@@ -571,6 +571,7 @@ function ScheduleCalendar() {
         .legend-head { background: #6777B6; color: #FFFFFF; margin: -16px -16px 14px; padding: 13px 16px; }
         .legend-row { background: #FFFFFF; color: #2B2B23; border-radius: 8px; padding: 7px 9px; }
         @media (max-width: 600px) {
+          .cell-shift-label { font-size: 8.5px !important; }
           .overview-grid { max-width: none; }
           .overview-month { grid-template-columns: 1fr; min-height: 0; }
           .overview-month-side { min-height: 150px; padding: 20px; }
@@ -676,8 +677,8 @@ function ScheduleCalendar() {
                     style={{ minHeight: 62, borderRadius: 8, background: s ? s.soft : '#FFFFFF', border: (isSel || isToday) ? '2px solid #FFFFFF' : '2px solid transparent', padding: '6px 6px 4px', position: 'relative', overflow: 'hidden' }}>
                     <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: s ? 13 : 20, lineHeight: 1, fontWeight: s ? 600 : 700, color: s ? s.date : '#1F3A35' }}>{c.day}</div>
                     {c.info?.holiday && <div style={{ fontSize: 9, color: '#9C4530', fontWeight: 600, lineHeight: 1.2, marginTop: 1 }}>{c.info.holiday}</div>}
-                    {s && <div style={{ fontSize: 9.5, color: s.text, fontWeight: 600, marginTop: 2 }}>{s.label}</div>}
-                    {vc > 0 && <div style={{ position: 'absolute', bottom: 4, right: 6, fontSize: 8.5, color: s ? s.count : '#1F5B54', fontWeight: 700 }}>{vc} คนไข้</div>}
+                    {s && <div className="cell-shift-label" style={{ fontSize: 9.5, color: s.text, fontWeight: 600, marginTop: 2 }}>{s.label}</div>}
+                    {vc > 0 && <div style={{ position: 'absolute', bottom: 4, right: 6, fontSize: 8.5, color: s ? s.count : '#1F5B54', fontWeight: 700 }}>{vc}</div>}
                   </div>
                 );
               })}
@@ -947,30 +948,28 @@ function ScheduleCalendar() {
 }
 
 function App() {
-  currentUid = 'ui-preview';
-  window.storage = {
-    async get(key) {
-      const value = localStorage.getItem('ui-preview-' + key);
-      if (value === null) throw new Error('key not found');
-      return { key, value };
-    },
-    async set(key, value) {
-      localStorage.setItem('ui-preview-' + key, value);
-      return { key, value };
-    },
-    async delete(key) {
-      localStorage.removeItem('ui-preview-' + key);
-      return { key, deleted: true };
-    },
-    async list(prefix = '') {
-      const keys = Object.keys(localStorage)
-        .filter(k => k.startsWith('ui-preview-' + prefix))
-        .map(k => k.replace(/^ui-preview-/, ''));
-      return { keys, prefix };
-    },
-  };
+  const [user, setUser] = useState(undefined); // undefined = loading, null = signed out
 
-  return <ScheduleCalendar />;
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged(u => {
+      currentUid = u ? u.uid : null;
+      setUser(u);
+    });
+    return unsub;
+  }, []);
+
+  if (user === undefined) return <LoadingScreen />;
+  if (!user) return <SignInScreen />;
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, padding: '8px 14px', background: '#F0EBDD', fontFamily: "'Sarabun', sans-serif" }}>
+        <span style={{ fontSize: 11.5, color: '#5C6D68' }}>{user.email}</span>
+        <button onClick={() => auth.signOut()} style={{ fontSize: 11.5, border: '1px solid #DCD4C4', background: '#FFFFFF', color: '#5C6D68', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>ออกจากระบบ</button>
+      </div>
+      <ScheduleCalendar key={user.uid} />
+    </div>
+  );
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
