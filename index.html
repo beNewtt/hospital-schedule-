@@ -103,6 +103,8 @@ function Icon({ name, size = 16, color = 'currentColor' }) {
     case 'crownSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="m3.2 7.2 4.3 3.1L11 4.8a1.15 1.15 0 0 1 2 0l3.5 5.5 4.3-3.1a1 1 0 0 1 1.55 1.05l-1.8 8.15H3.45l-1.8-8.15A1 1 0 0 1 3.2 7.2ZM4 18h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2Z" /></svg>;
     case 'keyboardSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h18a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm1.5 3v2H7V8H4.5ZM8 8v2h2.5V8H8Zm3.5 0v2H14V8h-2.5ZM15 8v2h2.5V8H15Zm3.5 0v2H21V8h-2.5Zm-14 3.5v2H7v-2H4.5Zm3.5 0v2h2.5v-2H8Zm3.5 0v2H14v-2h-2.5Zm3.5 0v2h2.5v-2H15Zm3.5 0v2H21v-2h-2.5ZM7 15v2h10v-2H7Z" /></svg>;
     case 'userPlusSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="7" r="4" /><path d="M1.5 20a7.5 7.5 0 0 1 15 0 1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1ZM19 9V6h2v3h3v2h-3v3h-2v-3h-3V9h3Z" /></svg>;
+    case 'banSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20ZM6.7 8.1l9.2 9.2a7 7 0 0 0-9.2-9.2Zm10.6 7.8L8.1 6.7a7 7 0 0 0 9.2 9.2Z" clipRule="evenodd" /></svg>;
+    case 'historySolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 1-8.5 6H1l3.5-4L8 9H5.6A6.5 6.5 0 1 0 12 5.5V3Zm-1 4h2v5.1l3.4 2-1 1.7-4.4-2.6V7Z" /></svg>;
     case 'google': return (
       <svg width={size} height={size} viewBox="0 0 24 24">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -257,6 +259,9 @@ function ScheduleCalendar() {
   const [pickedCaseId, setPickedCaseId] = useState(null);
   const [historyCaseId, setHistoryCaseId] = useState(null);
   const [patientListQuery, setPatientListQuery] = useState('');
+  const [patientSort, setPatientSort] = useState('date');
+  const [editingCase, setEditingCase] = useState(false);
+  const [editCaseForm, setEditCaseForm] = useState({ hn: '', name: '', phone: '', category: 'ตรวจ' });
 
   const [fHn, setFHn] = useState('');
   const [fName, setFName] = useState('');
@@ -412,8 +417,14 @@ function ScheduleCalendar() {
       const nextVisit = future[0] || null;
       const lastVisit = past[0] || null;
       return { ...c, activeCount: active.length, cancelledCount, nextVisit, lastVisit };
-    }).sort((a, b) => a.name.localeCompare(b.name, 'th'));
-  }, [patientListQuery, cases]);
+    }).sort((a, b) => {
+      if (patientSort === 'name') return a.name.localeCompare(b.name, 'th');
+      if (patientSort === 'hn') return (a.hn || '').localeCompare(b.hn || '', undefined, { numeric: true });
+      const aDate = a.nextVisit?.date || a.lastVisit?.date || '9999-12-31';
+      const bDate = b.nextVisit?.date || b.lastVisit?.date || '9999-12-31';
+      return aDate.localeCompare(bDate);
+    });
+  }, [patientListQuery, patientSort, cases]);
 
   const resetNewForm = () => { setFHn(''); setFName(''); setFPhone(''); setFCategory('ตรวจ'); setFTime('13:00'); setFDuration(30); setFStep(''); };
 
@@ -458,6 +469,12 @@ function ScheduleCalendar() {
     const next = { ...cases }; delete next[caseId]; saveCases(next);
     if (historyCaseId === caseId) setHistoryCaseId(null);
   };
+  const startEditCase = (c) => { setEditCaseForm({ hn: c.hn || '', name: c.name || '', phone: c.phone || '', category: c.category || 'อื่นๆ' }); setEditingCase(true); };
+  const saveCaseEdit = () => {
+    if (!historyCase || !editCaseForm.name.trim()) return;
+    saveCases({ ...cases, [historyCase.id]: { ...historyCase, ...editCaseForm, hn: editCaseForm.hn.trim(), name: editCaseForm.name.trim(), phone: editCaseForm.phone.trim() } });
+    setEditingCase(false);
+  };
 
   const goMonth = (delta) => {
     let m = month + delta, y = year;
@@ -476,23 +493,23 @@ function ScheduleCalendar() {
     return (
       <div style={{ padding: '8px 10px', borderRadius: 8, background: cancelled ? '#F3EDE9' : '#FAF6EF', marginBottom: 6, opacity: cancelled ? 0.7 : 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12.5, fontWeight: 600, color: cancelled ? '#B9AF9A' : '#1F5B54', minWidth: 92, textDecoration: cancelled ? 'line-through' : 'none' }}>
+          <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 13, fontWeight: 600, color: cancelled ? '#B9AF9A' : '#000000', minWidth: 92, textDecoration: cancelled ? 'line-through' : 'none' }}>
             {v.time}–{minToTime(timeToMin(v.time) + v.duration)}
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               {c.hn && <span style={{ fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", color: '#8A7F63' }}>HN {c.hn}</span>}
               <span style={{ fontSize: 13.5, fontWeight: 600, color: cancelled ? '#B9AF9A' : '#1F3A35', textDecoration: cancelled ? 'line-through' : 'none' }}>{c.name}</span>
-              <span style={{ fontSize: 10.5, fontWeight: 700, padding: '1px 7px', borderRadius: 10, background: cs.bg, color: cs.text }}>{c.category}</span>
               {cancelled && <span style={{ fontSize: 10, fontWeight: 700, color: '#A33636' }}>ยกเลิกแล้ว</span>}
             </div>
             {v.step && <div style={{ fontSize: 12, color: '#5C6D68', marginTop: 2 }}>{v.step}</div>}
             {showJump && <button onClick={() => jumpToVisit(v.date)} style={{ fontSize: 11, color: '#1F5B54', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0, marginTop: 2 }}>{v.date} — ไปที่วันนัด</button>}
           </div>
-          <button onClick={() => toggleCancelVisit(c.id, v.id)} title={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 2 }}>
-            {cancelled ? <Icon name="rotateCcw" size={14} color="#5C6D68" /> : <Icon name="ban" size={14} color="#A33636" />}
+          <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: cs.bg, color: cs.text, whiteSpace: 'nowrap' }}>{c.category}</span>
+          <button onClick={() => toggleCancelVisit(c.id, v.id)} title={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: '#F8CABA', color: '#D8560E', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {cancelled ? <Icon name="rotateCcw" size={14} color="#D8560E" /> : <Icon name="banSolid" size={15} />}
           </button>
-          <button onClick={() => setHistoryCaseId(historyCaseId === c.id ? null : c.id)} title="ดูประวัติเคส" style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 2 }}><Icon name="history" size={15} color="#1F5B54" /></button>
+          <button onClick={() => setHistoryCaseId(historyCaseId === c.id ? null : c.id)} title="ดูประวัติเคส" style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: '#CBD183', color: '#1F5B54', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="historySolid" size={15} /></button>
           <button onClick={() => removeVisit(c.id, v.id)} title="ลบนัดนี้" style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 2 }}><Icon name="x" size={14} color="#B9AF9A" /></button>
         </div>
       </div>
@@ -502,7 +519,7 @@ function ScheduleCalendar() {
   return (
     <div style={{ fontFamily: "'Sarabun', sans-serif", background: '#F3EAE3', minHeight: '100vh', color: '#2B2B23', padding: '20px 14px 60px' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
         @keyframes viewIn { from { opacity: .35; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
@@ -528,11 +545,13 @@ function ScheduleCalendar() {
         input, select { border: none !important; outline: none; }
         .page-head { position: sticky; top: 0; z-index: 30; background: #6777B6; border-radius: 18px; padding: 18px 20px; box-shadow: 0 8px 22px rgba(103,119,182,.20); }
         .history-panel { position: sticky; top: 112px; z-index: 20; }
-        .patient-scroll { overflow-y: auto; padding-right: 4px; }
+        .patient-scroll { overflow-y: auto; padding-right: 4px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-content: start; }
+        .patient-scroll .plist-row { margin-bottom: 0 !important; }
         .legend-card { overflow: hidden; box-shadow: 0 8px 22px rgba(43,43,35,.10); }
         .legend-head { background: #6777B6; color: #FFFFFF; margin: -16px -16px 14px; padding: 13px 16px; }
         .legend-row { background: #FFFFFF; color: #2B2B23; border-radius: 8px; padding: 7px 9px; }
         @media (max-width: 600px) {
+          .patient-scroll { grid-template-columns: 1fr; }
           .page-head { position: relative; top: auto; border-radius: 18px; padding: 16px; }
           .history-panel { position: relative; top: auto; }
           .view-panel { animation-duration: .2s; }
@@ -630,29 +649,30 @@ function ScheduleCalendar() {
 
             {selected && (
               <div style={{ background: '#FFFFFF', border: 'none', borderRadius: 12, padding: 16, marginBottom: 22 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ background: selShift ? SHIFT_STYLE[selShift]?.soft : '#FFFFFF', borderRadius: 14, padding: '12px 14px', marginBottom: 12, transition: 'background-color .25s ease' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                   <div>
-                    <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 18, fontWeight: 600, color: '#1F5B54' }}>
+                    <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 18, fontWeight: 600, color: selShift ? SHIFT_STYLE[selShift]?.date : '#1F5B54' }}>
                       {new Date(selected).toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                     </div>
                     {selInfo?.holiday && <div style={{ fontSize: 12.5, color: '#9C4530', marginTop: 2 }}>วันหยุด: {selInfo.holiday}</div>}
                   </div>
-                  <button onClick={() => { setSelected(null); setHistoryCaseId(null); }} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 2 }}><Icon name="x" size={18} color="#8A7F63" /></button>
+                  <button onClick={() => { setSelected(null); setHistoryCaseId(null); }} style={{ border: 'none', background: 'none', color: selShift ? SHIFT_STYLE[selShift]?.date : '#1F5B54', cursor: 'pointer', padding: 2 }}><Icon name="x" size={18} color="currentColor" /></button>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '10px 0' }}>
-                  <span style={{ fontSize: 12, color: '#8A7F63' }}>รหัสเวร:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: selShift ? SHIFT_STYLE[selShift]?.date : '#1F5B54' }}>เลือกห้อง</span>
                   <select value={selShift || ''} onChange={e => setShift(selected, e.target.value || null)}
-                    style={{ fontSize: 12.5, fontWeight: 600, border: '1px solid #DCD4C4', borderRadius: 6, padding: '5px 8px', fontFamily: "'Sarabun', sans-serif", background: selShift ? SHIFT_STYLE[selShift]?.soft : '#FAF6EF', color: selShift ? SHIFT_STYLE[selShift]?.text : '#5C6D68' }}>
+                    style={{ fontSize: 12.5, fontWeight: 600, border: 'none', borderRadius: 7, padding: '6px 9px', fontFamily: "'Sarabun', sans-serif", background: selShift ? SHIFT_STYLE[selShift]?.soft : '#FFFFFF', color: selShift ? SHIFT_STYLE[selShift]?.text : '#5C6D68' }}>
                     <option value="">— ไม่ระบุ —</option>
                     {Object.keys(SHIFT_STYLE).map(k => <option key={k} value={k}>{k}</option>)}
                   </select>
-                  {selShift && <span style={{ fontSize: 11.5, color: '#8A7F63' }}>{shiftNotes[selShift]}</span>}
+                </div>
                 </div>
 
                 {selInfo?.shiftNotes?.length > 0 && <div style={{ fontSize: 13, color: '#5C6D68', marginBottom: 10 }}>หมายเหตุเวร: {selInfo.shiftNotes.join(' · ')}</div>}
 
-                <div style={{ fontSize: 11.5, fontWeight: 600, color: '#8A7F63', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, marginTop: 4 }}>รายชื่อคนไข้ในวันนี้</div>
+                <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 13, fontWeight: 700, color: '#000000', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, marginTop: 4 }}>Patient list</div>
                 {dayVisits.length > 0 ? (
                   <div style={{ marginBottom: 12 }}>
                     {dayVisits.map(({ case: c, visit: v }) => <VisitRow key={v.id} c={c} v={v} showJump={false} />)}
@@ -778,13 +798,21 @@ function ScheduleCalendar() {
         )}
 
         {view === 'patients' && (
-          <div className="view-panel" style={{ marginBottom: 22, height: historyCase ? 'calc(100vh - 390px)' : 'calc(100vh - 225px)', minHeight: 280, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div className="view-panel" style={{ marginBottom: 22, height: historyCase ? 'calc(100vh - 390px)' : 'calc(100vh - 225px)', minHeight: 280, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: "'IBM Plex Sans Thai', sans-serif" }}>
             <div className="search-box" style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', borderRadius: 8, padding: '8px 10px', marginBottom: 12, background: '#FFFFFF' }}>
               <Icon name="search" size={14} color="#8A7F63" />
               <input placeholder="ค้นหาด้วย HN, ชื่อ, หรือประเภทงาน" value={patientListQuery} onChange={e => setPatientListQuery(e.target.value)}
-                style={{ border: 'none', outline: 'none', fontSize: 13.5, flex: 1, fontFamily: "'Sarabun', sans-serif" }} />
+                style={{ border: 'none', outline: 'none', fontSize: 14, flex: 1, fontFamily: "'IBM Plex Sans Thai', sans-serif" }} />
             </div>
-            <div style={{ fontSize: 11.5, color: '#8A7F63', marginBottom: 8 }}>ทั้งหมด {patientListResults.length} เคส</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: '#8A7F63' }}>Total {patientListResults.length} cases</div>
+              <select value={patientSort} onChange={e => setPatientSort(e.target.value)} aria-label="Sort patient list"
+                style={{ background: '#FFFFFF', color: '#1F5B54', borderRadius: 9, padding: '6px 10px', fontFamily: "'IBM Plex Sans Thai', sans-serif", fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>
+                <option value="date">Date</option>
+                <option value="name">A–Z</option>
+                <option value="hn">HN</option>
+              </select>
+            </div>
             <div className="patient-scroll" style={{ flex: 1 }}>
             {patientListResults.map(c => {
               const cs = CATEGORY_STYLE[c.category] || CATEGORY_STYLE['อื่นๆ'];
@@ -792,12 +820,12 @@ function ScheduleCalendar() {
                 <div key={c.id} className="plist-row" onClick={() => setHistoryCaseId(historyCaseId === c.id ? null : c.id)}
                   style={{ background: '#FFFFFF', border: '1px solid #EAE3D3', borderRadius: 10, padding: '10px 12px', marginBottom: 8, cursor: 'pointer' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    {c.hn && <span style={{ fontSize: 11.5, fontFamily: "'IBM Plex Mono', monospace", color: '#8A7F63' }}>HN {c.hn}</span>}
-                    <span style={{ fontSize: 14.5, fontWeight: 600, color: '#1F3A35' }}>{c.name}</span>
+                    {c.hn && <span style={{ fontSize: 12.5, fontFamily: "'IBM Plex Sans Thai', sans-serif", fontWeight: 700, color: '#6777B6', letterSpacing: .3 }}>HN {c.hn}</span>}
+                    <span style={{ fontSize: 15, fontWeight: 400, color: '#1F3A35' }}>{c.name}</span>
                     <span style={{ fontSize: 10.5, fontWeight: 700, padding: '1px 8px', borderRadius: 10, background: cs.bg, color: cs.text }}>{c.category}</span>
                     {c.phone && <span style={{ fontSize: 11.5, color: '#B9AF9A' }}>โทร {c.phone}</span>}
                   </div>
-                  <div style={{ display: 'flex', gap: 14, marginTop: 6, fontSize: 12, color: '#5C6D68', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 11, fontWeight: 400, color: '#5C6D68', flexWrap: 'wrap' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="calendarSolid" size={13} /> {c.activeCount} {c.activeCount === 1 ? 'visit' : 'visits'}{c.cancelledCount > 0 ? ` (ยกเลิก ${c.cancelledCount})` : ''}</span>
                     {c.nextVisit ? <span>Next date: <b>{c.nextVisit.date} {c.nextVisit.time}</b></span> : c.lastVisit ? <span>Last date: {c.lastVisit.date}</span> : null}
                   </div>
