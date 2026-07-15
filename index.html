@@ -164,13 +164,13 @@ const MONTH_THEMES = [
 ];
 
 const SHIFT_STYLE = {
-  'off':      { bar: '#D3C2CD', soft: '#2B2B23', date: '#D3C2CD', text: '#D3C2CD', count: '#D3C2CD', label: 'off' },
-  'ปกส':      { bar: '#EFCE7B', soft: '#D17089', date: '#EFCE7B', text: '#EFCE7B', count: '#EFCE7B', label: 'ปกส' },
+  'off':      { bar: '#D3C2CD', soft: '#2B2B23', date: '#D3C2CD', text: '#FFFFFF', count: '#D3C2CD', label: 'off' },
+  'ปกส':      { bar: '#EFCE7B', soft: '#D17089', date: '#EFCE7B', text: '#000000', count: '#EFCE7B', label: 'ปกส' },
   'ฟุ้ง':     { bar: '#1F5B54', soft: '#D3C2CD', date: '#1F5B54', text: '#000000', count: '#1F5B54', label: 'ฟุ้ง' },
-  'Screen':   { bar: '#CBD183', soft: '#D8560E', date: '#CBD183', text: '#CBD183', count: '#CBD183', label: 'Screen' },
+  'Screen':   { bar: '#CBD183', soft: '#D8560E', date: '#CBD183', text: '#000000', count: '#CBD183', label: 'Screen' },
   'DM':       { bar: '#EFCE7B', soft: '#849E15', date: '#EFCE7B', text: '#EFCE7B', count: '#EFCE7B', label: 'DM' },
-  'รพ.สต.':   { bar: '#7A3B42', soft: '#CBD183', date: '#7A3B42', text: '#7A3B42', count: '#7A3B42', label: 'รพ.สต.' },
-  '1/1':      { bar: '#F8CABA', soft: '#92A2A6', date: '#F8CABA', text: '#F8CABA', count: '#F8CABA', label: '1/1' },
+  'รพ.สต.':   { bar: '#7A3B42', soft: '#CBD183', date: '#7A3B42', text: '#000000', count: '#7A3B42', label: 'รพ.สต.' },
+  '1/1':      { bar: '#F8CABA', soft: '#92A2A6', date: '#F8CABA', text: '#000000', count: '#F8CABA', label: '1/1' },
 };
 
 const SHIFT_DEFAULTS = {
@@ -532,8 +532,12 @@ function ScheduleCalendar() {
         .cell { border-radius: 12px !important; transition: transform .2s ease, filter .2s ease, box-shadow .2s ease; cursor: pointer; }
         .ov-cell { transition: filter .15s ease, transform .15s ease; }
         .ov-cell:hover { filter: brightness(.93); transform: translateY(-1px); }
-        .overview-grid { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: start; max-width: 620px; margin-left: auto; margin-right: auto; }
-        .overview-month { background: #FFFFFF; border-radius: 18px; padding: 18px 20px; }
+        .overview-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; max-width: 760px; margin-left: auto; margin-right: auto; }
+        .overview-month { background: #FFFFFF; border-radius: 20px; overflow: hidden; display: grid; grid-template-columns: 190px 1fr; min-height: 310px; }
+        .overview-month-side { padding: 26px 22px; display: flex; flex-direction: column; }
+        .overview-month-calendar { padding: 24px 26px; }
+        .calendar-week-grid { grid-template-columns: .72fr repeat(5, minmax(0, 1fr)) .72fr; max-width: 720px; margin-left: auto; margin-right: auto; }
+        .overview-week-grid { grid-template-columns: .72fr repeat(5, minmax(0, 1fr)) .72fr; }
         .tab-btn { transition: all 0.15s ease; }
         .nav-icon { width: 31px; height: 31px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: transparent; color: #FFFFFF; cursor: pointer; transition: color .15s ease, transform .15s ease; }
         .nav-icon:hover { color: #EFCE7B !important; transform: translateY(-1px); }
@@ -558,6 +562,11 @@ function ScheduleCalendar() {
         .legend-row { background: #FFFFFF; color: #2B2B23; border-radius: 8px; padding: 7px 9px; }
         @media (max-width: 600px) {
           .overview-grid { max-width: none; }
+          .overview-month { grid-template-columns: 1fr; min-height: 0; }
+          .overview-month-side { min-height: 150px; padding: 20px; }
+          .overview-month-calendar { padding: 20px 14px; }
+          .calendar-week-grid { grid-template-columns: .52fr repeat(5, minmax(0, 1fr)) .52fr; gap: 5px !important; }
+          .overview-week-grid { grid-template-columns: .58fr repeat(5, minmax(0, 1fr)) .58fr; }
           .patient-scroll { grid-template-columns: 1fr; }
           .page-head { position: relative; top: auto; border-radius: 18px; padding: 16px; }
           .history-panel { position: relative; top: auto; }
@@ -641,10 +650,10 @@ function ScheduleCalendar() {
 
         {view === 'calendar' && (
           <>
-            <div className="view-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 6, marginBottom: 6 }}>
+            <div className="view-panel calendar-week-grid" style={{ display: 'grid', gap: 6, marginBottom: 6 }}>
               {WEEKDAYS_TH.map(w => <div key={w} style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#000000', fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif", letterSpacing: .2 }}>{w}</div>)}
             </div>
-            <div className="view-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 6, marginBottom: 22 }}>
+            <div className="view-panel calendar-week-grid" style={{ display: 'grid', gap: 6, marginBottom: 22 }}>
               {cells.map((c, i) => {
                 if (!c) return <div key={'e' + i} />;
                 const s = c.shift ? SHIFT_STYLE[c.shift] : null;
@@ -786,21 +795,32 @@ function ScheduleCalendar() {
               const mc = buildCells(year, m);
               const weeks = [];
               for (let i = 0; i < mc.length; i += 7) weeks.push(mc.slice(i, i + 7));
+              const shiftCounts = mc.filter(Boolean).reduce((acc, c) => { if (c.shift) acc[c.shift] = (acc[c.shift] || 0) + 1; return acc; }, {});
+              const shiftTotal = Object.values(shiftCounts).reduce((a, b) => a + b, 0);
               return (
                 <div key={m} className="overview-month">
-                  <div style={{ display: 'table', margin: '0 auto 12px', fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: 13.5, color: MONTH_THEMES[idx].text, background: MONTH_THEMES[idx].bg, borderRadius: 10, padding: '6px 14px' }}>{mname} {year}</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 3, marginBottom: 3 }}>
+                  <div className="overview-month-side" style={{ background: MONTH_THEMES[idx].bg, color: MONTH_THEMES[idx].text }}>
+                    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", fontSize: 58, lineHeight: 1, fontWeight: 800 }}>{String(m).padStart(2, '0')}</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, marginTop: 8 }}>MONTH / {year}</div>
+                    <div style={{ marginTop: 'auto', paddingTop: 28 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8 }}>{shiftTotal} SHIFT DAYS</div>
+                      {Object.entries(shiftCounts).slice(0, 4).map(([key, total]) => <div key={key} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 10.5, marginTop: 5 }}><span>{key}</span><b>{total}</b></div>)}
+                    </div>
+                  </div>
+                  <div className="overview-month-calendar">
+                  <div style={{ textAlign: 'center', fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", fontWeight: 800, fontSize: 22, color: MONTH_THEMES[idx].bg, marginBottom: 18 }}>{new Date(year, idx, 1).toLocaleString('en-US', { month: 'long' }).toUpperCase()} {year}</div>
+                  <div className="overview-week-grid" style={{ display: 'grid', gap: 6, marginBottom: 7 }}>
                     {WEEKDAYS_TH.map(w => <div key={w} style={{ textAlign: 'center', fontSize: 9.5, fontWeight: 700, color: '#000000', fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif", letterSpacing: .1 }}>{w}</div>)}
                   </div>
                   {weeks.map((wk, wi) => (
-                    <div key={wi} style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 3, marginBottom: 3 }}>
+                    <div key={wi} className="overview-week-grid" style={{ display: 'grid', gap: 6, marginBottom: 8 }}>
                       {wk.map((c, ci) => {
-                        if (!c) return <div key={ci} style={{ minHeight: 32 }} />;
+                        if (!c) return <div key={ci} style={{ minHeight: 38 }} />;
                         const s = c.shift ? SHIFT_STYLE[c.shift] : null;
                         return (
-                          <div key={c.dstr} style={{ minHeight: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div key={c.dstr} style={{ minHeight: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <div className="ov-cell" onClick={() => openDay(c.dstr, year, m)} title={c.shift || ''}
-                            style={{ width: 34, height: 34, borderRadius: '50%', background: s ? s.soft : '#FAF6EF', color: s ? s.date : '#1F3A35', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', fontSize: 11.5, fontWeight: 600, fontFamily: "'IBM Plex Sans Thai', sans-serif" }}>
+                            style={{ width: 34, height: 34, borderRadius: '50%', background: s ? s.soft : '#FFFFFF', color: s ? s.date : '#1F3A35', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', fontSize: 11.5, fontWeight: 600, fontFamily: "'IBM Plex Sans Thai', sans-serif" }}>
                             {c.day}
                           </div>
                           </div>
@@ -808,6 +828,7 @@ function ScheduleCalendar() {
                       })}
                     </div>
                   ))}
+                  </div>
                 </div>
               );
             })}
