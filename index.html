@@ -530,7 +530,7 @@ function ScheduleCalendar() {
   };
 
   return (
-    <div style={{ fontFamily: "'Sarabun', sans-serif", background: '#F3EAE3', minHeight: '100vh', color: '#2B2B23', padding: '20px 14px 60px' }}>
+    <div style={{ fontFamily: "'Sarabun', sans-serif", background: '#F3EAE3', minHeight: '100vh', color: '#2B2B23', padding: '20px 14px 0' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; }
@@ -675,7 +675,7 @@ function ScheduleCalendar() {
                 return (
                   <div key={c.dstr} className="cell" onClick={() => setSelected(c.dstr)}
                     style={{ minHeight: 62, borderRadius: 8, background: s ? s.soft : '#FFFFFF', border: (isSel || isToday) ? '2px solid #FFFFFF' : '2px solid transparent', padding: '6px 6px 4px', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: s ? 13 : 20, lineHeight: 1, fontWeight: s ? 600 : 700, color: s ? s.date : '#1F3A35' }}>{c.day}</div>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: s ? 13 : 20, lineHeight: 1, fontWeight: s ? 600 : 700, color: s ? s.date : '#B9AF9A' }}>{c.day}</div>
                     {c.info?.holiday && <div style={{ fontSize: 9, color: '#9C4530', fontWeight: 600, lineHeight: 1.2, marginTop: 1 }}>{c.info.holiday}</div>}
                     {s && <div className="cell-shift-label" style={{ fontSize: 9.5, color: s.text, fontWeight: 600, marginTop: 2 }}>{s.label}</div>}
                     {vc > 0 && <div style={{ position: 'absolute', bottom: 4, right: 6, fontSize: 8.5, color: s ? s.count : '#1F5B54', fontWeight: 700 }}>{vc}</div>}
@@ -939,10 +939,10 @@ function ScheduleCalendar() {
         </div>
         </>}
 
-        <div style={{ textAlign: 'center', fontSize: 10.5, color: '#B9AF9A', marginTop: 16 }}>
-          ข้อมูลเวร/นัดของ เม.ย.–ก.ย. 2569 ดึงจากไฟล์ที่อัปโหลด (แปลงเป็นเคสอัตโนมัติ) · กดยกเลิกนัดแทนการลบเพื่อเก็บประวัติไว้ · บันทึกไว้ในเครื่องนี้อัตโนมัติ
-        </div>
       </div>
+      <footer style={{ textAlign: 'center', fontSize: 10.5, lineHeight: 1.6, color: '#B9AF9A', margin: '32px -14px 0', padding: '14px 18px 16px', borderTop: '1px solid rgba(185,175,154,.28)', background: 'rgba(255,255,255,.22)' }}>
+        ข้อมูลเวร/นัดของ เม.ย.–ก.ย. 2569 ดึงจากไฟล์ที่อัปโหลด (แปลงเป็นเคสอัตโนมัติ) · กดยกเลิกนัดแทนการลบเพื่อเก็บประวัติไว้ · บันทึกไว้ในเครื่องนี้อัตโนมัติ
+      </footer>
     </div>
   );
 }
