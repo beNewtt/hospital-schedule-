@@ -219,8 +219,9 @@ function parseLegacyToCases(apps) {
 
 function ScheduleCalendar() {
   const [view, setView] = useState('calendar');
-  const [year, setYear] = useState(2026);
-  const [month, setMonth] = useState(4);
+  const today0 = new Date();
+  const [year, setYear] = useState(today0.getFullYear());
+  const [month, setMonth] = useState(today0.getMonth() + 1);
   const [selected, setSelected] = useState(null);
   const [shiftNotes, setShiftNotes] = useState(SHIFT_DEFAULTS);
   const [editingLegend, setEditingLegend] = useState(false);
@@ -349,7 +350,7 @@ function ScheduleCalendar() {
     return !m || SKIP_WORDS.has((m[2] || '').trim());
   });
 
-  const todayStr = '2026-07-01';
+  const todayStr = dateKey(today0.getFullYear(), today0.getMonth() + 1, today0.getDate());
 
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
