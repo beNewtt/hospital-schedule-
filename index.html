@@ -11,7 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 <style>
-  html, body { margin: 0; padding: 0; }
+  html, body { margin: 0; padding: 0; background: #F3EAE3; }
 </style>
 </head>
 <body>
@@ -93,6 +93,16 @@ function Icon({ name, size = 16, color = 'currentColor' }) {
     case 'rotateCcw': return <svg {...p}><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>;
     case 'users': return <svg {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
     case 'calendarClock': return <svg {...p}><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><circle cx="16" cy="16" r="3" /><path d="M16 14.5V16l1 1" /></svg>;
+    case 'calendar': return <svg {...p}><rect x="3" y="4" width="18" height="17" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>;
+    case 'grid': return <svg {...p}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>;
+    case 'settings': return <svg {...p}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.12 2.12-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1 1.55V20.3h-3v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.88.34l-.06.06-2.12-2.12.06-.06A1.7 1.7 0 0 0 7.08 15a1.7 1.7 0 0 0-1.55-1H5.4v-3h.13a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.12-2.12.06.06a1.7 1.7 0 0 0 1.88.34 1.7 1.7 0 0 0 1-1.55V4.7h3v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.12 2.12-.06.06A1.7 1.7 0 0 0 19.4 10a1.7 1.7 0 0 0 1.55 1h.13v3h-.13a1.7 1.7 0 0 0-1.55 1Z" /></svg>;
+    case 'calendarSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v9a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-9Z" /></svg>;
+    case 'gridSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="9" height="9" rx="2" /><rect x="13" y="2" width="9" height="9" rx="2" /><rect x="2" y="13" width="9" height="9" rx="2" /><rect x="13" y="13" width="9" height="9" rx="2" /></svg>;
+    case 'usersSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8" r="4" /><path d="M1.5 20a7.5 7.5 0 0 1 15 0 1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1Z" /><circle cx="18" cy="8" r="3" /><path d="M17.2 13.2A6.5 6.5 0 0 1 22.5 20a1 1 0 0 1-1 1h-3.2a9.4 9.4 0 0 0-2.2-7.1c.35-.3.72-.52 1.1-.7Z" /></svg>;
+    case 'settingsSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.2 7.2 0 0 0-1.63-.95L14.37 2.8a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.49.42l-.37 2.51c-.58.24-1.12.56-1.62.95L5.15 5.3a.5.5 0 0 0-.61.22L2.62 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.05.31-.08.65-.08.94s.03.63.08.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.4-.96c.49.39 1.03.71 1.62.95l.37 2.51c.04.24.24.42.49.42h3.84a.5.5 0 0 0 .5-.42l.36-2.51c.59-.24 1.13-.56 1.63-.95l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.02-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z" /></svg>;
+    case 'crownSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="m3.2 7.2 4.3 3.1L11 4.8a1.15 1.15 0 0 1 2 0l3.5 5.5 4.3-3.1a1 1 0 0 1 1.55 1.05l-1.8 8.15H3.45l-1.8-8.15A1 1 0 0 1 3.2 7.2ZM4 18h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2Z" /></svg>;
+    case 'keyboardSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h18a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm1.5 3v2H7V8H4.5ZM8 8v2h2.5V8H8Zm3.5 0v2H14V8h-2.5ZM15 8v2h2.5V8H15Zm3.5 0v2H21V8h-2.5Zm-14 3.5v2H7v-2H4.5Zm3.5 0v2h2.5v-2H8Zm3.5 0v2H14v-2h-2.5Zm3.5 0v2h2.5v-2H15Zm3.5 0v2H21v-2h-2.5ZM7 15v2h10v-2H7Z" /></svg>;
+    case 'userPlusSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="7" r="4" /><path d="M1.5 20a7.5 7.5 0 0 1 15 0 1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1ZM19 9V6h2v3h3v2h-3v3h-2v-3h-3V9h3Z" /></svg>;
     case 'google': return (
       <svg width={size} height={size} viewBox="0 0 24 24">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -139,14 +149,23 @@ function SignInScreen() {
 
 const SCHEDULE_DATA = {"2026-04-01":{"appointments":["13:00 room 5"],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-02":{"appointments":["13:00 Screen","13:30 385129 ติ๋ม TN","14:00 155848 สว่าง TNช("],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-03":{"appointments":[],"clinic":"CK","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-04":{"appointments":[],"clinic":"Bantoom","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-05":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-06":{"appointments":[],"clinic":"ไม่ลง","holiday":"หยุดจักกรี","shift":null,"shiftNotes":[]},"2026-04-07":{"appointments":["13:00 ประชุม zoom","13:30 7172 แสง TMD","14:00 **โทรเลื่อนเป็นวันที่ 20","14:30 095-2368071"],"clinic":"ไม่ลง","holiday":"Orentation","shift":null,"shiftNotes":[]},"2026-04-08":{"appointments":["13:00 room 4","13:30 ศิวดล ใจดี recheck Cr","14:00 ไม่มาตามนัด"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-09":{"appointments":["13:00 room 6","13:30 90705 บุญธ.(( RCT","14:00 ( **รอหาวันนัด(ชชช(ช(((((ช((","14:30 ( xช((ช("],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-10":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-11":{"appointments":[],"clinic":"HugFunFull","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-12":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-13":{"appointments":[],"clinic":"ไม่ลง","holiday":"สงกรานต์","shift":null,"shiftNotes":[]},"2026-04-14":{"appointments":[],"clinic":"ไม่ลง","holiday":"สงกรานต์","shift":null,"shiftNotes":[]},"2026-04-15":{"appointments":[],"clinic":"ไม่ลง","holiday":"สงกรานต์","shift":null,"shiftNotes":[]},"2026-04-16":{"appointments":["13:00 214901 มานะ RCT"],"clinic":"ไม่ลง","holiday":"ล","shift":null,"shiftNotes":[]},"2026-04-17":{"appointments":[],"clinic":"CK","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-18":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-19":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-20":{"appointments":["13:00 7172 แสง TMD","13:30 F/U traumatic OCC","14:00 สงวน ชิดสนิท"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-21":{"appointments":["13:00 88693 จิรา TP","13:30 reline >> รอส่ง lab"],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-22":{"appointments":["13:00 3436 อภิ CD","13:30 Recheck ต่อ"],"clinic":"HugFun","holiday":"screen","shift":null,"shiftNotes":[]},"2026-04-23":{"appointments":["13:00 เตียงเสริม","13:30 ทำ present + หมอพร้อม"],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-24":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-25":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-26":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-27":{"appointments":["13:00 Screen"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-28":{"appointments":["13:00 room 5"],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-29":{"appointments":["13:00 room 6"],"clinic":"OT โรงบาล","holiday":"OT","shift":null,"shiftNotes":[]},"2026-04-30":{"appointments":["13:00 155848 สว่าง TN","13:30 ไม่มาตามนัด"],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-01":{"appointments":["1/1"],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-02":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-03":{"appointments":[],"clinic":"HugFunFull","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-04":{"appointments":[],"clinic":"HugFunFull","holiday":"หยุดฉัตรมงคล","shift":"off","shiftNotes":[]},"2026-05-05":{"appointments":["ฟุ้ง","13:00 off"],"clinic":"CK","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-06":{"appointments":["ฟุ้ง","13:00 363292 สุดที่รัก RCT","13:30 097-9397727","14:00 LTMI TMC #21 + dam"],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-07":{"appointments":["ฟุ้ง","13:00 90705 บุญธ. RCT","13:30 082-9315934","14:00 OC LT MI #24"],"clinic":null,"holiday":null,"shift":null,"shiftNotes":[]},"2026-05-08":{"appointments":["Screen"],"clinic":null,"holiday":null,"shift":null,"shiftNotes":[]},"2026-05-10":{"appointments":[],"clinic":"x","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-11":{"appointments":["ฟุ้ง","13:00 214901 มานะ RCT","13:30 098-7465869","14:00 FRC #45, WL 22.5"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-12":{"appointments":["ฟุ้ง","13:00 7172 แสง TMD","13:30 095-2368071","14:00 นัดพิมพ์าปาก RPD ??"],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-13":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":"off","shiftNotes":[]},"2026-05-14":{"appointments":["ปกส"],"clinic":"CK","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-15":{"appointments":["ฟุ้ง","19","ฟุ้ง","13:00 363292 สุดที่รัก RCT","13:30 097-9397727"],"clinic":null,"holiday":"5848","shift":null,"shiftNotes":[]},"2026-05-17":{"appointments":[],"clinic":"HugFunFull","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-18":{"appointments":[],"clinic":"OT โรงบาล","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-19":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-20":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-22":{"appointments":[],"clinic":"CK","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-23":{"appointments":[],"clinic":"Bantoom","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-24":{"appointments":[],"clinic":"Bantoom","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-25":{"appointments":["ฟุ้ง","13:00 90705 บุญธ. RCT","13:30 082-9315934","14:00 MI TMC #24"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-26":{"appointments":["ปกส","13:00 ห้ามนัดคนไข้"],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-27":{"appointments":["Screen","13:00 268967 ไหน","13:30 F/u affter off splint + ลงคิว RCT"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-28":{"appointments":["1/1/2026","13:00 สาธิต มังคลาด Recheck/Reline LTP","13:30 reline +/- Ext.","14:00 351,640 ศิริกาน URPD"],"clinic":null,"holiday":null,"shift":null,"shiftNotes":["Reline LTP/ Repair","Prep rest for RPD"]},"2026-05-29":{"appointments":["ฟุ้ง"],"clinic":"CK","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-30":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-31":{"appointments":[],"clinic":"x","holiday":null,"shift":null,"shiftNotes":[]},"2026-06-01":{"appointments":[],"clinic":"x","holiday":null,"shift":"off","shiftNotes":[]},"2026-06-02":{"appointments":["ปกส","13:00 214901 มานะ RCT","13:30 098-7465869","14:00 Recheck RPD"],"clinic":"CDC","holiday":null,"shift":"ปกส","shiftNotes":["TP","RPD"]},"2026-06-03":{"appointments":[],"clinic":"CK","holiday":null,"shift":"off","shiftNotes":[]},"2026-06-04":{"appointments":["ฟุ้ง","13:00 88693 จิราพรรณ แซ่จ๋าว Insert UTP","13:30 N/V - 6/7/69"],"clinic":"ไม่ลง","holiday":null,"shift":"ฟุ้ง","shiftNotes":["TP"]},"2026-06-05":{"appointments":["ฟุ้ง"],"clinic":"CK","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-06":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-06-07":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-06-08":{"appointments":["Screen"],"clinic":"OT โรงบาล","holiday":null,"shift":"Screen","shiftNotes":[]},"2026-06-09":{"appointments":["ฟุ้ง","13:00 จันทร์ ใจมูล","13:30 Off splint + แก้ OCC","14:00 209481 วิไลยวรรณ B24"],"clinic":"CDC","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-10":{"appointments":["ปกส","13:00 3436 อภิชาติ CD","13:30 Recheck CD"],"clinic":"HugFun","holiday":null,"shift":"ปกส","shiftNotes":[]},"2026-06-11":{"appointments":["ฟุ้ง","13:00 ✅ Lab แสงอรุน splint","13:30 insert upper splint + check OCC  (095-2368071)"],"clinic":null,"holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-12":{"appointments":["ฟุ้ง"],"clinic":"CK","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-14":{"appointments":[],"clinic":"Bantoom","holiday":null,"shift":null,"shiftNotes":[]},"2026-06-15":{"appointments":["ฟุ้ง","13:00 65424 ศศิประภา UTP","13:30 Insert UTP (3 ซี่)"],"clinic":"HugFun","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-16":{"appointments":["ฟุ้ง","13:00 300716 อินทรา RCT","13:30 remed + dam construct on 31OM"],"clinic":"CDC","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-17":{"appointments":["Screen","13:00 343086 พิยุทธ f/u*ยกเลิกนัด ไม่สะดวก","13:30 214901 มานะ UTP","14:00 insert UTP"],"clinic":"HugFun","holiday":null,"shift":"Screen","shiftNotes":[]},"2026-06-18":{"appointments":["ฟุ้ง","13:00 363292 สุดที่รัก RCT","13:30 097-9397727","14:00 TMC FRC #21 **ledge ปลาย"],"clinic":"CK","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-19":{"appointments":["Screen"],"clinic":null,"holiday":null,"shift":"Screen","shiftNotes":[]},"2026-06-20":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-06-21":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-06-22":{"appointments":["Screen"],"clinic":"OT โรงบาล","holiday":null,"shift":"Screen","shiftNotes":[]},"2026-06-23":{"appointments":["ฟุ้ง","13:00 90705 บุญธ. RCT","13:30 082-9315934","14:00 MI TMC #24"],"clinic":"CDC","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-24":{"appointments":["DM","13:00 351640 ศิริกานต RPD","13:30 try framwork URPD"],"clinic":"HugFun","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-25":{"appointments":["1/1","13:00 84550 นางคั้ว แซ่ย่าง insert SD","13:30 insert SD & LTP คนไข้ฝาก"],"clinic":null,"holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-26":{"appointments":["ฟุ้ง"],"clinic":"CK","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-28":{"appointments":[],"clinic":"HugFunFull","holiday":null,"shift":null,"shiftNotes":[]},"2026-06-29":{"appointments":["ฟุ้ง","13:00 214901 มานะ UTP","13:30 insert UTP"],"clinic":"HugFun","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-30":{"appointments":["ฟุ้ง","13:00 33620 ลวน 16OM","13:30 14727 จิราวรรณ Imp RPD"],"clinic":"CDC","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-01":{"appointments":["ปกส","13:00 385129 ติ๋ม ตุ้ยวงค์ F/U - TN"],"clinic":"x","holiday":null,"shift":"ปกส","shiftNotes":[]},"2026-07-02":{"appointments":["Screen","13:00 249618 ณรงค์ศักดิ์ St. off 36-37A","13:30 265078 ทศพล อุดสร้อย ตัดไหม 12-23A"],"clinic":null,"holiday":null,"shift":"Screen","shiftNotes":[]},"2026-07-03":{"appointments":["ฟุ้ง","ฟุ้ง","13:00 395460 บังเอิญ สุทธประภา Boder M.","13:30 081-4888439"],"clinic":"HugFun","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-04":{"appointments":["ฟุ้ง"],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-05":{"appointments":["1/1","13:00 นายประเสริฐ ศรีขันทะ TP (New) - 0871869763"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-06":{"appointments":["ฟุ้ง","13:00 88693 จิราพรรณ แซ่จ๋าว Recheck UTP","13:30 84550 คั่ว แซ่ย่าง Recheck USD","14:00 65424 ศศิประภา กาติ๊บ try in tooth UTP","Screen"],"clinic":"HugFun","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-07":{"appointments":["รพ.สต.","ฟุ้ง"],"clinic":"CDC","holiday":null,"shift":"รพ.สต.","shiftNotes":[]},"2026-07-08":{"appointments":["Screen"],"clinic":"HugFun","holiday":null,"shift":"Screen","shiftNotes":[]},"2026-07-09":{"appointments":["ฟุ้ง","13:00 7172 แสงอรุณ insert splint","13:30 (095-2368071)"],"clinic":"HugFunFull","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-10":{"appointments":["ฟุ้ง","ฟุ้ง","13:30 14727 จิราวรรณ มังคลาด Try in framework RPD"],"clinic":"HugFun","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-11":{"appointments":["Screen"],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-12":{"appointments":["off","13:00 ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ","13:30 ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ","14:00 ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-13":{"appointments":["ปกส","off","13:00 ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ","13:30 ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ","14:00 ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ"],"clinic":"x","holiday":null,"shift":"ปกส","shiftNotes":[]},"2026-07-14":{"appointments":["ฟุ้ง","13:00 260270 เหมยออน แซ่เติ๋น TMD ตรวจฟัน tel: 064-0735721","13:30 14727 จิราวรรณ มังคลาด prep rest RPD","14:00 X-ray Pa tooth 24","off"],"clinic":"x","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-15":{"appointments":["ฟุ้ง","13:00 90705 บุญธรรม อุทธิยา final 24O + E 15 *เลื่อนนัด รอโทรแจ้งอีกที ต้นเดือน กค.","13:30 265078 ทศพล อุดสร้อย F/U 12-23A","14:00 7172 แสงอรุณ Recheck splint"],"clinic":"x","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-16":{"appointments":["ฟุ้ง","13:00 2149001 มานะ เขจร FRC on 45"],"clinic":null,"holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-17":{"appointments":["Screen","Screen"],"clinic":"CK","holiday":null,"shift":"Screen","shiftNotes":[]},"2026-07-18":{"appointments":["ฟุ้ง","13:00 7172 แสงอรุณ Recheck splint"],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-19":{"appointments":["ปกส"],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-20":{"appointments":["Screen","13:00 154386 ปิ่น แสงศรีจันทร์ f/u 16+ filling root caries","13:30 plan ย้ายมา 27","ฟุ้ง"],"clinic":"HugFun","holiday":null,"shift":"Screen","shiftNotes":[]},"2026-07-21":{"appointments":["ฟุ้ง","13:00 351640 ศิริกานต์ วิต๊ะกุล insert URPD","13:30 * OCCLUSION แน่นมาก ขอเต็มเวลา","Screen"],"clinic":"CDC","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-22":{"appointments":["ฟุ้ง","13:00 000272546 พิชชากร ศรีจันทร์ OC LT - 21","13:30 เปิดใหม่ ขอเต็มเวลา"],"clinic":"HugFun","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-23":{"appointments":["1/1","13:00 39977 จันทร์ ใจมูล f/u off splint 1 mo +/- sc upper arch","13:30 65424 ศศิประภา กาติ๊บ Insert UTP +/- Reline","14:00 งานแก้ อันเดิม palatal ไม่แนบ"],"clinic":null,"holiday":null,"shift":"1/1","shiftNotes":[]},"2026-07-24":{"appointments":["ฟุ้ง","ฟุ้ง"],"clinic":null,"holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-25":{"appointments":["รพ.สต."],"clinic":"Bantoom","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-26":{"appointments":["ฟุ้ง"],"clinic":"HugFunFull","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-27":{"appointments":["ฟุ้ง","13:00 268967 ไหนกว้าง แซ่ลี f/u หลัง off splint","13:30 on tooth 11 21 12 +/- RP on lower arch","14:00 154386 ปิ่น แสงศรีจันทร์ f/u 16+ filling root caries","ฟุ้ง"],"clinic":"OT โรงบาล","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-28":{"appointments":["off","13:00 น่ากลับบ้านเนอะ","13:30 น่ากลับบ้านเนอะ","14:00 น่ากลับบ้านเนอะ","ฟุ้ง"],"clinic":"x","holiday":null,"shift":"off","shiftNotes":[]},"2026-07-29":{"appointments":["off","13:00 น่ากลับบ้านเนอะ","13:30 น่ากลับบ้านเนอะ","14:00 น่ากลับบ้านเนอะ"],"clinic":null,"holiday":null,"shift":"off","shiftNotes":[]},"2026-07-30":{"appointments":["off","13:00 น่ากลับบ้านเนอะ","13:30 น่ากลับบ้านเนอะ","14:00 น่ากลับบ้านเนอะ"],"clinic":"CDC","holiday":null,"shift":"off","shiftNotes":[]},"2026-07-31":{"appointments":["รพ.สต.","ฟุ้ง"],"clinic":"CK","holiday":null,"shift":"รพ.สต.","shiftNotes":[]},"2026-08-01":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-03":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-04":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-05":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-08":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-09":{"appointments":[],"clinic":"HugFunFull","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-10":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-11":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-13":{"appointments":[],"clinic":"x","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-14":{"appointments":[],"clinic":"x","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-15":{"appointments":[],"clinic":"x","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-16":{"appointments":[],"clinic":"x","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-17":{"appointments":[],"clinic":"OT โรงบาล","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-18":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-19":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-24":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-25":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-26":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-30":{"appointments":[],"clinic":"HugFunFull","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-31":{"appointments":[],"clinic":"OT โรงบาล","holiday":null,"shift":null,"shiftNotes":[]},"2026-09-01":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-09-08":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-09-15":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-09-22":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-09-29":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]}};const THAI_MONTH_NAMES = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const WEEKDAYS_TH = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+const MONTH_THEMES = [
+  { bg: '#D3C2CD', text: '#1F5B54' }, { bg: '#849E15', text: '#EFCE7B' },
+  { bg: '#92A2A6', text: '#F8CABA' }, { bg: '#B28622', text: '#F8CABA' },
+  { bg: '#F8CABA', text: '#6777B6' }, { bg: '#D8560E', text: '#CBD183' },
+  { bg: '#EFCE7B', text: '#D8560E' }, { bg: '#E1903E', text: '#F8CABA' },
+  { bg: '#6777B6', text: '#CBD183' }, { bg: '#2B2B23', text: '#D3C2CD' },
+  { bg: '#D17089', text: '#EFCE7B' }, { bg: '#CBD183', text: '#7A3B42' },
+];
 
 const SHIFT_STYLE = {
-  'off':      { bar: '#C08A26', soft: '#F3E7CC', text: '#7A5B18', label: 'off' },
-  'ปกส':      { bar: '#1F5B54', soft: '#E4EFEA', text: '#173F3A', label: 'ปกส' },
-  'ฟุ้ง':     { bar: '#D9694F', soft: '#F7E4DD', text: '#9C4530', label: 'ฟุ้ง' },
-  'Screen':   { bar: '#5B6FA8', soft: '#E3E7F3', text: '#3C4A75', label: 'Screen' },
-  'รพ.สต.':   { bar: '#5C8A6A', soft: '#E1EDE3', text: '#3F6349', label: 'รพ.สต.' },
-  '1/1':      { bar: '#8A5C7A', soft: '#EFE1EA', text: '#63405A', label: '1/1' },
+  'off':      { bar: '#D3C2CD', soft: '#2B2B23', date: '#D3C2CD', text: '#D3C2CD', count: '#D3C2CD', label: 'off' },
+  'ปกส':      { bar: '#EFCE7B', soft: '#D17089', date: '#EFCE7B', text: '#EFCE7B', count: '#EFCE7B', label: 'ปกส' },
+  'ฟุ้ง':     { bar: '#1F5B54', soft: '#D3C2CD', date: '#1F5B54', text: '#000000', count: '#1F5B54', label: 'ฟุ้ง' },
+  'Screen':   { bar: '#CBD183', soft: '#D8560E', date: '#CBD183', text: '#CBD183', count: '#CBD183', label: 'Screen' },
+  'DM':       { bar: '#EFCE7B', soft: '#849E15', date: '#EFCE7B', text: '#EFCE7B', count: '#EFCE7B', label: 'DM' },
+  'รพ.สต.':   { bar: '#7A3B42', soft: '#CBD183', date: '#7A3B42', text: '#7A3B42', count: '#7A3B42', label: 'รพ.สต.' },
+  '1/1':      { bar: '#F8CABA', soft: '#92A2A6', date: '#F8CABA', text: '#F8CABA', count: '#F8CABA', label: '1/1' },
 };
 
 const SHIFT_DEFAULTS = {
@@ -154,11 +173,12 @@ const SHIFT_DEFAULTS = {
   'ปกส': 'ออกตรวจ / เวรผู้ป่วยประกันสังคม (ปกส.)',
   'ฟุ้ง': 'เวรหน่วยงาน "ฟุ้ง"',
   'Screen': 'วันคัดกรอง / ตรวจคัดกรองผู้ป่วย',
+  'DM': 'เวรคลินิกเบาหวาน (DM)',
   'รพ.สต.': 'ออกหน่วย รพ.สต. (โรงพยาบาลส่งเสริมสุขภาพตำบล)',
   '1/1': 'เวร 1/1 (นัดพิเศษ / เข้าเวรครึ่งวัน)',
 };
 
-const CATEGORIES = ['ตรวจ', 'อุดฟัน', 'ขูดหินปูน', 'RPD', 'TP', 'CD', 'ENDO', 'SUR', 'Stitch off', 'F/U', 'อื่นๆ'];
+const DEFAULT_CATEGORIES = ['ตรวจ', 'อุดฟัน', 'ขูดหินปูน', 'RPD', 'TP', 'CD', 'ENDO', 'SUR', 'Stitch off', 'F/U', 'อื่นๆ'];
 const CATEGORY_STYLE = {
   'ตรวจ':       { bg: '#EDEAE0', text: '#5C6D68' },
   'อุดฟัน':     { bg: '#E4EFEA', text: '#1F5B54' },
@@ -227,6 +247,8 @@ function ScheduleCalendar() {
   const [editingLegend, setEditingLegend] = useState(false);
   const [cases, setCases] = useState({});
   const [shiftOverrides, setShiftOverrides] = useState({});
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [newCategory, setNewCategory] = useState('');
   const [loaded, setLoaded] = useState(false);
 
   const [addMode, setAddMode] = useState('new');
@@ -256,6 +278,11 @@ function ScheduleCalendar() {
       try {
         const ovrRes = await window.storage.get('shift-overrides', false);
         if (ovrRes?.value) setShiftOverrides(JSON.parse(ovrRes.value));
+      } catch (e) {}
+
+      try {
+        const catRes = await window.storage.get('categories', false);
+        if (catRes?.value) setCategories(JSON.parse(catRes.value));
       } catch (e) {}
 
       let caseData = null;
@@ -315,6 +342,20 @@ function ScheduleCalendar() {
   const saveOverrides = async (next) => {
     setShiftOverrides(next);
     try { await window.storage.set('shift-overrides', JSON.stringify(next), false); } catch (e) {}
+  };
+  const saveCategories = async (next) => {
+    setCategories(next);
+    try { await window.storage.set('categories', JSON.stringify(next), false); } catch (e) {}
+  };
+  const addCategory = () => {
+    const name = newCategory.trim();
+    if (!name || categories.includes(name)) return;
+    saveCategories([...categories, name]);
+    setNewCategory('');
+  };
+  const removeCategory = (name) => {
+    if (DEFAULT_CATEGORIES.includes(name)) return;
+    saveCategories(categories.filter(c => c !== name));
   };
 
   const getShift = (dstr) => shiftOverrides[dstr] !== undefined ? shiftOverrides[dstr] : (SCHEDULE_DATA[dstr]?.shift || null);
@@ -458,49 +499,72 @@ function ScheduleCalendar() {
   };
 
   return (
-    <div style={{ fontFamily: "'Sarabun', sans-serif", background: '#FAF6EF', minHeight: '100vh', color: '#1F3A35', padding: '20px 14px 60px' }}>
+    <div style={{ fontFamily: "'Sarabun', sans-serif", background: '#F3EAE3', minHeight: '100vh', color: '#2B2B23', padding: '20px 14px 60px' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
         * { box-sizing: border-box; }
-        .cell:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(31,58,53,0.12); }
-        .cell { transition: all 0.15s ease; cursor: pointer; }
-        .ov-cell:hover { outline: 1.5px solid #1F5B54; }
+        html { scroll-behavior: smooth; }
+        @keyframes viewIn { from { opacity: .35; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+        .view-panel { animation: viewIn .28s cubic-bezier(.22,.8,.3,1) both; }
+        .cell:hover { transform: translateY(-2px); filter: brightness(.93); box-shadow: 0 4px 10px rgba(43,43,35,0.14); }
+        .cell { border-radius: 12px !important; transition: transform .2s ease, filter .2s ease, box-shadow .2s ease; cursor: pointer; }
+        .ov-cell { transition: filter .15s ease, transform .15s ease; }
+        .ov-cell:hover { filter: brightness(.93); transform: translateY(-1px); }
         .tab-btn { transition: all 0.15s ease; }
+        .nav-icon { width: 31px; height: 31px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: transparent; color: #FFFFFF; cursor: pointer; transition: color .15s ease, transform .15s ease; }
+        .nav-icon:hover { color: #EFCE7B !important; transform: translateY(-1px); }
+        .nav-icon.active { color: #CBD183; }
+        .nav-group { display: inline-flex; align-items: center; padding: 3px; border-radius: 999px; background: #FFFFFF; }
+        .nav-text { border: none; background: transparent; color: #2B2B23; padding: 6px 11px; border-radius: 999px; font-family: 'Kanit', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: color .2s ease, background .2s ease, transform .2s ease; }
+        .nav-text:hover { color: #D8560E; transform: translateY(-1px); }
+        .nav-text.active { color: #1F5B54; background: #CBD183; }
         .stepbtn { transition: background 0.15s ease; }
         .stepbtn:hover { background: #1F5B54 !important; color: #FAF6EF !important; }
         .search-item:hover { background: #F0EBDD !important; }
+        .plist-row { border: none !important; border-radius: 16px !important; transition: background .2s ease, transform .2s ease; }
         .plist-row:hover { background: #F3F0E6 !important; }
+        .search-box { border: none !important; }
+        input, select { border: none !important; outline: none; }
+        .page-head { position: sticky; top: 0; z-index: 30; background: #6777B6; border-radius: 18px; padding: 18px 20px; box-shadow: 0 8px 22px rgba(103,119,182,.20); }
+        .history-panel { position: sticky; top: 112px; z-index: 20; }
+        .patient-scroll { overflow-y: auto; padding-right: 4px; }
+        .legend-card { overflow: hidden; box-shadow: 0 8px 22px rgba(43,43,35,.10); }
+        .legend-head { background: #6777B6; color: #FFFFFF; margin: -16px -16px 14px; padding: 13px 16px; }
+        .legend-row { background: #FFFFFF; color: #2B2B23; border-radius: 8px; padding: 7px 9px; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #DCD4C4; border-radius: 4px; }
       `}</style>
 
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
-        <header style={{ marginBottom: 16 }}>
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: 2, color: '#8A7F63', textTransform: 'uppercase', marginBottom: 4 }}>
+        <header className="page-head" style={{ marginBottom: 16 }}>
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: 2, color: '#CBD183', textTransform: 'uppercase', marginBottom: 4 }}>
             งานโรงพยาบาล &amp; นัดคนไข้
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-            <h1 style={{ fontFamily: "'Kanit', sans-serif", fontSize: 24, fontWeight: 700, margin: 0, color: '#1F5B54' }}>
-              {view === 'calendar' ? `${THAI_MONTH_NAMES[month - 1]} ${year}` : view === 'overview' ? `ภาพรวมทั้งปี ${year}` : 'รายชื่อคนไข้ทั้งหมด'}
+            <h1 style={{ fontFamily: "'Kanit', sans-serif", fontSize: 24, fontWeight: 700, margin: 0, color: '#FFFFFF' }}>
+              {view === 'calendar' ? `${THAI_MONTH_NAMES[month - 1]} ${year}` : view === 'overview' ? `ภาพรวมทั้งปี ${year}` : view === 'patients' ? 'รายชื่อคนไข้ทั้งหมด' : 'ตั้งค่า'}
             </h1>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <button onClick={() => setView('calendar')} className="tab-btn" style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 600, fontSize: 13, padding: '6px 12px', borderRadius: 7, border: 'none', cursor: 'pointer', background: view === 'calendar' ? '#1F5B54' : '#F0EBDD', color: view === 'calendar' ? '#FAF6EF' : '#5C6D68' }}>ปฏิทิน</button>
-              <button onClick={() => setView('overview')} className="tab-btn" style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 600, fontSize: 13, padding: '6px 12px', borderRadius: 7, border: 'none', cursor: 'pointer', background: view === 'overview' ? '#1F5B54' : '#F0EBDD', color: view === 'overview' ? '#FAF6EF' : '#5C6D68' }}>ภาพรวม</button>
-              <button onClick={() => setView('patients')} className="tab-btn" style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 600, fontSize: 13, padding: '6px 12px', borderRadius: 7, border: 'none', cursor: 'pointer', background: view === 'patients' ? '#1F5B54' : '#F0EBDD', color: view === 'patients' ? '#FAF6EF' : '#5C6D68', display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="users" size={13} /> รายชื่อคนไข้</button>
+              <div className="nav-group">
+                <button onClick={() => setView('calendar')} className={`nav-text ${view === 'calendar' ? 'active' : ''}`}>ปฏิทิน</button>
+                <button onClick={() => setView('overview')} className={`nav-text ${view === 'overview' ? 'active' : ''}`}>ภาพรวม</button>
+                <button onClick={() => setView('patients')} className={`nav-text ${view === 'patients' ? 'active' : ''}`}>คนไข้</button>
+              </div>
+              <button onClick={() => setView('settings')} className={`nav-icon ${view === 'settings' ? 'active' : ''}`} title="ตั้งค่า" aria-label="ตั้งค่า"><Icon name="settingsSolid" size={18} /></button>
             </div>
           </div>
         </header>
 
-        {view !== 'patients' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, borderBottom: '2px solid #DCD4C4', paddingBottom: 10 }}>
-            <button onClick={() => setYear(year - 1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="chevronLeft" size={16} color="#8A7F63" /></button>
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, fontWeight: 600, color: '#5C6D68' }}>ปี {year}</span>
-            <button onClick={() => setYear(year + 1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="chevronRight" size={16} color="#8A7F63" /></button>
+        {view !== 'patients' && view !== 'settings' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, borderBottom: '2px solid #D3C2CD', paddingBottom: 10 }}>
+            <button onClick={() => setYear(year - 1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="chevronLeft" size={16} color="#6777B6" /></button>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, fontWeight: 600, color: '#6777B6' }}>ปี {year}</span>
+            <button onClick={() => setYear(year + 1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="chevronRight" size={16} color="#6777B6" /></button>
             {view === 'calendar' && (
               <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <button onClick={() => goMonth(-1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="chevronLeft" size={20} color="#1F5B54" /></button>
-                <span style={{ fontFamily: "'Kanit', sans-serif", fontSize: 14, fontWeight: 600, color: '#1F5B54', minWidth: 90, textAlign: 'center' }}>{THAI_MONTH_NAMES[month - 1]}</span>
-                <button onClick={() => goMonth(1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="chevronRight" size={20} color="#1F5B54" /></button>
+                <button onClick={() => goMonth(-1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="chevronLeft" size={20} color="#6777B6" /></button>
+                <span style={{ fontFamily: "'Kanit', sans-serif", fontSize: 14, fontWeight: 600, color: '#6777B6', minWidth: 90, textAlign: 'center' }}>{THAI_MONTH_NAMES[month - 1]}</span>
+                <button onClick={() => goMonth(1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="chevronRight" size={20} color="#6777B6" /></button>
               </div>
             )}
           </div>
@@ -508,7 +572,7 @@ function ScheduleCalendar() {
 
         {/* Global case history panel */}
         {historyCase && (
-          <div style={{ background: '#F3F0E6', border: '1px solid #DCD4C4', borderRadius: 10, padding: 14, marginBottom: 18 }}>
+          <div className="history-panel" style={{ background: '#F3F0E6', border: 'none', borderRadius: 10, padding: 14, marginBottom: 18, maxHeight: view === 'patients' ? 170 : 'none', overflowY: view === 'patients' ? 'auto' : 'visible' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#1F5B54' }}>
                 ประวัติเคส: {historyCase.hn ? `HN ${historyCase.hn} · ` : ''}{historyCase.name} <span style={{ fontWeight: 500, color: '#8A7F63' }}>({historyCase.category})</span>
@@ -536,10 +600,10 @@ function ScheduleCalendar() {
 
         {view === 'calendar' && (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 6, marginBottom: 6 }}>
+            <div className="view-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 6, marginBottom: 6 }}>
               {WEEKDAYS_TH.map(w => <div key={w} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#8A7F63', fontFamily: "'IBM Plex Mono', monospace" }}>{w}</div>)}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 6, marginBottom: 22 }}>
+            <div className="view-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 6, marginBottom: 22 }}>
               {cells.map((c, i) => {
                 if (!c) return <div key={'e' + i} />;
                 const s = c.shift ? SHIFT_STYLE[c.shift] : null;
@@ -548,18 +612,18 @@ function ScheduleCalendar() {
                 const vc = countForDate(c.dstr);
                 return (
                   <div key={c.dstr} className="cell" onClick={() => setSelected(c.dstr)}
-                    style={{ minHeight: 62, borderRadius: 8, background: s ? s.soft : '#FFFFFF', border: isSel ? '2px solid #1F5B54' : isToday ? '2px solid #D9694F' : '1px solid #EAE3D3', borderLeft: s ? `4px solid ${s.bar}` : (isSel ? '2px solid #1F5B54' : '1px solid #EAE3D3'), padding: '6px 6px 4px', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, fontWeight: 600 }}>{c.day}</div>
+                    style={{ minHeight: 62, borderRadius: 8, background: s ? s.soft : '#FFFFFF', border: (isSel || isToday) ? '2px solid #FFFFFF' : '2px solid transparent', padding: '6px 6px 4px', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: s ? 13 : 20, lineHeight: 1, fontWeight: s ? 600 : 700, color: s ? s.date : '#1F3A35' }}>{c.day}</div>
                     {c.info?.holiday && <div style={{ fontSize: 9, color: '#9C4530', fontWeight: 600, lineHeight: 1.2, marginTop: 1 }}>{c.info.holiday}</div>}
                     {s && <div style={{ fontSize: 9.5, color: s.text, fontWeight: 600, marginTop: 2 }}>{s.label}</div>}
-                    {vc > 0 && <div style={{ position: 'absolute', bottom: 4, right: 6, fontSize: 8.5, color: '#1F5B54', fontWeight: 700 }}>{vc} คนไข้</div>}
+                    {vc > 0 && <div style={{ position: 'absolute', bottom: 4, right: 6, fontSize: 8.5, color: s ? s.count : '#1F5B54', fontWeight: 700 }}>{vc} คนไข้</div>}
                   </div>
                 );
               })}
             </div>
 
             {selected && (
-              <div style={{ background: '#FFFFFF', border: '1px solid #EAE3D3', borderRadius: 12, padding: 16, marginBottom: 22 }}>
+              <div style={{ background: '#FFFFFF', border: 'none', borderRadius: 12, padding: 16, marginBottom: 22 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 18, fontWeight: 600, color: '#1F5B54' }}>
@@ -591,7 +655,7 @@ function ScheduleCalendar() {
                   <div style={{ fontSize: 13, color: '#B9AF9A', fontStyle: 'italic', marginBottom: 12 }}>ยังไม่มีคนไข้ในวันนี้</div>
                 )}
 
-                <div style={{ border: '1px dashed #DCD4C4', borderRadius: 8, padding: 12 }}>
+                <div style={{ background: '#EFCE7B', border: 'none', borderRadius: 10, padding: 14 }}>
                   <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
                     <button onClick={() => { setAddMode('new'); setPickedCaseId(null); }} style={{ fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', background: addMode === 'new' ? '#1F5B54' : '#F0EBDD', color: addMode === 'new' ? '#FAF6EF' : '#5C6D68' }}>เคสใหม่</button>
                     <button onClick={() => setAddMode('existing')} style={{ fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', background: addMode === 'existing' ? '#1F5B54' : '#F0EBDD', color: addMode === 'existing' ? '#FAF6EF' : '#5C6D68' }}>เคสเดิม (นัดต่อเนื่อง)</button>
@@ -606,7 +670,7 @@ function ScheduleCalendar() {
                       </div>
                       <div style={{ marginBottom: 8 }}>
                         <select value={fCategory} onChange={e => setFCategory(e.target.value)} style={{ fontSize: 12.5, fontWeight: 600, border: '1px solid #DCD4C4', borderRadius: 6, padding: '6px 8px', fontFamily: "'Sarabun', sans-serif", background: CATEGORY_STYLE[fCategory]?.bg, color: CATEGORY_STYLE[fCategory]?.text }}>
-                          {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                          {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                         </select>
                       </div>
                     </>
@@ -614,13 +678,13 @@ function ScheduleCalendar() {
 
                   {addMode === 'existing' && !pickedCaseId && (
                     <div style={{ marginBottom: 8, position: 'relative' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid #DCD4C4', borderRadius: 6, padding: '6px 9px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', borderRadius: 6, padding: '6px 9px', background: '#FFFFFF' }}>
                         <Icon name="search" size={13} color="#8A7F63" />
                         <input placeholder="ค้นหาด้วย HN หรือชื่อ" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                           style={{ border: 'none', outline: 'none', fontSize: 13, flex: 1, fontFamily: "'Sarabun', sans-serif" }} />
                       </div>
                       {searchResults.length > 0 && (
-                        <div style={{ border: '1px solid #DCD4C4', borderRadius: 6, marginTop: 4, overflow: 'hidden' }}>
+                        <div style={{ border: 'none', borderRadius: 6, marginTop: 4, overflow: 'hidden', background: '#FFFFFF' }}>
                           {searchResults.map(c => (
                             <div key={c.id} className="search-item" onClick={() => { setPickedCaseId(c.id); setSearchQuery(''); }}
                               style={{ padding: '7px 10px', fontSize: 12.5, cursor: 'pointer', borderBottom: '1px solid #EAE3D3' }}>
@@ -643,7 +707,7 @@ function ScheduleCalendar() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
                     <input type="time" value={fTime} onChange={e => setFTime(e.target.value)} style={{ fontSize: 13, border: '1px solid #DCD4C4', borderRadius: 6, padding: '7px 9px', fontFamily: "'IBM Plex Mono', monospace" }} />
                     <span style={{ fontSize: 12, color: '#5C6D68' }}>ระยะเวลา</span>
-                    <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #DCD4C4', borderRadius: 6, overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', border: 'none', borderRadius: 6, overflow: 'hidden' }}>
                       <button className="stepbtn" onClick={() => setFDuration(Math.max(15, fDuration - 15))} style={{ border: 'none', background: '#F0EBDD', color: '#1F5B54', width: 28, height: 28, cursor: 'pointer', fontWeight: 700 }}>−</button>
                       <div style={{ width: 56, textAlign: 'center', fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, fontWeight: 600 }}>{fDuration} น.</div>
                       <button className="stepbtn" onClick={() => setFDuration(fDuration + 15)} style={{ border: 'none', background: '#F0EBDD', color: '#1F5B54', width: 28, height: 28, cursor: 'pointer', fontWeight: 700 }}>+</button>
@@ -674,7 +738,7 @@ function ScheduleCalendar() {
         )}
 
         {view === 'overview' && (
-          <div style={{ marginBottom: 22 }}>
+          <div className="view-panel" style={{ marginBottom: 22 }}>
             {THAI_MONTH_NAMES.map((mname, idx) => {
               const m = idx + 1;
               const mc = buildCells(year, m);
@@ -682,7 +746,7 @@ function ScheduleCalendar() {
               for (let i = 0; i < mc.length; i += 7) weeks.push(mc.slice(i, i + 7));
               return (
                 <div key={m} style={{ background: '#FFFFFF', border: '1px solid #EAE3D3', borderRadius: 10, padding: 10, marginBottom: 10 }}>
-                  <div style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 600, fontSize: 13.5, color: '#1F5B54', marginBottom: 6 }}>{mname} {year}</div>
+                  <div style={{ display: 'inline-block', fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: 13.5, color: MONTH_THEMES[idx].text, background: MONTH_THEMES[idx].bg, borderRadius: 8, padding: '5px 12px', marginBottom: 8 }}>{mname} {year}</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 3, marginBottom: 3 }}>
                     {WEEKDAYS_TH.map(w => <div key={w} style={{ textAlign: 'center', fontSize: 9, color: '#B9AF9A', fontFamily: "'IBM Plex Mono', monospace" }}>{w}</div>)}
                   </div>
@@ -693,7 +757,7 @@ function ScheduleCalendar() {
                         const s = c.shift ? SHIFT_STYLE[c.shift] : null;
                         return (
                           <div key={c.dstr} className="ov-cell" onClick={() => openDay(c.dstr, year, m)}
-                            style={{ minHeight: 30, borderRadius: 4, background: s ? s.soft : '#FAF6EF', cursor: 'pointer', padding: '2px 3px', borderLeft: s ? `2px solid ${s.bar}` : '2px solid transparent' }}>
+                            style={{ minHeight: 30, borderRadius: 4, background: s ? s.soft : '#FAF6EF', cursor: 'pointer', padding: '2px 3px', border: 'none' }}>
                             <div style={{ fontSize: 9.5, fontWeight: 600, fontFamily: "'IBM Plex Mono', monospace" }}>{c.day}</div>
                             {s && <div style={{ fontSize: 7.5, color: s.text, fontWeight: 600 }}>{s.label}</div>}
                           </div>
@@ -708,13 +772,14 @@ function ScheduleCalendar() {
         )}
 
         {view === 'patients' && (
-          <div style={{ marginBottom: 22 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid #DCD4C4', borderRadius: 8, padding: '8px 10px', marginBottom: 12, background: '#FFFFFF' }}>
+          <div className="view-panel" style={{ marginBottom: 22, height: historyCase ? 'calc(100vh - 390px)' : 'calc(100vh - 225px)', minHeight: 280, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div className="search-box" style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', borderRadius: 8, padding: '8px 10px', marginBottom: 12, background: '#FFFFFF' }}>
               <Icon name="search" size={14} color="#8A7F63" />
               <input placeholder="ค้นหาด้วย HN, ชื่อ, หรือประเภทงาน" value={patientListQuery} onChange={e => setPatientListQuery(e.target.value)}
                 style={{ border: 'none', outline: 'none', fontSize: 13.5, flex: 1, fontFamily: "'Sarabun', sans-serif" }} />
             </div>
             <div style={{ fontSize: 11.5, color: '#8A7F63', marginBottom: 8 }}>ทั้งหมด {patientListResults.length} เคส</div>
+            <div className="patient-scroll" style={{ flex: 1 }}>
             {patientListResults.map(c => {
               const cs = CATEGORY_STYLE[c.category] || CATEGORY_STYLE['อื่นๆ'];
               return (
@@ -727,37 +792,51 @@ function ScheduleCalendar() {
                     {c.phone && <span style={{ fontSize: 11.5, color: '#B9AF9A' }}>โทร {c.phone}</span>}
                   </div>
                   <div style={{ display: 'flex', gap: 14, marginTop: 6, fontSize: 12, color: '#5C6D68', flexWrap: 'wrap' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Icon name="calendarClock" size={12} /> {c.activeCount} นัด{c.cancelledCount > 0 ? ` (ยกเลิก ${c.cancelledCount})` : ''}</span>
-                    {c.nextVisit ? <span>นัดถัดไป: <b>{c.nextVisit.date} {c.nextVisit.time}</b></span> : c.lastVisit ? <span>นัดล่าสุด: {c.lastVisit.date}</span> : null}
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="calendarSolid" size={13} /> {c.activeCount} {c.activeCount === 1 ? 'visit' : 'visits'}{c.cancelledCount > 0 ? ` (ยกเลิก ${c.cancelledCount})` : ''}</span>
+                    {c.nextVisit ? <span>Next date: <b>{c.nextVisit.date} {c.nextVisit.time}</b></span> : c.lastVisit ? <span>Last date: {c.lastVisit.date}</span> : null}
                   </div>
                 </div>
               );
             })}
             {patientListResults.length === 0 && <div style={{ fontSize: 13, color: '#B9AF9A', fontStyle: 'italic', textAlign: 'center', padding: 20 }}>ไม่พบคนไข้</div>}
+            </div>
           </div>
         )}
 
-        <div style={{ background: '#FFFFFF', border: '1px solid #EAE3D3', borderRadius: 12, padding: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <div style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 600, fontSize: 15, color: '#1F5B54', display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="info" size={16} /> คำอธิบายรหัสเวร</div>
-            <button onClick={() => setEditingLegend(!editingLegend)} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, border: '1px solid #DCD4C4', background: editingLegend ? '#1F5B54' : '#FAF6EF', color: editingLegend ? '#FAF6EF' : '#5C6D68', borderRadius: 6, padding: '4px 9px', cursor: 'pointer' }}>
+        {view === 'settings' && <>
+        <div className="view-panel" style={{ background: '#EFCE7B', borderRadius: 18, padding: 16, marginBottom: 14 }}>
+          <div style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: 15, color: '#2B2B23', marginBottom: 10 }}>ประเภทงาน</div>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <input value={newCategory} onChange={e => setNewCategory(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addCategory(); }} placeholder="เพิ่มประเภทงานใหม่" style={{ flex: 1, background: '#FFFFFF', borderRadius: 8, padding: '9px 11px', fontFamily: "'Sarabun', sans-serif", fontSize: 13 }} />
+            <button onClick={addCategory} style={{ border: 'none', borderRadius: 8, padding: '8px 14px', background: '#6777B6', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>+ เพิ่ม</button>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+            {categories.map(cat => <span key={cat} style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#FFFFFF', borderRadius: 16, padding: '5px 9px', fontSize: 12 }}><span>{cat}</span>{!DEFAULT_CATEGORIES.includes(cat) && <button onClick={() => removeCategory(cat)} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', color: '#D8560E' }}><Icon name="x" size={12} /></button>}</span>)}
+          </div>
+        </div>
+
+        <div className="legend-card" style={{ background: '#D3C2CD', border: 'none', borderRadius: 14, padding: 16 }}>
+          <div className="legend-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 600, fontSize: 15, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="info" size={16} /> หมายเหตุ</div>
+            <button onClick={() => setEditingLegend(!editingLegend)} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, border: '1px solid #D3C2CD', background: editingLegend ? '#CBD183' : '#FFFFFF', color: '#2B2B23', borderRadius: 6, padding: '4px 9px', cursor: 'pointer' }}>
               {editingLegend ? <><Icon name="check" size={13} /> เสร็จสิ้น</> : <><Icon name="pencil" size={13} /> แก้ไข</>}
             </button>
           </div>
           {Object.keys(SHIFT_STYLE).map(k => (
-            <div key={k} style={{ display: 'flex', gap: 6, marginBottom: 6, alignItems: 'flex-start' }}>
+            <div key={k} className="legend-row" style={{ display: 'flex', gap: 8, marginBottom: 7, alignItems: 'flex-start' }}>
               <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: SHIFT_STYLE[k].soft, color: SHIFT_STYLE[k].text, whiteSpace: 'nowrap', flexShrink: 0 }}>{k}</span>
               {editingLegend ? (
                 <input value={shiftNotes[k] || ''} onChange={e => setShiftNotes({ ...shiftNotes, [k]: e.target.value })} style={{ fontSize: 12, border: '1px solid #DCD4C4', borderRadius: 4, padding: '2px 6px', flex: 1, fontFamily: "'Sarabun', sans-serif" }} />
               ) : (
-                <span style={{ fontSize: 12, color: '#5C6D68' }}>{shiftNotes[k]}</span>
+                <span style={{ fontSize: 12, color: '#2B2B23' }}>{shiftNotes[k]}</span>
               )}
             </div>
           ))}
           {editingLegend && (
-            <button onClick={() => { saveLegend(shiftNotes); setEditingLegend(false); }} style={{ marginTop: 6, fontSize: 12.5, fontWeight: 600, background: '#1F5B54', color: '#FAF6EF', border: 'none', borderRadius: 6, padding: '7px 14px', cursor: 'pointer' }}>บันทึกคำอธิบาย</button>
+            <button onClick={() => { saveLegend(shiftNotes); setEditingLegend(false); }} style={{ marginTop: 6, fontSize: 12.5, fontWeight: 600, background: '#2B2B23', color: '#FFFFFF', border: 'none', borderRadius: 6, padding: '7px 14px', cursor: 'pointer' }}>บันทึกหมายเหตุ</button>
           )}
         </div>
+        </>}
 
         <div style={{ textAlign: 'center', fontSize: 10.5, color: '#B9AF9A', marginTop: 16 }}>
           ข้อมูลเวร/นัดของ เม.ย.–ก.ย. 2569 ดึงจากไฟล์ที่อัปโหลด (แปลงเป็นเคสอัตโนมัติ) · กดยกเลิกนัดแทนการลบเพื่อเก็บประวัติไว้ · บันทึกไว้ในเครื่องนี้อัตโนมัติ
