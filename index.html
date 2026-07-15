@@ -17,7 +17,7 @@
 <body>
 <div id="root"></div>
 <script type="text/babel" data-presets="react">
-const { useState, useEffect, useMemo } = React;
+const { useState, useEffect, useMemo, useRef } = React;
 
 /* =========================================================
    FIREBASE CONFIG — แก้ตรงนี้ก่อนใช้งานจริง
@@ -262,6 +262,15 @@ function ScheduleCalendar() {
   const [historyCaseId, setHistoryCaseId] = useState(null);
   const [patientListQuery, setPatientListQuery] = useState('');
   const [patientSort, setPatientSort] = useState('date');
+  const [overviewPicker, setOverviewPicker] = useState(null);
+  const overviewPressTimer = useRef(null);
+  const openOverviewPicker = (e, c, m) => setOverviewPicker({ date: c.dstr, year, month: m, x: e.clientX, y: e.clientY });
+  const startOverviewPress = (e, c, m) => {
+    if (!window.matchMedia('(max-width: 600px)').matches) return;
+    const point = { clientX: e.clientX, clientY: e.clientY };
+    overviewPressTimer.current = setTimeout(() => openOverviewPicker(point, c, m), 480);
+  };
+  const cancelOverviewPress = () => { if (overviewPressTimer.current) clearTimeout(overviewPressTimer.current); overviewPressTimer.current = null; };
   const [editingCase, setEditingCase] = useState(false);
   const [editCaseForm, setEditCaseForm] = useState({ hn: '', name: '', phone: '', category: 'ตรวจ' });
   useEffect(() => { setEditingCase(false); }, [historyCaseId]);
@@ -538,6 +547,7 @@ function ScheduleCalendar() {
         .overview-month-calendar { padding: 24px 26px; }
         .calendar-week-grid { grid-template-columns: .72fr repeat(5, minmax(0, 1fr)) .72fr; max-width: 720px; margin-left: auto; margin-right: auto; }
         .overview-week-grid { grid-template-columns: .72fr repeat(5, minmax(0, 1fr)) .72fr; }
+        .overview-shift-popover { position: fixed; width: 220px; background: #FFFFFF; border-radius: 18px; padding: 14px; box-shadow: 0 16px 45px rgba(43,43,35,.24); z-index: 81; }
         .tab-btn { transition: all 0.15s ease; }
         .nav-icon { width: 31px; height: 31px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: transparent; color: #FFFFFF; cursor: pointer; transition: color .15s ease, transform .15s ease; }
         .nav-icon:hover { color: #EFCE7B !important; transform: translateY(-1px); }
@@ -567,6 +577,7 @@ function ScheduleCalendar() {
           .overview-month-calendar { padding: 20px 14px; }
           .calendar-week-grid { grid-template-columns: .52fr repeat(5, minmax(0, 1fr)) .52fr; gap: 5px !important; }
           .overview-week-grid { grid-template-columns: .58fr repeat(5, minmax(0, 1fr)) .58fr; }
+          .overview-shift-popover { left: 16px !important; right: 16px !important; bottom: 18px !important; top: auto !important; width: auto; }
           .patient-scroll { grid-template-columns: 1fr; }
           .page-head { position: relative; top: auto; border-radius: 18px; padding: 16px; }
           .history-panel { position: relative; top: auto; }
@@ -819,8 +830,8 @@ function ScheduleCalendar() {
                         const s = c.shift ? SHIFT_STYLE[c.shift] : null;
                         return (
                           <div key={c.dstr} style={{ minHeight: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <div className="ov-cell" onClick={() => openDay(c.dstr, year, m)} title={c.shift || ''}
-                            style={{ width: 34, height: 34, borderRadius: '50%', background: s ? s.soft : '#FFFFFF', color: s ? s.date : '#1F3A35', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', fontSize: 11.5, fontWeight: 600, fontFamily: "'IBM Plex Sans Thai', sans-serif" }}>
+                          <div className="ov-cell" onClick={e => { e.stopPropagation(); if (!window.matchMedia('(max-width: 600px)').matches) openOverviewPicker(e, c, m); }} onPointerDown={e => startOverviewPress(e, c, m)} onPointerUp={cancelOverviewPress} onPointerCancel={cancelOverviewPress} onPointerLeave={cancelOverviewPress} onContextMenu={e => e.preventDefault()} title={c.shift || 'เลือกห้อง'}
+                            style={{ width: 34, height: 34, borderRadius: '50%', background: s ? s.soft : '#FFFFFF', color: s ? s.date : '#1F3A35', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', fontSize: 11.5, fontWeight: 600, fontFamily: "'IBM Plex Sans Thai', sans-serif", touchAction: 'manipulation', userSelect: 'none' }}>
                             {c.day}
                           </div>
                           </div>
@@ -833,6 +844,23 @@ function ScheduleCalendar() {
               );
             })}
           </div>
+        )}
+
+        {overviewPicker && (
+          <>
+            <div onClick={() => setOverviewPicker(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(43,43,35,.08)', zIndex: 80 }} />
+            <div className="overview-shift-popover" style={{ left: Math.min(overviewPicker.x + 8, window.innerWidth - 238), top: Math.min(overviewPicker.y + 8, window.innerHeight - 390) }}>
+              <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 14, fontWeight: 700, color: '#1F3A35', marginBottom: 2 }}>เลือกห้อง</div>
+              <div style={{ fontSize: 11.5, color: '#8A7F63', marginBottom: 11 }}>{overviewPicker.date}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 7 }}>
+                {Object.keys(SHIFT_STYLE).map(k => <button key={k} onClick={() => { setShift(overviewPicker.date, k); setOverviewPicker(null); }} style={{ border: 'none', borderRadius: 11, padding: '9px 8px', background: SHIFT_STYLE[k].soft, color: SHIFT_STYLE[k].text, fontWeight: 700, cursor: 'pointer' }}>{k}</button>)}
+              </div>
+              <div style={{ display: 'flex', gap: 7, marginTop: 9 }}>
+                <button onClick={() => { setShift(overviewPicker.date, null); setOverviewPicker(null); }} style={{ flex: 1, border: 'none', borderRadius: 10, padding: '8px', background: '#F3EAE3', color: '#5C6D68', cursor: 'pointer', fontWeight: 600 }}>ไม่ระบุ</button>
+                <button onClick={() => { const p = overviewPicker; setOverviewPicker(null); openDay(p.date, p.year, p.month); }} style={{ flex: 1, border: 'none', borderRadius: 10, padding: '8px', background: '#6777B6', color: '#FFFFFF', cursor: 'pointer', fontWeight: 600 }}>เปิดวัน</button>
+              </div>
+            </div>
+          </>
         )}
 
         {view === 'patients' && (
@@ -919,28 +947,30 @@ function ScheduleCalendar() {
 }
 
 function App() {
-  const [user, setUser] = useState(undefined); // undefined = loading, null = signed out
+  currentUid = 'ui-preview';
+  window.storage = {
+    async get(key) {
+      const value = localStorage.getItem('ui-preview-' + key);
+      if (value === null) throw new Error('key not found');
+      return { key, value };
+    },
+    async set(key, value) {
+      localStorage.setItem('ui-preview-' + key, value);
+      return { key, value };
+    },
+    async delete(key) {
+      localStorage.removeItem('ui-preview-' + key);
+      return { key, deleted: true };
+    },
+    async list(prefix = '') {
+      const keys = Object.keys(localStorage)
+        .filter(k => k.startsWith('ui-preview-' + prefix))
+        .map(k => k.replace(/^ui-preview-/, ''));
+      return { keys, prefix };
+    },
+  };
 
-  useEffect(() => {
-    const unsub = auth.onAuthStateChanged(u => {
-      currentUid = u ? u.uid : null;
-      setUser(u);
-    });
-    return unsub;
-  }, []);
-
-  if (user === undefined) return <LoadingScreen />;
-  if (!user) return <SignInScreen />;
-
-  return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, padding: '8px 14px', background: '#F0EBDD', fontFamily: "'Sarabun', sans-serif" }}>
-        <span style={{ fontSize: 11.5, color: '#5C6D68' }}>{user.email}</span>
-        <button onClick={() => auth.signOut()} style={{ fontSize: 11.5, border: '1px solid #DCD4C4', background: '#FFFFFF', color: '#5C6D68', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>ออกจากระบบ</button>
-      </div>
-      <ScheduleCalendar key={user.uid} />
-    </div>
-  );
+  return <ScheduleCalendar />;
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
