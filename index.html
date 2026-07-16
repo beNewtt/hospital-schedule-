@@ -530,7 +530,7 @@ function ScheduleCalendar() {
   };
 
   return (
-    <div style={{ fontFamily: "'Sarabun', sans-serif", background: '#F3EAE3', minHeight: '100vh', color: '#2B2B23', padding: '20px 14px 0' }}>
+    <div style={{ fontFamily: "'Sarabun', sans-serif", background: '#F3EAE3', minHeight: '100vh', color: '#2B2B23', padding: '20px 14px 0', display: 'flex', flexDirection: 'column' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; }
@@ -940,7 +940,7 @@ function ScheduleCalendar() {
         </>}
 
       </div>
-      <footer style={{ textAlign: 'center', fontSize: 10.5, lineHeight: 1.6, color: '#B9AF9A', margin: '32px -14px 0', padding: '14px 18px 16px', borderTop: '1px solid rgba(185,175,154,.28)', background: 'rgba(255,255,255,.22)' }}>
+      <footer style={{ textAlign: 'center', fontSize: 10.5, lineHeight: 1.6, color: '#B9AF9A', margin: 'auto -14px 0', padding: '22px 18px 12px' }}>
         ข้อมูลเวร/นัดของ เม.ย.–ก.ย. 2569 ดึงจากไฟล์ที่อัปโหลด (แปลงเป็นเคสอัตโนมัติ) · กดยกเลิกนัดแทนการลบเพื่อเก็บประวัติไว้ · บันทึกไว้ในเครื่องนี้อัตโนมัติ
       </footer>
     </div>
