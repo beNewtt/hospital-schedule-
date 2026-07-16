@@ -119,6 +119,30 @@ function Icon({ name, size = 16, color = 'currentColor' }) {
   }
 }
 
+function CleanSelect({ value, onChange, options, style = {}, className = '', ariaLabel = 'Select option' }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const selected = options.find(o => String(o.value) === String(value)) || options[0];
+  useEffect(() => {
+    const close = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, []);
+  return (
+    <div ref={ref} className={`clean-select ${className}`} style={{ position: 'relative', display: 'inline-block' }}>
+      <button type="button" aria-label={ariaLabel} aria-expanded={open} onClick={() => setOpen(!open)}
+        style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, border: 'none', cursor: 'pointer' }}>
+        <span>{selected?.label ?? selected?.value}</span><span className="clean-select-arrow">⌄</span>
+      </button>
+      {open && (
+        <div className="clean-select-menu">
+          {options.map(o => <button type="button" key={String(o.value)} className={String(o.value) === String(value) ? 'selected' : ''} onClick={() => { onChange(o.value); setOpen(false); }}><span>{o.label ?? o.value}</span></button>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LoadingScreen() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAF6EF', fontFamily: 'sans-serif', color: '#8A7F63' }}>
@@ -433,6 +457,7 @@ function ScheduleCalendar() {
     }).sort((a, b) => {
       if (patientSort === 'name') return a.name.localeCompare(b.name, 'th');
       if (patientSort === 'hn') return (a.hn || '').localeCompare(b.hn || '', undefined, { numeric: true });
+      if (patientSort === 'category') return (a.category || '').localeCompare(b.category || '', 'th') || a.name.localeCompare(b.name, 'th');
       const aDate = a.nextVisit?.date || a.lastVisit?.date || '9999-12-31';
       const bDate = b.nextVisit?.date || b.lastVisit?.date || '9999-12-31';
       return aDate.localeCompare(bDate);
@@ -532,7 +557,19 @@ function ScheduleCalendar() {
   return (
     <div style={{ fontFamily: "'Sarabun', sans-serif", background: '#F3EAE3', minHeight: '100vh', color: '#2B2B23', padding: '20px 14px 0', display: 'flex', flexDirection: 'column' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Thai+Looped:wght@400;500;600;700&display=swap');
+        :root {
+          --font-thai-body: 'Noto Sans Thai Looped', sans-serif;
+          --font-heading: 'Kanit', sans-serif;
+          --font-latin: 'Manrope', sans-serif;
+        }
+        [style*="Sarabun"] { font-family: var(--font-thai-body) !important; }
+        [style*="IBM Plex Sans Thai"] { font-family: var(--font-thai-body) !important; }
+        [style*="IBM Plex Mono"] { font-family: var(--font-latin) !important; }
+        input, select, textarea { font-family: var(--font-thai-body); }
+        .page-head h1 { letter-spacing: -.25px; }
+        .patient-scroll, .history-panel { font-family: var(--font-thai-body); }
+        .patient-scroll [style*="letter-spacing"], .history-panel [style*="letter-spacing"] { font-family: var(--font-latin); }
         * { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
         @keyframes viewIn { from { opacity: .35; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
@@ -565,8 +602,17 @@ function ScheduleCalendar() {
         input, select { border: none !important; outline: none; }
         .page-head { position: sticky; top: 0; z-index: 30; background: #6777B6; border-radius: 18px; padding: 18px 20px; box-shadow: 0 8px 22px rgba(103,119,182,.20); }
         .history-panel { position: sticky; top: 112px; z-index: 20; }
-        .patient-scroll { overflow-y: auto; padding-right: 4px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-content: start; }
+        .case-edit-grid { display: grid !important; grid-template-columns: 110px minmax(180px,2fr) 150px 120px; gap: 7px !important; }
+        .case-edit-grid input, .case-edit-grid select { width: 100% !important; min-width: 0 !important; box-sizing: border-box; }
+        .patient-scroll { overflow-y: auto; padding-right: 4px; display: grid; grid-template-columns: 1fr; gap: 10px; align-content: start; }
         .patient-scroll .plist-row { margin-bottom: 0 !important; }
+        .patient-filter-select { appearance: auto; border: none !important; border-radius: 999px !important; padding: 7px 12px !important; background: #D3C2CD !important; color: #1F5B54 !important; font-family: var(--font-latin) !important; font-size: 11.5px !important; font-weight: 800 !important; letter-spacing: .45px; cursor: pointer; box-shadow: inset 0 0 0 2px rgba(255,255,255,.45); transition: transform .18s ease, filter .18s ease; }
+        .patient-filter-select:hover { filter: brightness(.96); transform: translateY(-1px); }
+        .clean-select-menu { position: absolute; top: calc(100% + 7px); right: 0; min-width: 100%; width: max-content; max-height: 280px; overflow-y: auto; padding: 7px; background: #FFFFFF; border: none; border-radius: 16px; box-shadow: 0 16px 38px rgba(43,43,35,.16); z-index: 120; }
+        .clean-select-menu button { width: 100%; border: none; background: transparent; color: #1F3A35; padding: 9px 12px; border-radius: 10px; text-align: left; font-family: var(--font-thai-body); font-size: 12px; font-weight: 500; cursor: pointer; transition: background .15s ease, color .15s ease; }
+        .clean-select-menu button:hover { background: #F3EAE3; }
+        .clean-select-menu button.selected { background: #D3C2CD; color: #1F5B54; font-weight: 700; }
+        .clean-select-arrow { font-family: var(--font-latin); font-size: 15px; line-height: 1; transform: translateY(-2px); }
         .legend-card { overflow: hidden; box-shadow: 0 8px 22px rgba(43,43,35,.10); }
         .legend-head { background: #6777B6; color: #FFFFFF; margin: -16px -16px 14px; padding: 13px 16px; }
         .legend-row { background: #FFFFFF; color: #2B2B23; border-radius: 8px; padding: 7px 9px; }
@@ -582,6 +628,7 @@ function ScheduleCalendar() {
           .patient-scroll { grid-template-columns: 1fr; }
           .page-head { position: relative; top: auto; border-radius: 18px; padding: 16px; }
           .history-panel { position: relative; top: auto; }
+          .case-edit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
           .view-panel { animation-duration: .2s; }
         }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -595,9 +642,9 @@ function ScheduleCalendar() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
             <h1 style={{ fontFamily: "'Kanit', sans-serif", fontSize: 24, fontWeight: 700, margin: 0, color: '#FFFFFF' }}>
-              {view === 'calendar' ? `${THAI_MONTH_NAMES[month - 1]} ${year}` : view === 'overview' ? `ภาพรวมทั้งปี ${year}` : view === 'patients' ? 'รายชื่อคนไข้ทั้งหมด' : 'ตั้งค่า'}
+              {view === 'calendar' ? `${THAI_MONTH_NAMES[month - 1]} ${year}` : view === 'overview' ? `OVERVIEW ${year}` : view === 'patients' ? 'PATIENT LIST' : 'SETTINGS'}
             </h1>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginLeft: 'auto' }}>
               <div className="nav-group">
                 <button onClick={() => setView('calendar')} className={`nav-text ${view === 'calendar' ? 'active' : ''}`}>ปฏิทิน</button>
                 <button onClick={() => setView('overview')} className={`nav-text ${view === 'overview' ? 'active' : ''}`}>ภาพรวม</button>
@@ -628,35 +675,39 @@ function ScheduleCalendar() {
           <div className="history-panel" style={{ background: '#F3F0E6', border: 'none', borderRadius: 10, padding: 14, marginBottom: 18, maxHeight: view === 'patients' ? 170 : 'none', overflowY: view === 'patients' ? 'auto' : 'visible' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div style={{ fontSize: 14, color: '#1F5B54' }}>
-                <span style={{ fontWeight: 600 }}>ประวัติเคส:</span> {historyCase.hn && <span style={{ fontFamily: "'IBM Plex Sans Thai', sans-serif", fontWeight: 700, color: '#6777B6' }}>HN {historyCase.hn} · </span>}<span style={{ fontFamily: "'Sarabun', sans-serif", fontWeight: 400 }}>{historyCase.name}</span> <span style={{ fontWeight: 500, color: '#8A7F63' }}>({historyCase.category})</span>
-                {historyCase.phone && <span style={{ fontWeight: 500, color: '#8A7F63' }}> · โทร {historyCase.phone}</span>}
+                <span style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", fontWeight: 800, letterSpacing: .5 }}>CASE HISTORY :</span> {historyCase.hn && <span style={{ fontFamily: "'IBM Plex Sans Thai', sans-serif", fontWeight: 700, color: '#6777B6' }}>HN {historyCase.hn} · </span>}<span style={{ fontFamily: "'Sarabun', sans-serif", fontWeight: 400 }}>{historyCase.name}</span> <span style={{ fontWeight: 500, color: '#8A7F63' }}>({historyCase.category})</span>
+                {historyCase.phone && <span style={{ fontWeight: 500, color: '#8A7F63' }}> · Tel: {historyCase.phone}</span>}
               </div>
               <button onClick={() => setHistoryCaseId(null)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><Icon name="x" size={16} color="#8A7F63" /></button>
             </div>
+            <div style={{ background: '#D3C2CD', borderRadius: 13, padding: 10 }}>
             {editingCase ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 10, background: '#D3C2CD', padding: 10, borderRadius: 10 }}>
-                <input value={editCaseForm.hn} onChange={e => setEditCaseForm({ ...editCaseForm, hn: e.target.value })} placeholder="HN" style={{ width: 105, padding: '7px 9px', borderRadius: 7, fontWeight: 700 }} />
-                <input value={editCaseForm.name} onChange={e => setEditCaseForm({ ...editCaseForm, name: e.target.value })} placeholder="ชื่อคนไข้" style={{ flex: 1, minWidth: 150, padding: '7px 9px', borderRadius: 7, fontFamily: "'Sarabun', sans-serif" }} />
-                <input value={editCaseForm.phone} onChange={e => setEditCaseForm({ ...editCaseForm, phone: e.target.value })} placeholder="เบอร์ติดต่อ" style={{ width: 130, padding: '7px 9px', borderRadius: 7 }} />
-                <select value={editCaseForm.category} onChange={e => setEditCaseForm({ ...editCaseForm, category: e.target.value })} style={{ padding: '7px 9px', borderRadius: 7 }}>{categories.map(x => <option key={x}>{x}</option>)}</select>
-                <button onClick={saveCaseEdit} title="บันทึก" style={{ border: 'none', borderRadius: 8, background: '#1F5B54', color: '#FFFFFF', padding: '7px 11px', cursor: 'pointer' }}><Icon name="check" size={15} /></button>
+              <div className="case-edit-grid" style={{ marginBottom: 12 }}>
+                <input value={editCaseForm.hn} onChange={e => setEditCaseForm({ ...editCaseForm, hn: e.target.value })} placeholder="HN" style={{ padding: '9px 11px', borderRadius: 8, fontWeight: 700 }} />
+                <input value={editCaseForm.name} onChange={e => setEditCaseForm({ ...editCaseForm, name: e.target.value })} placeholder="ชื่อคนไข้" style={{ padding: '9px 11px', borderRadius: 8, fontFamily: "'Sarabun', sans-serif" }} />
+                <input value={editCaseForm.phone} onChange={e => setEditCaseForm({ ...editCaseForm, phone: e.target.value })} placeholder="เบอร์ติดต่อ" style={{ padding: '9px 11px', borderRadius: 8 }} />
+                <select value={editCaseForm.category} onChange={e => setEditCaseForm({ ...editCaseForm, category: e.target.value })} style={{ padding: '9px 11px', borderRadius: 8 }}>{categories.map(x => <option key={x}>{x}</option>)}</select>
               </div>
-            ) : <button onClick={() => startEditCase(historyCase)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: 'none', borderRadius: 8, background: '#D3C2CD', color: '#1F5B54', padding: '6px 10px', marginBottom: 8, cursor: 'pointer', fontWeight: 600 }}><Icon name="pencil" size={13} /> แก้ไขเคส</button>}
+            ) : null}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 7, marginBottom: 6, flexWrap: 'nowrap' }}>
+              <button onClick={() => historyVisitsSorted.length && jumpToVisit(historyVisitsSorted[historyVisitsSorted.length - 1].date)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: 'none', borderRadius: 9, background: '#6777B6', color: '#FFFFFF', padding: '7px 10px', cursor: 'pointer', fontWeight: 700, fontSize: 11.5 }}><Icon name="calendarSolid" size={13} /> Open</button>
+              <button onClick={() => deleteCase(historyCase.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: 'none', borderRadius: 9, background: '#D8560E', color: '#FFFFFF', padding: '7px 10px', cursor: 'pointer', fontWeight: 700, fontSize: 11.5 }}><Icon name="noEntrySolid" size={13} /> Delete</button>
+              <button onClick={() => editingCase ? saveCaseEdit() : startEditCase(historyCase)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: 'none', borderRadius: 9, background: '#CBD183', color: '#1F5B54', padding: '7px 10px', cursor: 'pointer', fontWeight: 700, fontSize: 11.5 }}>{editingCase ? <Icon name="check" size={13} /> : <Icon name="pencil" size={13} />} {editingCase ? 'Save case' : 'Edit case'}</button>
+            </div>
             {historyVisitsSorted.map((v, idx) => {
               const cancelled = v.status === 'cancelled';
               return (
-                <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, padding: '6px 0', borderBottom: idx < historyVisitsSorted.length - 1 ? '1px solid #E4DECB' : 'none' }}>
-                  <span style={{ fontWeight: 700, color: cancelled ? '#B9AF9A' : '#1F5B54', minWidth: 62 }}>ครั้งที่ {idx + 1}</span>
+                <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, padding: '8px 7px', borderRadius: 9, background: 'rgba(255,255,255,.38)', marginTop: 5 }}>
+                  <span style={{ fontWeight: 700, color: cancelled ? '#B9AF9A' : '#6777B6', minWidth: 62 }}>Visit {idx + 1}</span>
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", color: '#5C6D68', minWidth: 130, textDecoration: cancelled ? 'line-through' : 'none' }}>{v.date} {v.time}</span>
                   <span style={{ flex: 1, color: cancelled ? '#B9AF9A' : '#1F3A35', textDecoration: cancelled ? 'line-through' : 'none' }}>{v.step || '—'}</span>
                   {cancelled && <span style={{ fontSize: 10, fontWeight: 700, color: '#A33636' }}>ยกเลิกแล้ว</span>}
-                  <button onClick={() => jumpToVisit(v.date)} style={{ fontSize: 11, fontWeight: 600, color: '#FFFFFF', background: '#6777B6', border: 'none', borderRadius: 7, padding: '5px 9px', cursor: 'pointer' }}>ไปดู</button>
                   <button onClick={() => toggleCancelVisit(historyCase.id, v.id)} style={{ width: 27, height: 27, borderRadius: '50%', border: 'none', background: cancelled ? '#CBD183' : '#F8CABA', color: cancelled ? '#1F5B54' : '#D8560E', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>{cancelled ? <Icon name="rotateCcw" size={13} /> : <Icon name="noEntrySolid" size={15} />}</button>
                   <button onClick={() => removeVisit(historyCase.id, v.id)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><Icon name="x" size={12} color="#B9AF9A" /></button>
                 </div>
               );
             })}
-            <button onClick={() => deleteCase(historyCase.id)} style={{ marginTop: 9, fontSize: 11.5, fontWeight: 600, color: '#FFFFFF', background: '#D8560E', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer' }}>ลบเคสนี้ทั้งหมด</button>
+            </div>
           </div>
         )}
 
@@ -868,16 +919,16 @@ function ScheduleCalendar() {
           <div className="view-panel" style={{ marginBottom: 22, height: historyCase ? 'calc(100vh - 390px)' : 'calc(100vh - 225px)', minHeight: 280, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: "'IBM Plex Sans Thai', sans-serif" }}>
             <div className="search-box" style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', borderRadius: 8, padding: '8px 10px', marginBottom: 12, background: '#FFFFFF' }}>
               <Icon name="search" size={14} color="#8A7F63" />
-              <input placeholder="ค้นหาด้วย HN, ชื่อ, หรือประเภทงาน" value={patientListQuery} onChange={e => setPatientListQuery(e.target.value)}
+              <input placeholder="Search by HN, name, or category" value={patientListQuery} onChange={e => setPatientListQuery(e.target.value)}
                 style={{ border: 'none', outline: 'none', fontSize: 14, flex: 1, fontFamily: "'IBM Plex Sans Thai', sans-serif" }} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
               <div style={{ fontSize: 12.5, fontWeight: 600, color: '#8A7F63' }}>Total {patientListResults.length} cases</div>
-              <select value={patientSort} onChange={e => setPatientSort(e.target.value)} aria-label="Sort patient list"
-                style={{ background: '#FFFFFF', color: '#1F5B54', borderRadius: 9, padding: '6px 10px', fontFamily: "'IBM Plex Sans Thai', sans-serif", fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>
+              <select className="patient-filter-select" value={patientSort} onChange={e => setPatientSort(e.target.value)} aria-label="Sort patient list">
                 <option value="date">Date</option>
                 <option value="name">A–Z</option>
                 <option value="hn">HN</option>
+                <option value="category">Work type</option>
               </select>
             </div>
             <div className="patient-scroll" style={{ flex: 1 }}>
@@ -892,9 +943,9 @@ function ScheduleCalendar() {
                     <span style={{ fontSize: 10.5, fontWeight: 700, padding: '1px 8px', borderRadius: 10, background: cs.bg, color: cs.text }}>{c.category}</span>
                     {c.phone && <span style={{ fontSize: 11.5, color: '#B9AF9A' }}>โทร {c.phone}</span>}
                   </div>
-                  <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 11, fontWeight: 400, color: '#5C6D68', flexWrap: 'wrap' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="calendarSolid" size={13} /> {c.activeCount} {c.activeCount === 1 ? 'visit' : 'visits'}{c.cancelledCount > 0 ? ` (ยกเลิก ${c.cancelledCount})` : ''}</span>
-                    {c.nextVisit ? <span>Next date: <b>{c.nextVisit.date} {c.nextVisit.time}</b></span> : c.lastVisit ? <span>Last date: {c.lastVisit.date}</span> : null}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 6, fontSize: 11, fontWeight: 400, color: '#5C6D68' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}><Icon name="calendarSolid" size={13} /> {c.activeCount}{c.cancelledCount > 0 ? ` (ยกเลิก ${c.cancelledCount})` : ''}</span>
+                    {c.nextVisit ? <span style={{ marginLeft: 'auto', textAlign: 'right' }}>Next date: <b>{c.nextVisit.date} {c.nextVisit.time}</b></span> : c.lastVisit ? <span style={{ marginLeft: 'auto', textAlign: 'right' }}>Last date: {c.lastVisit.date}</span> : null}
                   </div>
                 </div>
               );
