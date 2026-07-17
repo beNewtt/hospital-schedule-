@@ -111,6 +111,7 @@ function Icon({ name, size = 16, color = 'currentColor' }) {
     case 'cuteSettings': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#E45C32" d="m13.4 1.5 5.2.1.8 4a12 12 0 0 1 2.2 1.3l3.8-1.3 2.5 4.6-3 2.7c.1.8.1 1.7 0 2.5l3.1 2.6-2.5 4.6-3.9-1.2c-.7.5-1.4 1-2.2 1.3l-.7 4-5.2.1-.9-4a12 12 0 0 1-2.2-1.2l-3.8 1.3-2.7-4.5 3-2.8a12 12 0 0 1 0-2.5L3.8 10.5 6.3 6l3.9 1.2c.7-.5 1.4-1 2.2-1.3l1-4.4Z"/><circle cx="16" cy="14.3" r="7.1" fill="#FFD84D"/><circle cx="13.7" cy="13.2" r=".9" fill="#6F4638"/><circle cx="18.3" cy="13.2" r=".9" fill="#6F4638"/><path d="M14.2 16.1c1.2 1 2.4 1 3.6 0" fill="none" stroke="#6F4638" strokeWidth="1.2" strokeLinecap="round"/></svg>;
     case 'cuteHistory': return <svg width={size} height={size} viewBox="0 0 32 32"><g transform="rotate(-3 16 16)"><rect x="5" y="5" width="21" height="23" rx="3" fill="#FFF9E8"/><rect x="9" y="3.5" width="18" height="24" rx="2.4" fill="#95604D"/><rect x="5" y="7" width="6" height="2" rx="1" fill="#FFD84D"/><rect x="5" y="12" width="6" height="2" rx="1" fill="#FFD84D"/><rect x="5" y="17" width="6" height="2" rx="1" fill="#FFD84D"/><rect x="5" y="22" width="6" height="2" rx="1" fill="#FFD84D"/><circle cx="18" cy="15" r="5.2" fill="#FFF9E8"/><circle cx="16.3" cy="14" r=".8" fill="#442B24"/><circle cx="19.7" cy="14" r=".8" fill="#442B24"/><path d="m17 16.2 1-1 1 1-1 1.2Z" fill="#442B24"/><path d="M15.8 18.2c1.4-.8 3-.8 4.4 0" fill="none" stroke="#442B24" strokeWidth="1" strokeLinecap="round"/></g></svg>;
     case 'cuteCancel': return <svg width={size} height={size} viewBox="0 0 32 32"><rect x="5" y="6" width="22" height="21" rx="6" fill="#FFD84D"/><circle cx="16" cy="15" r="9" fill="#E45C32"/><circle cx="13" cy="13" r="1" fill="#FFF9E8"/><circle cx="19" cy="13" r="1" fill="#FFF9E8"/><rect x="10" y="16" width="12" height="3" rx="1.5" fill="#FFF9E8"/><circle cx="25" cy="7" r="3" fill="#95604D"/></svg>;
+    case 'cuteRestore': return <svg width={size} height={size} viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="#CBD183"/><path d="M9.1 15.2a7.3 7.3 0 0 1 12.7-4.1" fill="none" stroke="#95604D" strokeWidth="3" strokeLinecap="round"/><path d="m21.2 7.5 4.3 4.2-5.6 1.5Z" fill="#95604D"/><path d="M22.9 17a7.3 7.3 0 0 1-12.7 4.1" fill="none" stroke="#E45C32" strokeWidth="3" strokeLinecap="round"/><path d="m10.8 24.6-4.3-4.2 5.6-1.5Z" fill="#E45C32"/><path d="m16 10.8 1.5 3.1 3.4.5-2.5 2.4.6 3.4-3-1.6-3 1.6.6-3.4-2.5-2.4 3.4-.5Z" fill="#FFD84D"/></svg>;
     case 'google': return (
       <svg width={size} height={size} viewBox="0 0 24 24">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -239,6 +240,18 @@ const CATEGORY_STYLE = {
   'F/U':        { bg: '#E3E7F3', text: '#3C4A75' },
   'อื่นๆ':      { bg: '#F0EBDD', text: '#8A7F63' },
 };
+const CATEGORY_THEME_OPTIONS = {
+  lilac: { label: 'Lilac Grey', bg: '#D3C2CD', text: '#1F5B54' },
+  spring: { label: 'Spring Leaves', bg: '#849E15', text: '#FFF4CC' },
+  surf: { label: 'Good Surf', bg: '#92A2A6', text: '#1F3A35' },
+  pink: { label: 'Brink of Pink', bg: '#F8CABA', text: '#6777B6' },
+  poppy: { label: 'Poppy', bg: '#D8560E', text: '#FFFFFF' },
+  butter: { label: 'Butter Yellow', bg: '#EFCE7B', text: '#5D4820' },
+  pea: { label: 'Pea Flower', bg: '#6777B6', text: '#FFFFFF' },
+  forest: { label: 'Night Forest', bg: '#2B2B23', text: '#FFFFFF' },
+  berry: { label: 'Dusty Berry', bg: '#D17089', text: '#FFFFFF' },
+  pistachio: { label: 'Pistachio', bg: '#CBD183', text: '#1F5B54' },
+};
 const CATEGORY_KEYWORDS = [
   ['RPD', 'RPD'], ['TP', 'TP'], ['CD', 'CD'], ['RCT', 'ENDO'], ['ENDO', 'ENDO'],
   ['SUR', 'SUR'], ['stitch', 'Stitch off'], ['f/u', 'F/U'], ['recheck', 'F/U'],
@@ -325,6 +338,8 @@ function ScheduleCalendar() {
   const [shiftOverrides, setShiftOverrides] = useState({});
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [newCategory, setNewCategory] = useState('');
+  const [categoryStyles, setCategoryStyles] = useState(CATEGORY_STYLE);
+  const [newCategoryTheme, setNewCategoryTheme] = useState('pistachio');
   const [loaded, setLoaded] = useState(false);
 
   const [addMode, setAddMode] = useState('new');
@@ -340,8 +355,11 @@ function ScheduleCalendar() {
   const deckTouchY = useRef(null);
   const deckTouchTime = useRef(0);
   const deckMoved = useRef(false);
-  const deckWheelLock = useRef(false);
+  const deckWheelAccum = useRef(0);
+  const deckWheelTimer = useRef(null);
+  const deckGlideTimer = useRef(null);
   const [deckDragY, setDeckDragY] = useState(0);
+  const [deckDragging, setDeckDragging] = useState(false);
   const overviewPressTimer = useRef(null);
   const openOverviewPicker = (e, c, m) => setOverviewPicker({ date: c.dstr, year, month: m, x: e.clientX, y: e.clientY });
   const startOverviewPress = (e, c, m) => {
@@ -384,6 +402,10 @@ function ScheduleCalendar() {
       try {
         const catRes = await window.storage.get('categories', false);
         if (catRes?.value) setCategories(JSON.parse(catRes.value));
+      } catch (e) {}
+      try {
+        const styleRes = await window.storage.get('category-styles', false);
+        if (styleRes?.value) setCategoryStyles({ ...CATEGORY_STYLE, ...JSON.parse(styleRes.value) });
       } catch (e) {}
 
       let caseData = null;
@@ -452,15 +474,22 @@ function ScheduleCalendar() {
     setCategories(next);
     try { await window.storage.set('categories', JSON.stringify(next), false); } catch (e) {}
   };
+  const saveCategoryStyles = async (next) => {
+    setCategoryStyles(next);
+    try { await window.storage.set('category-styles', JSON.stringify(next), false); } catch (e) {}
+  };
   const addCategory = () => {
     const name = newCategory.trim();
     if (!name || categories.includes(name)) return;
     saveCategories([...categories, name]);
+    const theme = CATEGORY_THEME_OPTIONS[newCategoryTheme] || CATEGORY_THEME_OPTIONS.pistachio;
+    saveCategoryStyles({ ...categoryStyles, [name]: { bg: theme.bg, text: theme.text } });
     setNewCategory('');
   };
   const removeCategory = (name) => {
     if (DEFAULT_CATEGORIES.includes(name)) return;
     saveCategories(categories.filter(c => c !== name));
+    const next = { ...categoryStyles }; delete next[name]; saveCategoryStyles(next);
   };
 
   const getShift = (dstr) => shiftOverrides[dstr] !== undefined ? shiftOverrides[dstr] : (SCHEDULE_DATA[dstr]?.shift || null);
@@ -496,6 +525,17 @@ function ScheduleCalendar() {
     const dstr = dateKey(d.getFullYear(), d.getMonth() + 1, d.getDate());
     return { dstr, day: d.getDate(), year: d.getFullYear(), month: d.getMonth() + 1, shift: getShift(dstr), info: SCHEDULE_DATA[dstr] || null };
   }), [shiftOverrides]);
+  const glideDeck = (direction, steps) => {
+    if (deckGlideTimer.current) clearTimeout(deckGlideTimer.current);
+    let remaining = Math.max(1, steps);
+    const tick = () => {
+      setDeckIndex(i => Math.max(0, Math.min(deckItems.length - 1, i + direction)));
+      remaining -= 1;
+      if (remaining > 0) deckGlideTimer.current = setTimeout(tick, 105);
+      else deckGlideTimer.current = null;
+    };
+    tick();
+  };
   const leftoverNotes = (selInfo?.appointments || []).filter(line => {
     const m = line.match(TIME_RE);
     return !m || SKIP_WORDS.has((m[2] || '').trim());
@@ -610,7 +650,7 @@ function ScheduleCalendar() {
   const historyVisitsSorted = historyCase ? [...historyCase.visits].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)) : [];
 
   const VisitRow = ({ c, v, showJump }) => {
-    const cs = CATEGORY_STYLE[c.category] || CATEGORY_STYLE['อื่นๆ'];
+    const cs = categoryStyles[c.category] || categoryStyles['อื่นๆ'] || CATEGORY_STYLE['อื่นๆ'];
     const cancelled = v.status === 'cancelled';
     return (
       <div style={{ padding: '8px 10px', borderRadius: 8, background: cancelled ? '#F3EDE9' : '#FAF6EF', marginBottom: 6, opacity: cancelled ? 0.7 : 1 }}>
@@ -627,11 +667,11 @@ function ScheduleCalendar() {
             {v.step && <div style={{ fontSize: 12, color: '#5C6D68', marginTop: 2 }}>{v.step}</div>}
             {showJump && <button onClick={() => jumpToVisit(v.date)} style={{ fontSize: 11, color: '#1F5B54', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0, marginTop: 2 }}>{v.date} — ไปที่วันนัด</button>}
           </div>
-          <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: cs.bg, color: cs.text, whiteSpace: 'nowrap' }}>{c.category}</span>
+          <span style={{ fontSize: 10.5, fontWeight: 700, padding: '3px 7px', borderRadius: 4, background: cs.bg, color: cs.text, whiteSpace: 'nowrap' }}>{c.category}</span>
           {!showJump && <button onClick={() => editPatientFromCalendar(c, v)} title="แก้ไขข้อมูลคนไข้และหมายเหตุ" style={{ width: 30, height: 30, borderRadius: 9, border: 'none', background: 'transparent', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CuteIcon name="pencil" size={12} tone="yellow" box={22} /></button>}
           <button onClick={() => openPatientHistory(c.id)} title="ดูประวัติเคส" aria-label="ดูประวัติเคส" style={{ width: 34, height: 32, border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="cuteHistory" size={31} /></button>
-          <button onClick={() => toggleCancelVisit(c.id, v.id)} title={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} aria-label={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} style={{ minWidth: cancelled ? 42 : 34, height: 32, borderRadius: 8, border: 'none', background: cancelled ? '#CBD183' : 'transparent', color: '#1F5B54', cursor: 'pointer', padding: cancelled ? '0 7px' : 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 10.5, fontWeight: 700, whiteSpace: 'nowrap' }}>
-            {cancelled ? 'คืนค่า' : <Icon name="cuteCancel" size={31} />}
+          <button onClick={() => toggleCancelVisit(c.id, v.id)} title={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} aria-label={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} style={{ width: 34, height: 32, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name={cancelled ? 'cuteRestore' : 'cuteCancel'} size={31} />
           </button>
           <button onClick={() => removeVisit(c.id, v.id)} title="ลบนัดนี้" style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 2 }}><Icon name="x" size={14} color="#B9AF9A" /></button>
         </div>
@@ -700,7 +740,7 @@ function ScheduleCalendar() {
         .clean-select-menu button.selected { background: #CBD183; color: #1F5B54; font-weight: 700; }
         .clean-select-arrow { font-family: var(--font-latin); font-size: 15px; line-height: 1; transform: translateY(-2px); }
         .deck-stage { position: relative; height: 520px; max-width: 520px; margin: 0 auto 22px; overflow: hidden; touch-action: none; overscroll-behavior: contain; user-select: none; -webkit-user-select: none; }
-        .deck-card { position: absolute; left: 22px; right: 22px; top: 96px; min-height: 285px; border-radius: 26px; padding: 22px; box-sizing: border-box; box-shadow: 0 18px 45px rgba(43,43,35,.18); transition: transform .48s cubic-bezier(.2,.8,.2,1), opacity .35s ease, filter .35s ease; cursor: pointer; overflow: hidden; }
+        .deck-card { position: absolute; left: 22px; right: 22px; top: 96px; min-height: 285px; border-radius: 26px; padding: 22px; box-sizing: border-box; box-shadow: 0 18px 45px rgba(43,43,35,.18); transition: transform .34s cubic-bezier(.18,.84,.25,1), opacity .28s ease, filter .28s ease; cursor: pointer; overflow: hidden; will-change: transform; }
         .deck-stage.dragging .deck-card { transition: none; }
         .deck-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(145deg, rgba(255,255,255,.22), transparent 48%); pointer-events: none; }
         .deck-hint { text-align: center; color: #8A7F63; font-family: var(--font-latin); font-size: 10.5px; font-weight: 700; letter-spacing: .7px; margin-bottom: 4px; }
@@ -708,6 +748,7 @@ function ScheduleCalendar() {
         .legend-head { background: #6777B6; color: #FFFFFF; margin: -16px -16px 14px; padding: 13px 16px; }
         .legend-row { background: #FFFFFF; color: #2B2B23; border-radius: 8px; padding: 7px 9px; }
         @media (max-width: 600px) {
+          .category-add-form { grid-template-columns: 1fr !important; }
           .cell-shift-label { font-size: 8.5px !important; }
           .overview-grid { max-width: none; }
           .overview-month { grid-template-columns: 1fr; min-height: 0; }
@@ -791,7 +832,7 @@ function ScheduleCalendar() {
                   <span style={{ flex: '1 1 120px', minWidth: 0, color: cancelled ? '#B9AF9A' : '#1F3A35', textDecoration: cancelled ? 'line-through' : 'none' }}>{v.step || '—'}</span>
                   {cancelled && <span style={{ fontSize: 10, fontWeight: 700, color: '#A33636' }}>ยกเลิกแล้ว</span>}
                   <button onClick={() => jumpToVisit(v.date)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', borderRadius: 7, background: '#6777B6', color: '#FFFFFF', padding: '4px 8px 4px 5px', cursor: 'pointer', fontWeight: 700, fontSize: 10.5, whiteSpace: 'nowrap' }}><CuteIcon name="calendarSolid" size={10} tone="yellow" box={19} /> Open</button>
-                  <button onClick={() => toggleCancelVisit(historyCase.id, v.id)} title={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} style={{ width: 31, height: 31, borderRadius: 8, border: 'none', background: cancelled ? '#CBD183' : 'transparent', color: cancelled ? '#1F5B54' : '#D8560E', cursor: 'pointer', display: 'grid', placeItems: 'center', padding: 0 }}>{cancelled ? <Icon name="rotateCcw" size={13} /> : <Icon name="cuteCancel" size={29} />}</button>
+                  <button onClick={() => toggleCancelVisit(historyCase.id, v.id)} title={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} style={{ width: 31, height: 31, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', padding: 0 }}><Icon name={cancelled ? 'cuteRestore' : 'cuteCancel'} size={29} /></button>
                   <button onClick={() => removeVisit(historyCase.id, v.id)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><Icon name="x" size={12} color="#B9AF9A" /></button>
                 </div>
               );
@@ -879,7 +920,7 @@ function ScheduleCalendar() {
                       </div>
                       <div style={{ marginBottom: 8 }}>
                         <CleanSelect value={fCategory} onChange={setFCategory} options={categories.map(cat => ({ value: cat, label: cat }))}
-                          style={{ minWidth: 120, fontSize: 12.5, fontWeight: 600, borderRadius: 9, padding: '7px 10px', background: CATEGORY_STYLE[fCategory]?.bg, color: CATEGORY_STYLE[fCategory]?.text }} ariaLabel="ประเภทงาน" />
+                          style={{ minWidth: 120, fontSize: 12.5, fontWeight: 600, borderRadius: 6, padding: '7px 10px', background: (categoryStyles[fCategory] || CATEGORY_STYLE['อื่นๆ']).bg, color: (categoryStyles[fCategory] || CATEGORY_STYLE['อื่นๆ']).text }} ariaLabel="ประเภทงาน" />
                       </div>
                     </>
                   )}
@@ -995,12 +1036,12 @@ function ScheduleCalendar() {
         {view === 'deck' && (
           <div className="view-panel">
             <div className="deck-hint">SWIPE UP / DOWN · {deckItems[deckIndex]?.dstr}</div>
-            <div className={`deck-stage ${deckTouchY.current !== null ? 'dragging' : ''}`}
-              onTouchStart={e => { deckTouchY.current = e.touches[0].clientY; deckTouchTime.current = Date.now(); deckMoved.current = false; setDeckDragY(0); }}
+            <div className={`deck-stage ${deckDragging ? 'dragging' : ''}`}
+              onTouchStart={e => { if (deckGlideTimer.current) clearTimeout(deckGlideTimer.current); deckGlideTimer.current = null; deckTouchY.current = e.touches[0].clientY; deckTouchTime.current = Date.now(); deckMoved.current = false; setDeckDragging(true); setDeckDragY(0); }}
               onTouchMove={e => { if (deckTouchY.current === null) return; const drag = e.touches[0].clientY - deckTouchY.current; if (Math.abs(drag) > 5) deckMoved.current = true; setDeckDragY(Math.max(-150, Math.min(150, drag))); }}
-              onTouchCancel={() => { deckTouchY.current = null; setDeckDragY(0); }}
-              onTouchEnd={e => { const drag = e.changedTouches[0].clientY - (deckTouchY.current ?? e.changedTouches[0].clientY); const velocity = drag / Math.max(1, Date.now() - deckTouchTime.current); if (Math.abs(drag) > 42 || Math.abs(velocity) > .35) setDeckIndex(i => Math.max(0, Math.min(deckItems.length - 1, i + (drag < 0 ? 1 : -1)))); deckTouchY.current = null; setDeckDragY(0); }}
-              onWheel={e => { if (deckWheelLock.current || Math.abs(e.deltaY) < 10) return; deckWheelLock.current = true; setDeckIndex(i => Math.max(0, Math.min(deckItems.length - 1, i + (e.deltaY > 0 ? 1 : -1)))); setTimeout(() => { deckWheelLock.current = false; }, 380); }}>
+              onTouchCancel={() => { deckTouchY.current = null; setDeckDragging(false); setDeckDragY(0); }}
+              onTouchEnd={e => { const drag = e.changedTouches[0].clientY - (deckTouchY.current ?? e.changedTouches[0].clientY); const velocity = drag / Math.max(1, Date.now() - deckTouchTime.current); if (Math.abs(drag) > 32 || Math.abs(velocity) > .3) { const distanceSteps = Math.max(1, Math.round(Math.abs(drag) / 58)); const velocitySteps = Math.max(1, Math.ceil(Math.abs(velocity) * 2.2)); const steps = Math.min(5, Math.max(distanceSteps, velocitySteps)); glideDeck(drag < 0 ? 1 : -1, steps); } deckTouchY.current = null; setDeckDragging(false); setDeckDragY(0); }}
+              onWheel={e => { if (Math.abs(e.deltaY) < 1) return; if (deckGlideTimer.current) { clearTimeout(deckGlideTimer.current); deckGlideTimer.current = null; } deckWheelAccum.current += e.deltaY; setDeckDragging(true); setDeckDragY(Math.max(-150, Math.min(150, -deckWheelAccum.current))); if (deckWheelTimer.current) clearTimeout(deckWheelTimer.current); deckWheelTimer.current = setTimeout(() => { const delta = deckWheelAccum.current; const steps = Math.min(6, Math.max(1, Math.round(Math.abs(delta) / 55))); deckWheelAccum.current = 0; setDeckDragging(false); setDeckDragY(0); glideDeck(delta > 0 ? 1 : -1, steps); }, 85); }}>
               {deckItems.map((c, i) => {
                 const offset = i - deckIndex;
                 const s = c.shift ? SHIFT_STYLE[c.shift] : null;
@@ -1085,14 +1126,14 @@ function ScheduleCalendar() {
             </div>
             <div className="patient-scroll" style={{ flex: 1 }}>
             {patientListResults.map(c => {
-              const cs = CATEGORY_STYLE[c.category] || CATEGORY_STYLE['อื่นๆ'];
+              const cs = categoryStyles[c.category] || categoryStyles['อื่นๆ'] || CATEGORY_STYLE['อื่นๆ'];
               return (
                 <div key={c.id} className="plist-row" onClick={() => setHistoryCaseId(historyCaseId === c.id ? null : c.id)}
                   style={{ background: '#FFFFFF', border: '1px solid #EAE3D3', borderRadius: 10, padding: '10px 12px', marginBottom: 8, cursor: 'pointer' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     {c.hn && <span style={{ fontSize: 12.5, fontFamily: "'IBM Plex Sans Thai', sans-serif", fontWeight: 700, color: '#6777B6', letterSpacing: .3 }}>HN {c.hn}</span>}
                     <span style={{ fontFamily: "'Sarabun', sans-serif", fontSize: 15, fontWeight: 400, color: '#1F3A35' }}>{c.name}</span>
-                    <span style={{ fontSize: 10.5, fontWeight: 700, padding: '1px 8px', borderRadius: 10, background: cs.bg, color: cs.text }}>{c.category}</span>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, padding: '3px 7px', borderRadius: 4, background: cs.bg, color: cs.text }}>{c.category}</span>
                     {c.phone && <span style={{ fontSize: 11.5, color: '#B9AF9A' }}>โทร {c.phone}</span>}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 6, fontSize: 11, fontWeight: 400, color: '#5C6D68' }}>
@@ -1110,12 +1151,13 @@ function ScheduleCalendar() {
         {view === 'settings' && <>
         <div className="view-panel" style={{ background: '#EFCE7B', borderRadius: 18, padding: 16, marginBottom: 14 }}>
           <div style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: 15, color: '#2B2B23', marginBottom: 10 }}>ประเภทงาน</div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            <input value={newCategory} onChange={e => setNewCategory(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addCategory(); }} placeholder="เพิ่มประเภทงานใหม่" style={{ flex: 1, background: '#FFFFFF', borderRadius: 8, padding: '9px 11px', fontFamily: "'Sarabun', sans-serif", fontSize: 13 }} />
-            <button onClick={addCategory} style={{ border: 'none', borderRadius: 8, padding: '8px 14px', background: '#6777B6', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>+ เพิ่ม</button>
-          </div>
+          <form className="category-add-form" onSubmit={e => { e.preventDefault(); addCategory(); }} style={{ display: 'grid', gridTemplateColumns: 'minmax(140px,1fr) minmax(130px,.65fr) auto', gap: 8, marginBottom: 12 }}>
+            <input value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="เพิ่มประเภทงานใหม่" style={{ flex: 1, background: '#FFFFFF', borderRadius: 8, padding: '9px 11px', fontFamily: "'Sarabun', sans-serif", fontSize: 13 }} />
+            <CleanSelect value={newCategoryTheme} onChange={setNewCategoryTheme} options={Object.entries(CATEGORY_THEME_OPTIONS).map(([value, t]) => ({ value, label: t.label }))} style={{ width: '100%', height: '100%', borderRadius: 8, padding: '8px 10px', background: CATEGORY_THEME_OPTIONS[newCategoryTheme].bg, color: CATEGORY_THEME_OPTIONS[newCategoryTheme].text, fontWeight: 700 }} ariaLabel="เลือกสีประเภทงาน" />
+            <button type="submit" disabled={!newCategory.trim()} style={{ border: 'none', borderRadius: 8, padding: '8px 14px', background: newCategory.trim() ? '#6777B6' : '#B9AF9A', color: '#FFFFFF', fontWeight: 700, cursor: newCategory.trim() ? 'pointer' : 'default' }}>+ เพิ่ม</button>
+          </form>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-            {categories.map(cat => <span key={cat} style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#FFFFFF', borderRadius: 16, padding: '5px 9px', fontSize: 12 }}><span>{cat}</span>{!DEFAULT_CATEGORIES.includes(cat) && <button onClick={() => removeCategory(cat)} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', color: '#D8560E' }}><Icon name="x" size={12} /></button>}</span>)}
+            {categories.map(cat => { const s = categoryStyles[cat] || CATEGORY_STYLE['อื่นๆ']; return <span key={cat} style={{ display: 'flex', alignItems: 'center', gap: 6, background: s.bg, color: s.text, borderRadius: 4, padding: '5px 7px', fontSize: 12, fontWeight: 700 }}><span>{cat}</span>{!DEFAULT_CATEGORIES.includes(cat) && <button onClick={() => removeCategory(cat)} style={{ border: 'none', background: 'rgba(255,255,255,.35)', borderRadius: 2, padding: 1, cursor: 'pointer', color: s.text, lineHeight: 0 }}><Icon name="x" size={11} /></button>}</span>; })}
           </div>
         </div>
 
@@ -1180,4 +1222,3 @@ root.render(<App />);
 </script>
 </body>
 </html>
-
