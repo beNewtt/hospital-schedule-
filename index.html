@@ -268,7 +268,7 @@ function parseLegacyToCases(apps) {
 }
 
 function ScheduleCalendar() {
-  const [view, setView] = useState('calendar');
+  const [view, setView] = useState('deck');
   const today0 = new Date();
   const [year, setYear] = useState(today0.getFullYear());
   const [month, setMonth] = useState(today0.getMonth() + 1);
@@ -288,8 +288,12 @@ function ScheduleCalendar() {
   const [patientListQuery, setPatientListQuery] = useState('');
   const [patientSort, setPatientSort] = useState('date');
   const [overviewPicker, setOverviewPicker] = useState(null);
-  const [deckIndex, setDeckIndex] = useState(0);
+  const [deckIndex, setDeckIndex] = useState(60);
   const deckTouchY = useRef(null);
+  const deckTouchTime = useRef(0);
+  const deckMoved = useRef(false);
+  const deckWheelLock = useRef(false);
+  const [deckDragY, setDeckDragY] = useState(0);
   const overviewPressTimer = useRef(null);
   const openOverviewPicker = (e, c, m) => setOverviewPicker({ date: c.dstr, year, month: m, x: e.clientX, y: e.clientY });
   const startOverviewPress = (e, c, m) => {
@@ -622,8 +626,9 @@ function ScheduleCalendar() {
         .clean-select-menu button:hover { background: #F3EAE3; }
         .clean-select-menu button.selected { background: #D3C2CD; color: #1F5B54; font-weight: 700; }
         .clean-select-arrow { font-family: var(--font-latin); font-size: 15px; line-height: 1; transform: translateY(-2px); }
-        .deck-stage { position: relative; height: 520px; max-width: 520px; margin: 0 auto 22px; overflow: hidden; touch-action: pan-x; user-select: none; }
+        .deck-stage { position: relative; height: 520px; max-width: 520px; margin: 0 auto 22px; overflow: hidden; touch-action: none; overscroll-behavior: contain; user-select: none; -webkit-user-select: none; }
         .deck-card { position: absolute; left: 22px; right: 22px; top: 96px; min-height: 285px; border-radius: 26px; padding: 22px; box-sizing: border-box; box-shadow: 0 18px 45px rgba(43,43,35,.18); transition: transform .48s cubic-bezier(.2,.8,.2,1), opacity .35s ease, filter .35s ease; cursor: pointer; overflow: hidden; }
+        .deck-stage.dragging .deck-card { transition: none; }
         .deck-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(145deg, rgba(255,255,255,.22), transparent 48%); pointer-events: none; }
         .deck-hint { text-align: center; color: #8A7F63; font-family: var(--font-latin); font-size: 10.5px; font-weight: 700; letter-spacing: .7px; margin-bottom: 4px; }
         .legend-card { overflow: hidden; box-shadow: 0 8px 22px rgba(43,43,35,.10); }
@@ -912,23 +917,26 @@ function ScheduleCalendar() {
         {view === 'deck' && (
           <div className="view-panel">
             <div className="deck-hint">SWIPE UP / DOWN · {deckItems[deckIndex]?.dstr}</div>
-            <div className="deck-stage"
-              onTouchStart={e => { deckTouchY.current = e.touches[0].clientY; }}
-              onTouchEnd={e => { const dy = (deckTouchY.current ?? e.changedTouches[0].clientY) - e.changedTouches[0].clientY; if (Math.abs(dy) > 35) setDeckIndex(i => Math.max(0, Math.min(deckItems.length - 1, i + (dy > 0 ? 1 : -1)))); deckTouchY.current = null; }}
-              onWheel={e => { if (Math.abs(e.deltaY) > 12) setDeckIndex(i => Math.max(0, Math.min(deckItems.length - 1, i + (e.deltaY > 0 ? 1 : -1)))); }}>
+            <div className={`deck-stage ${deckTouchY.current !== null ? 'dragging' : ''}`}
+              onTouchStart={e => { deckTouchY.current = e.touches[0].clientY; deckTouchTime.current = Date.now(); deckMoved.current = false; setDeckDragY(0); }}
+              onTouchMove={e => { if (deckTouchY.current === null) return; const drag = e.touches[0].clientY - deckTouchY.current; if (Math.abs(drag) > 5) deckMoved.current = true; setDeckDragY(Math.max(-150, Math.min(150, drag))); }}
+              onTouchCancel={() => { deckTouchY.current = null; setDeckDragY(0); }}
+              onTouchEnd={e => { const drag = e.changedTouches[0].clientY - (deckTouchY.current ?? e.changedTouches[0].clientY); const velocity = drag / Math.max(1, Date.now() - deckTouchTime.current); if (Math.abs(drag) > 42 || Math.abs(velocity) > .35) setDeckIndex(i => Math.max(0, Math.min(deckItems.length - 1, i + (drag < 0 ? 1 : -1)))); deckTouchY.current = null; setDeckDragY(0); }}
+              onWheel={e => { if (deckWheelLock.current || Math.abs(e.deltaY) < 10) return; deckWheelLock.current = true; setDeckIndex(i => Math.max(0, Math.min(deckItems.length - 1, i + (e.deltaY > 0 ? 1 : -1)))); setTimeout(() => { deckWheelLock.current = false; }, 380); }}>
               {deckItems.map((c, i) => {
                 const offset = i - deckIndex;
                 const s = c.shift ? SHIFT_STYLE[c.shift] : null;
                 const visits = visitsForDate(c.dstr).filter(x => x.visit.status !== 'cancelled');
                 const hidden = Math.abs(offset) > 4;
-                return <div key={c.dstr} className="deck-card" onClick={() => openDay(c.dstr, c.year, c.month)}
-                  style={{ background: s ? s.soft : '#FFFFFF', color: s ? s.text : '#1F3A35', zIndex: 20 - Math.abs(offset), opacity: hidden ? 0 : offset < -1 ? .15 : 1, pointerEvents: Math.abs(offset) > 1 ? 'none' : 'auto', transform: `translateY(${offset < 0 ? offset * 58 : offset * 34}px) scale(${Math.max(.8, 1 - Math.abs(offset) * .045)})`, filter: offset === 0 ? 'none' : 'saturate(.82)' }}>
+                const dragShift = deckDragY * (offset === 0 ? 1 : .34);
+                return <div key={c.dstr} className="deck-card" onClick={() => { if (!deckMoved.current) openDay(c.dstr, c.year, c.month); }}
+                  style={{ background: s ? s.soft : '#FFFFFF', color: s ? s.text : '#1F3A35', zIndex: 20 - Math.abs(offset), opacity: hidden ? 0 : offset < -1 ? .15 : 1, pointerEvents: Math.abs(offset) > 1 ? 'none' : 'auto', transform: `translateY(${(offset < 0 ? offset * 58 : offset * 34) + dragShift}px) scale(${Math.max(.8, 1 - Math.abs(offset) * .045)})`, filter: offset === 0 ? 'none' : 'saturate(.82)' }}>
                   <div style={{ position: 'relative', zIndex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div><div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 12, fontWeight: 800, letterSpacing: 1.1 }}>{c.dstr}</div><div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 25, fontWeight: 700, marginTop: 4 }}>{new Date(c.dstr).toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div>
-                      <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 42, fontWeight: 800, lineHeight: 1 }}>{String(c.day).padStart(2, '0')}</div>
+                      <div><div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 12, fontWeight: 800, letterSpacing: 1.1, color: s ? s.date : '#6777B6' }}>{c.dstr}</div><div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 25, fontWeight: 700, marginTop: 4, color: s ? s.text : '#1F3A35' }}>{new Date(c.dstr).toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div>
+                      <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 52, fontWeight: 800, lineHeight: 1, color: s ? s.date : '#6777B6' }}>{String(c.day).padStart(2, '0')}</div>
                     </div>
-                    <div style={{ marginTop: 24, fontSize: 12, fontWeight: 700 }}>{c.shift || 'Appointments'} · {visits.length}</div>
+                    <div style={{ marginTop: 24, fontSize: 12, fontWeight: 700, color: s ? s.text : '#1F3A35' }}>{c.shift || 'Appointments'} · {visits.length}</div>
                     <div style={{ marginTop: 10, display: 'grid', gap: 7 }}>
                       {visits.slice(0, 3).map(({ case: item, visit }) => <div key={visit.id} style={{ display: 'flex', gap: 10, padding: '8px 10px', borderRadius: 11, background: 'rgba(255,255,255,.46)', color: '#1F3A35', fontSize: 11.5 }}><b>{visit.time}</b><span>{item.name}</span></div>)}
                       {!visits.length && <div style={{ opacity: .72, fontSize: 12 }}>ไม่มีรายการคนไข้</div>}
