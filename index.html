@@ -112,6 +112,7 @@ function Icon({ name, size = 16, color = 'currentColor' }) {
     case 'cuteHistory': return <svg width={size} height={size} viewBox="0 0 32 32"><g transform="rotate(-3 16 16)"><rect x="5" y="5" width="21" height="23" rx="3" fill="#FFF9E8"/><rect x="9" y="3.5" width="18" height="24" rx="2.4" fill="#95604D"/><rect x="5" y="7" width="6" height="2" rx="1" fill="#FFD84D"/><rect x="5" y="12" width="6" height="2" rx="1" fill="#FFD84D"/><rect x="5" y="17" width="6" height="2" rx="1" fill="#FFD84D"/><rect x="5" y="22" width="6" height="2" rx="1" fill="#FFD84D"/><circle cx="18" cy="15" r="5.2" fill="#FFF9E8"/><circle cx="16.3" cy="14" r=".8" fill="#442B24"/><circle cx="19.7" cy="14" r=".8" fill="#442B24"/><path d="m17 16.2 1-1 1 1-1 1.2Z" fill="#442B24"/><path d="M15.8 18.2c1.4-.8 3-.8 4.4 0" fill="none" stroke="#442B24" strokeWidth="1" strokeLinecap="round"/></g></svg>;
     case 'cuteCancel': return <svg width={size} height={size} viewBox="0 0 32 32"><rect x="5" y="6" width="22" height="21" rx="6" fill="#FFD84D"/><circle cx="16" cy="15" r="9" fill="#E45C32"/><circle cx="13" cy="13" r="1" fill="#FFF9E8"/><circle cx="19" cy="13" r="1" fill="#FFF9E8"/><rect x="10" y="16" width="12" height="3" rx="1.5" fill="#FFF9E8"/><circle cx="25" cy="7" r="3" fill="#95604D"/></svg>;
     case 'cuteRestore': return <svg width={size} height={size} viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="#CBD183"/><path d="M9.1 15.2a7.3 7.3 0 0 1 12.7-4.1" fill="none" stroke="#95604D" strokeWidth="3" strokeLinecap="round"/><path d="m21.2 7.5 4.3 4.2-5.6 1.5Z" fill="#95604D"/><path d="M22.9 17a7.3 7.3 0 0 1-12.7 4.1" fill="none" stroke="#E45C32" strokeWidth="3" strokeLinecap="round"/><path d="m10.8 24.6-4.3-4.2 5.6-1.5Z" fill="#E45C32"/><path d="m16 10.8 1.5 3.1 3.4.5-2.5 2.4.6 3.4-3-1.6-3 1.6.6-3.4-2.5-2.4 3.4-.5Z" fill="#FFD84D"/></svg>;
+    case 'cuteFilter': return <svg width={size} height={size} viewBox="0 0 32 32"><rect x="5.5" y="6" width="23" height="23" rx="7" fill="#95604D" opacity=".24"/><rect x="3" y="3" width="24" height="24" rx="7" fill="#FFF9E8"/><path d="M8 10h14M8 16h14M8 22h14" fill="none" stroke="#95604D" strokeWidth="2.4" strokeLinecap="round"/><circle cx="13" cy="10" r="3" fill="#E45C32"/><circle cx="19" cy="16" r="3" fill="#FFD84D"/><circle cx="11" cy="22" r="3" fill="#CBD183"/><circle cx="24.5" cy="5.5" r="3.2" fill="#E45C32"/><path d="m23.2 5.5.9.9 1.7-1.8" fill="none" stroke="#FFF9E8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
     case 'google': return (
       <svg width={size} height={size} viewBox="0 0 24 24">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -138,7 +139,7 @@ function CuteIcon({ name, size = 12, tone = 'yellow', box = 23 }) {
   </span>;
 }
 
-function CleanSelect({ value, onChange, options, style = {}, className = '', ariaLabel = 'Select option' }) {
+function CleanSelect({ value, onChange, options, style = {}, className = '', ariaLabel = 'Select option', iconOnly = false, iconName = 'cuteFilter' }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const selected = options.find(o => String(o.value) === String(value)) || options[0];
@@ -149,9 +150,9 @@ function CleanSelect({ value, onChange, options, style = {}, className = '', ari
   }, []);
   return (
     <div ref={ref} className={`clean-select ${className}`} style={{ position: 'relative', display: 'inline-block' }}>
-      <button type="button" aria-label={ariaLabel} aria-expanded={open} onClick={() => setOpen(!open)}
+      <button type="button" aria-label={`${ariaLabel}: ${selected?.label ?? selected?.value}`} title={iconOnly ? (selected?.label ?? selected?.value) : undefined} aria-expanded={open} onClick={() => setOpen(!open)}
         style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, border: 'none', cursor: 'pointer' }}>
-        <span>{selected?.label ?? selected?.value}</span><span className="clean-select-arrow">⌄</span>
+        {iconOnly ? <Icon name={iconName} size={32} /> : <><span>{selected?.label ?? selected?.value}</span><span className="clean-select-arrow">⌄</span></>}
       </button>
       {open && (
         <div className="clean-select-menu">
@@ -327,7 +328,7 @@ function parseLegacyToCases(apps) {
 }
 
 function ScheduleCalendar() {
-  const [view, setView] = useState('deck');
+  const [view, setView] = useState('calendar');
   const today0 = new Date();
   const [year, setYear] = useState(today0.getFullYear());
   const [month, setMonth] = useState(today0.getMonth() + 1);
@@ -351,15 +352,6 @@ function ScheduleCalendar() {
   const [patientListQuery, setPatientListQuery] = useState('');
   const [patientSort, setPatientSort] = useState('date');
   const [overviewPicker, setOverviewPicker] = useState(null);
-  const [deckIndex, setDeckIndex] = useState(60);
-  const deckTouchY = useRef(null);
-  const deckTouchTime = useRef(0);
-  const deckMoved = useRef(false);
-  const deckWheelAccum = useRef(0);
-  const deckWheelTimer = useRef(null);
-  const deckGlideTimer = useRef(null);
-  const [deckDragY, setDeckDragY] = useState(0);
-  const [deckDragging, setDeckDragging] = useState(false);
   const overviewPressTimer = useRef(null);
   const openOverviewPicker = (e, c, m) => setOverviewPicker({ date: c.dstr, year, month: m, x: e.clientX, y: e.clientY });
   const startOverviewPress = (e, c, m) => {
@@ -520,22 +512,6 @@ function ScheduleCalendar() {
   const selInfo = selected ? SCHEDULE_DATA[selected] : null;
   const selShift = selected ? getShift(selected) : null;
   const dayVisits = selected ? visitsForDate(selected) : [];
-  const deckItems = useMemo(() => Array.from({ length: 121 }, (_, i) => {
-    const d = new Date(today0); d.setDate(today0.getDate() + i - 60);
-    const dstr = dateKey(d.getFullYear(), d.getMonth() + 1, d.getDate());
-    return { dstr, day: d.getDate(), year: d.getFullYear(), month: d.getMonth() + 1, shift: getShift(dstr), info: SCHEDULE_DATA[dstr] || null };
-  }), [shiftOverrides]);
-  const glideDeck = (direction, steps) => {
-    if (deckGlideTimer.current) clearTimeout(deckGlideTimer.current);
-    let remaining = Math.max(1, steps);
-    const tick = () => {
-      setDeckIndex(i => Math.max(0, Math.min(deckItems.length - 1, i + direction)));
-      remaining -= 1;
-      if (remaining > 0) deckGlideTimer.current = setTimeout(tick, 105);
-      else deckGlideTimer.current = null;
-    };
-    tick();
-  };
   const leftoverNotes = (selInfo?.appointments || []).filter(line => {
     const m = line.match(TIME_RE);
     return !m || SKIP_WORDS.has((m[2] || '').trim());
@@ -682,15 +658,16 @@ function ScheduleCalendar() {
   return (
     <div style={{ fontFamily: "'Sarabun', sans-serif", background: '#F3EAE3', minHeight: '100vh', color: '#2B2B23', padding: '20px 14px 0', display: 'flex', flexDirection: 'column' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Thai+Looped:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Nunito:wght@400;500;600;700;800;900&family=Noto+Sans+Thai+Looped:wght@400;500;600;700&display=swap');
         :root {
           --font-thai-body: 'Noto Sans Thai Looped', sans-serif;
           --font-heading: 'Kanit', sans-serif;
-          --font-latin: 'Manrope', sans-serif;
+          --font-latin: 'Nunito', sans-serif;
         }
         [style*="Sarabun"] { font-family: var(--font-thai-body) !important; }
         [style*="IBM Plex Sans Thai"] { font-family: var(--font-thai-body) !important; }
         [style*="IBM Plex Mono"] { font-family: var(--font-latin) !important; }
+        [style*="Manrope"] { font-family: var(--font-latin) !important; }
         input, select, textarea { font-family: var(--font-thai-body); }
         .page-head h1 { letter-spacing: -.25px; }
         .patient-scroll, .history-panel { font-family: var(--font-thai-body); }
@@ -709,7 +686,9 @@ function ScheduleCalendar() {
         .overview-month-calendar { padding: 24px 26px; }
         .calendar-week-grid { grid-template-columns: .72fr repeat(5, minmax(0, 1fr)) .72fr; max-width: 720px; margin-left: auto; margin-right: auto; }
         .overview-week-grid { grid-template-columns: .72fr repeat(5, minmax(0, 1fr)) .72fr; }
-        .overview-shift-popover { position: fixed; width: 220px; background: #FFFFFF; border-radius: 18px; padding: 14px; box-shadow: 0 16px 45px rgba(43,43,35,.24); z-index: 81; }
+        .overview-shift-popover { position: fixed; width: 196px; box-sizing: border-box; background: #FFFFFF; border-radius: 15px; padding: 10px; box-shadow: 0 14px 36px rgba(43,43,35,.20); z-index: 81; }
+        .overview-shift-popover button { padding: 6px 7px !important; border-radius: 8px !important; font-size: 11.5px; min-height: 30px; }
+        .overview-shift-popover > div[style*="grid-template-columns"] { gap: 5px !important; }
         .tab-btn { transition: all 0.15s ease; }
         .nav-icon { width: 31px; height: 31px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: transparent; color: #FFFFFF; cursor: pointer; transition: color .15s ease, transform .15s ease; }
         .nav-icon:hover { color: #EFCE7B !important; transform: translateY(-1px); }
@@ -731,24 +710,22 @@ function ScheduleCalendar() {
         .case-edit-grid input, .case-edit-grid select { width: 100% !important; min-width: 0 !important; box-sizing: border-box; }
         .patient-scroll { overflow-y: auto; padding-right: 4px; display: grid; grid-template-columns: 1fr; gap: 10px; align-content: start; }
         .patient-scroll .plist-row { margin-bottom: 0 !important; }
-        .patient-filter-select { appearance: auto; border: none !important; border-radius: 999px !important; padding: 7px 12px !important; background: #D3C2CD !important; color: #1F5B54 !important; font-family: var(--font-latin) !important; font-size: 11.5px !important; font-weight: 800 !important; letter-spacing: .45px; cursor: pointer; box-shadow: inset 0 0 0 2px rgba(255,255,255,.45); transition: transform .18s ease, filter .18s ease; }
-        .patient-filter-select:hover { filter: brightness(.96); transform: translateY(-1px); }
+        .clean-select.patient-filter-select > button { width: 42px; height: 42px; padding: 4px !important; border-radius: 13px !important; background: transparent !important; box-shadow: none !important; justify-content: center !important; transition: transform .2s ease, filter .2s ease; }
+        .clean-select.patient-filter-select > button:hover { filter: brightness(.96); transform: translateY(-2px) rotate(-2deg); }
         .clean-select-menu { position: absolute; top: calc(100% + 7px); left: 0; right: auto; width: 190px; min-width: 100%; max-width: min(240px, calc(100vw - 28px)); max-height: 250px; overflow-y: auto; box-sizing: border-box; padding: 7px; background: #FFFFFF; border: none; border-radius: 16px; box-shadow: 0 16px 38px rgba(43,43,35,.16); z-index: 120; }
         .clean-select.align-right .clean-select-menu { left: auto; right: 0; }
         .clean-select-menu button { width: 100%; border: none; background: transparent; color: #1F3A35; padding: 9px 12px; border-radius: 10px; text-align: left; font-family: var(--font-thai-body); font-size: 12px; font-weight: 500; cursor: pointer; transition: background .15s ease, color .15s ease; }
         .clean-select-menu button:hover { background: #F3EAE3; }
         .clean-select-menu button.selected { background: #CBD183; color: #1F5B54; font-weight: 700; }
         .clean-select-arrow { font-family: var(--font-latin); font-size: 15px; line-height: 1; transform: translateY(-2px); }
-        .deck-stage { position: relative; height: 520px; max-width: 520px; margin: 0 auto 22px; overflow: hidden; touch-action: none; overscroll-behavior: contain; user-select: none; -webkit-user-select: none; }
-        .deck-card { position: absolute; left: 22px; right: 22px; top: 96px; min-height: 285px; border-radius: 26px; padding: 22px; box-sizing: border-box; box-shadow: 0 18px 45px rgba(43,43,35,.18); transition: transform .34s cubic-bezier(.18,.84,.25,1), opacity .28s ease, filter .28s ease; cursor: pointer; overflow: hidden; will-change: transform; }
-        .deck-stage.dragging .deck-card { transition: none; }
-        .deck-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(145deg, rgba(255,255,255,.22), transparent 48%); pointer-events: none; }
-        .deck-hint { text-align: center; color: #8A7F63; font-family: var(--font-latin); font-size: 10.5px; font-weight: 700; letter-spacing: .7px; margin-bottom: 4px; }
         .legend-card { overflow: hidden; box-shadow: 0 8px 22px rgba(43,43,35,.10); }
         .legend-head { background: #6777B6; color: #FFFFFF; margin: -16px -16px 14px; padding: 13px 16px; }
         .legend-row { background: #FFFFFF; color: #2B2B23; border-radius: 8px; padding: 7px 9px; }
         @media (max-width: 600px) {
-          .category-add-form { grid-template-columns: 1fr !important; }
+          .category-add-form { grid-template-columns: minmax(0,1fr) auto !important; }
+          .category-name-input { grid-column: 1 / -1; }
+          .category-theme-select, .category-theme-select > button { width: 100%; }
+          .category-add-button { min-width: 108px; }
           .cell-shift-label { font-size: 8.5px !important; }
           .overview-grid { max-width: none; }
           .overview-month { grid-template-columns: 1fr; min-height: 0; }
@@ -756,39 +733,62 @@ function ScheduleCalendar() {
           .overview-month-calendar { padding: 20px 14px; }
           .calendar-week-grid { grid-template-columns: .52fr repeat(5, minmax(0, 1fr)) .52fr; gap: 5px !important; }
           .overview-week-grid { grid-template-columns: .58fr repeat(5, minmax(0, 1fr)) .58fr; }
-          .overview-shift-popover { left: 16px !important; right: 16px !important; bottom: 18px !important; top: auto !important; width: auto; }
+          .overview-shift-popover { left: 50% !important; right: auto !important; bottom: 16px !important; top: auto !important; width: min(300px, calc(100vw - 28px)); transform: translateX(-50%); }
           .patient-scroll { grid-template-columns: 1fr; }
           .page-head { position: relative; top: auto; border-radius: 18px; padding: 16px; }
           .history-panel { position: relative; top: auto; }
           .case-edit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
           .view-panel { animation-duration: .2s; }
+          .history-panel .history-actions { width: 100%; justify-content: flex-end !important; padding-right: 28px; box-sizing: border-box; }
+          .history-panel .history-close { position: absolute; top: 12px; right: 10px; }
+          .new-case-fields { grid-template-columns: minmax(92px,.8fr) minmax(0,1.35fr) !important; }
+          .appointment-time-row { align-items: flex-start !important; }
+          .appointment-time-row { flex-wrap: nowrap !important; gap: 7px !important; }
+          .appointment-time-row > input { flex: 0 0 110px; min-width: 0; }
+          .duration-line { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap !important; gap: 6px !important; }
+          .duration-line .stepbtn { width: 25px !important; }
+          .duration-line > div > div { width: 46px !important; }
+          .duration-line > span:last-child { font-size: 10px !important; }
         }
+        .new-case-category, .new-case-category > button { width: 100%; }
+        .settings-corner { position: absolute; right: 16px; top: 12px; z-index: 2; }
+        .case-add-panel input { background: transparent !important; border: none !important; border-radius: 0 !important; box-shadow: inset 0 -1px 0 rgba(31,91,84,.24); transition: box-shadow .18s ease, background .18s ease; }
+        .case-add-panel input:focus { background: rgba(255,249,232,.24) !important; box-shadow: inset 0 -2px 0 #1F5B54; }
+        .case-add-panel .existing-case-search { background: transparent !important; border-radius: 0 !important; box-shadow: inset 0 -1px 0 rgba(31,91,84,.24); }
+        .case-add-panel .existing-case-search input { box-shadow: none !important; }
+        .motion-cta { position: relative !important; isolation: isolate; overflow: hidden; min-height: 34px; padding: 7px 13px 7px 38px !important; border: none !important; border-radius: 999px !important; background: #FFF9E8 !important; color: #1F5B54 !important; box-shadow: none !important; transition: color .42s cubic-bezier(.65,0,.076,1), transform .18s ease !important; }
+        .motion-cta::before { content: ''; position: absolute; z-index: -1; left: 3px; top: 50%; width: 28px; height: 28px; border-radius: 999px; background: #1F5B54; transform: translateY(-50%); transition: width .42s cubic-bezier(.65,0,.076,1), height .42s cubic-bezier(.65,0,.076,1), left .42s cubic-bezier(.65,0,.076,1); }
+        .motion-cta::after { content: '›'; position: absolute; left: 13px; top: 50%; color: #FFF9E8; font-size: 20px; font-weight: 500; line-height: 1; transform: translateY(-53%); transition: transform .42s cubic-bezier(.65,0,.076,1); }
+        @media (hover: hover) { .motion-cta:not(:disabled):hover { color: #FFF9E8 !important; transform: translateY(-1px); } .motion-cta:not(:disabled):hover::before { left: 0; width: 100%; height: 100%; } .motion-cta:not(:disabled):hover::after { transform: translate(6px,-53%); } }
+        .motion-cta:not(:disabled):active { color: #FFF9E8 !important; transform: scale(.98); }
+        .motion-cta:not(:disabled):active::before { left: 0; width: 100%; height: 100%; }
+        .motion-cta:disabled { opacity: .46; cursor: default !important; }
+        .overview-shift-popover button.motion-cta { padding-left: 35px !important; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #DCD4C4; border-radius: 4px; }
       `}</style>
 
-      <div style={{ width: '100%', maxWidth: 950, margin: '0 auto', boxSizing: 'border-box' }}>
+      <div style={{ width: '100%', maxWidth: view === 'patients' ? 820 : 950, margin: '0 auto', boxSizing: 'border-box', transition: 'max-width .28s cubic-bezier(.22,.8,.3,1)' }}>
         <header className="page-head" style={{ marginBottom: 16 }}>
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: 2, color: '#CBD183', textTransform: 'uppercase', marginBottom: 4 }}>
             งานโรงพยาบาล &amp; นัดคนไข้
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
             <h1 style={{ fontFamily: "'Kanit', sans-serif", fontSize: 24, fontWeight: 700, margin: 0, color: '#FFFFFF' }}>
-              {view === 'calendar' ? `${THAI_MONTH_NAMES[month - 1]} ${year}` : view === 'overview' ? `OVERVIEW ${year}` : view === 'patients' ? 'PATIENT LIST' : view === 'deck' ? 'SHIFT DECK' : 'SETTINGS'}
+              {view === 'calendar' ? `${THAI_MONTH_NAMES[month - 1]} ${year}` : view === 'overview' ? `OVERVIEW ${year}` : view === 'patients' ? 'PATIENT LIST' : 'SETTINGS'}
             </h1>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginLeft: 'auto' }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginLeft: 'auto', marginRight: 46 }}>
               <div className="nav-group">
                 <button onClick={() => setView('calendar')} className={`nav-text ${view === 'calendar' ? 'active' : ''}`}>ปฏิทิน</button>
                 <button onClick={() => setView('overview')} className={`nav-text ${view === 'overview' ? 'active' : ''}`}>ภาพรวม</button>
                 <button onClick={() => setView('patients')} className={`nav-text ${view === 'patients' ? 'active' : ''}`}>คนไข้</button>
-                <button onClick={() => { setDeckIndex(60); setView('deck'); }} className={`nav-text ${view === 'deck' ? 'active' : ''}`}>Deck</button>
               </div>
-              <button onClick={() => setView('settings')} className={`nav-icon ${view === 'settings' ? 'active' : ''}`} title="ตั้งค่า" aria-label="ตั้งค่า"><Icon name="cuteSettings" size={29} /></button>
             </div>
           </div>
+          <button onClick={() => setView('settings')} className={`nav-icon settings-corner ${view === 'settings' ? 'active' : ''}`} title="ตั้งค่า" aria-label="ตั้งค่า"><Icon name="cuteSettings" size={29} /></button>
         </header>
 
-        {view !== 'patients' && view !== 'settings' && view !== 'deck' && (
+        {view !== 'patients' && view !== 'settings' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, borderBottom: '2px solid #D3C2CD', paddingBottom: 10 }}>
             <button onClick={() => setYear(year - 1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="chevronLeft" size={16} color="#6777B6" /></button>
             <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, fontWeight: 600, color: '#6777B6' }}>ปี {year}</span>
@@ -806,7 +806,7 @@ function ScheduleCalendar() {
         {/* Global case history panel */}
         {historyCase && (
           <div className="history-panel" style={{ background: '#F3F0E6', border: 'none', borderRadius: 10, padding: 14, marginBottom: 18, maxHeight: view === 'patients' ? (editingCase ? 310 : 190) : 'none', overflowY: view === 'patients' ? 'auto' : 'visible' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: 0, fontSize: 14, color: '#1F5B54' }}>
                 <div style={{ marginBottom: editingCase ? 9 : 0 }}><span style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", fontWeight: 800, letterSpacing: .5 }}>CASE HISTORY :</span>{!editingCase && <> {historyCase.hn && <span style={{ fontFamily: "'IBM Plex Sans Thai', sans-serif", fontWeight: 700, color: '#6777B6' }}>HN {historyCase.hn} · </span>}<span style={{ fontFamily: "'Sarabun', sans-serif", fontWeight: 400 }}>{historyCase.name}</span> <span style={{ fontWeight: 500, color: '#8A7F63' }}>({historyCase.category})</span>{historyCase.phone && <span style={{ fontWeight: 500, color: '#8A7F63' }}> · Tel: {historyCase.phone}</span>}</>}</div>
                 {editingCase && <div className="case-edit-grid" style={{ background: '#CBD183', borderRadius: 13, padding: 10 }}>
@@ -816,13 +816,13 @@ function ScheduleCalendar() {
                   <CleanSelect value={editCaseForm.category} onChange={category => setEditCaseForm({ ...editCaseForm, category })} options={categories.map(x => ({ value: x, label: x }))} style={{ width: '100%', padding: '9px 11px', borderRadius: 9, background: '#FFFFFF', fontWeight: 600 }} ariaLabel="Category" />
                 </div>}
               </div>
-              <button onClick={() => setHistoryCaseId(null)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><Icon name="x" size={16} color="#8A7F63" /></button>
+              <div className="history-actions" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 7, flexShrink: 0, marginLeft: 'auto' }}>
+                <button onClick={() => deleteCase(historyCase.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', borderRadius: 9, background: '#D8560E', color: '#FFFFFF', padding: '5px 10px 5px 6px', cursor: 'pointer', fontWeight: 700, fontSize: 11.5 }}><CuteIcon name="noEntrySolid" size={10} tone="cream" box={19} /> Delete</button>
+                <button onClick={() => editingCase ? saveCaseEdit() : startEditCase(historyCase)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', borderRadius: 9, background: '#CBD183', color: '#1F5B54', padding: '5px 10px 5px 6px', cursor: 'pointer', fontWeight: 700, fontSize: 11.5 }}>{editingCase ? <CuteIcon name="check" size={10} tone="yellow" box={19} /> : <CuteIcon name="pencil" size={10} tone="brown" box={19} />} {editingCase ? 'Save case' : 'Edit case'}</button>
+                <button className="history-close" onClick={() => setHistoryCaseId(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="x" size={16} color="#8A7F63" /></button>
+              </div>
             </div>
             <div style={{ background: '#E7EBCB', borderRadius: 13, padding: 10 }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 7, marginBottom: 6, flexWrap: 'nowrap' }}>
-              <button onClick={() => deleteCase(historyCase.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', borderRadius: 9, background: '#D8560E', color: '#FFFFFF', padding: '5px 10px 5px 6px', cursor: 'pointer', fontWeight: 700, fontSize: 11.5 }}><CuteIcon name="noEntrySolid" size={10} tone="cream" box={19} /> Delete</button>
-              <button onClick={() => editingCase ? saveCaseEdit() : startEditCase(historyCase)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', borderRadius: 9, background: '#CBD183', color: '#1F5B54', padding: '5px 10px 5px 6px', cursor: 'pointer', fontWeight: 700, fontSize: 11.5 }}>{editingCase ? <CuteIcon name="check" size={10} tone="yellow" box={19} /> : <CuteIcon name="pencil" size={10} tone="brown" box={19} />} {editingCase ? 'Save case' : 'Edit case'}</button>
-            </div>
             {historyVisitsSorted.map((v, idx) => {
               const cancelled = v.status === 'cancelled';
               return (
@@ -905,7 +905,7 @@ function ScheduleCalendar() {
                   <button onClick={() => { if (addPanelOpen) { setAddPanelOpen(false); setAddChoiceOpen(false); } else setAddChoiceOpen(v => !v); }} aria-label="เพิ่มเคส" title="เพิ่มเคส" style={{ width: 44, height: 44, borderRadius: 14, border: 'none', background: '#E45C32', color: '#FFF9E8', cursor: 'pointer', display: 'grid', placeItems: 'center', boxShadow: '5px 5px 0 #FFD84D, 0 10px 22px rgba(111,70,56,.18)', fontSize: 28, fontWeight: 700, lineHeight: 1, transform: addPanelOpen ? 'rotate(45deg)' : 'none', transition: 'transform .22s ease, filter .22s ease' }}>+</button>
                 </div>
 
-                {addPanelOpen && <div style={{ background: '#EFCE7B', border: 'none', borderRadius: 10, padding: 14 }}>
+                {addPanelOpen && <div className="case-add-panel" style={{ background: '#EFCE7B', border: 'none', borderRadius: 10, padding: 14 }}>
                   <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
                     <button onClick={() => { setAddMode('new'); setPickedCaseId(null); }} style={{ fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', background: addMode === 'new' ? '#1F5B54' : '#F0EBDD', color: addMode === 'new' ? '#FAF6EF' : '#5C6D68' }}>เคสใหม่</button>
                     <button onClick={() => setAddMode('existing')} style={{ fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', background: addMode === 'existing' ? '#1F5B54' : '#F0EBDD', color: addMode === 'existing' ? '#FAF6EF' : '#5C6D68' }}>เคสเดิม (นัดต่อเนื่อง)</button>
@@ -913,13 +913,11 @@ function ScheduleCalendar() {
 
                   {addMode === 'new' && (
                     <>
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-                        <input placeholder="HN" value={fHn} onChange={e => setFHn(e.target.value)} style={{ width: 90, fontSize: 13, border: '1px solid #DCD4C4', borderRadius: 6, padding: '7px 9px', fontFamily: "'IBM Plex Mono', monospace" }} />
-                        <input placeholder="ชื่อคนไข้" value={fName} onChange={e => setFName(e.target.value)} style={{ flex: '1 1 140px', fontSize: 13, border: '1px solid #DCD4C4', borderRadius: 6, padding: '7px 9px', fontFamily: "'Sarabun', sans-serif" }} />
-                        <input placeholder="เบอร์ติดต่อ" value={fPhone} onChange={e => setFPhone(e.target.value)} style={{ width: 130, fontSize: 13, border: '1px solid #DCD4C4', borderRadius: 6, padding: '7px 9px', fontFamily: "'Sarabun', sans-serif" }} />
-                      </div>
-                      <div style={{ marginBottom: 8 }}>
-                        <CleanSelect value={fCategory} onChange={setFCategory} options={categories.map(cat => ({ value: cat, label: cat }))}
+                      <div className="new-case-fields" style={{ display: 'grid', gridTemplateColumns: '90px minmax(140px,1fr) 130px minmax(120px,.65fr)', gap: 8, marginBottom: 8 }}>
+                        <input placeholder="HN" value={fHn} onChange={e => setFHn(e.target.value)} style={{ minWidth: 0, fontSize: 13, border: '1px solid #DCD4C4', borderRadius: 6, padding: '7px 9px', fontFamily: "'IBM Plex Mono', monospace" }} />
+                        <input placeholder="ชื่อคนไข้" value={fName} onChange={e => setFName(e.target.value)} style={{ minWidth: 0, fontSize: 13, border: '1px solid #DCD4C4', borderRadius: 6, padding: '7px 9px', fontFamily: "'Sarabun', sans-serif" }} />
+                        <input placeholder="เบอร์ติดต่อ" value={fPhone} onChange={e => setFPhone(e.target.value)} style={{ minWidth: 0, fontSize: 13, border: '1px solid #DCD4C4', borderRadius: 6, padding: '7px 9px', fontFamily: "'Sarabun', sans-serif" }} />
+                        <CleanSelect className="new-case-category" value={fCategory} onChange={setFCategory} options={categories.map(cat => ({ value: cat, label: cat }))}
                           style={{ minWidth: 120, fontSize: 12.5, fontWeight: 600, borderRadius: 6, padding: '7px 10px', background: (categoryStyles[fCategory] || CATEGORY_STYLE['อื่นๆ']).bg, color: (categoryStyles[fCategory] || CATEGORY_STYLE['อื่นๆ']).text }} ariaLabel="ประเภทงาน" />
                       </div>
                     </>
@@ -927,7 +925,7 @@ function ScheduleCalendar() {
 
                   {addMode === 'existing' && !pickedCaseId && (
                     <div style={{ marginBottom: 8, position: 'relative' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', borderRadius: 6, padding: '6px 9px', background: '#FFFFFF' }}>
+                      <div className="existing-case-search" style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', borderRadius: 6, padding: '6px 9px', background: '#FFFFFF' }}>
                         <Icon name="search" size={13} color="#8A7F63" />
                         <input placeholder="ค้นหาด้วย HN หรือชื่อ" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                           style={{ border: 'none', outline: 'none', fontSize: 13, flex: 1, fontFamily: "'Sarabun', sans-serif" }} />
@@ -953,23 +951,24 @@ function ScheduleCalendar() {
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                  <div className="appointment-time-row" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
                     <input type="time" value={fTime} onChange={e => setFTime(e.target.value)} style={{ fontSize: 13, border: '1px solid #DCD4C4', borderRadius: 6, padding: '7px 9px', fontFamily: "'IBM Plex Mono', monospace" }} />
-                    <span style={{ fontSize: 12, color: '#5C6D68' }}>ระยะเวลา</span>
-                    <div style={{ display: 'flex', alignItems: 'center', border: 'none', borderRadius: 6, overflow: 'hidden' }}>
-                      <button className="stepbtn" onClick={() => setFDuration(Math.max(15, fDuration - 15))} style={{ border: 'none', background: '#F0EBDD', color: '#1F5B54', width: 28, height: 28, cursor: 'pointer', fontWeight: 700 }}>−</button>
-                      <div style={{ width: 56, textAlign: 'center', fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, fontWeight: 600 }}>{fDuration} น.</div>
-                      <button className="stepbtn" onClick={() => setFDuration(fDuration + 15)} style={{ border: 'none', background: '#F0EBDD', color: '#1F5B54', width: 28, height: 28, cursor: 'pointer', fontWeight: 700 }}>+</button>
+                    <div className="duration-line" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', border: 'none', borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
+                        <button className="stepbtn" onClick={() => setFDuration(Math.max(15, fDuration - 15))} style={{ border: 'none', background: '#F0EBDD', color: '#1F5B54', width: 28, height: 28, cursor: 'pointer', fontWeight: 700 }}>−</button>
+                        <div style={{ width: 56, textAlign: 'center', fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, fontWeight: 600 }}>{fDuration} น.</div>
+                        <button className="stepbtn" onClick={() => setFDuration(fDuration + 15)} style={{ border: 'none', background: '#F0EBDD', color: '#1F5B54', width: 28, height: 28, cursor: 'pointer', fontWeight: 700 }}>+</button>
+                      </div>
+                      <span style={{ fontSize: 11.5, color: '#B9AF9A', whiteSpace: 'nowrap' }}>ถึง {minToTime(timeToMin(fTime) + fDuration)}</span>
                     </div>
-                    <span style={{ fontSize: 11.5, color: '#B9AF9A' }}>ถึง {minToTime(timeToMin(fTime) + fDuration)}</span>
                   </div>
                   <input placeholder={addMode === 'new' ? 'หมายเหตุ / งานที่ทำ (ไม่บังคับ)' : 'ขั้นตอนครั้งนี้ เช่น "Insert RPD ครั้งที่ 2/3"'} value={fStep} onChange={e => setFStep(e.target.value)}
                     style={{ width: '100%', fontSize: 13, border: '1px solid #DCD4C4', borderRadius: 6, padding: '7px 9px', marginBottom: 8, fontFamily: "'Sarabun', sans-serif" }} />
 
                   {addMode === 'new' ? (
-                    <button onClick={createCase} disabled={!fName.trim()} style={{ fontSize: 12.5, fontWeight: 600, background: fName.trim() ? '#1F5B54' : '#DCD4C4', color: '#FAF6EF', border: 'none', borderRadius: 6, padding: '7px 14px', cursor: fName.trim() ? 'pointer' : 'default' }}>+ สร้างเคสใหม่</button>
+                    <button className="motion-cta" onClick={createCase} disabled={!fName.trim()} style={{ fontSize: 12.5, fontWeight: 700, cursor: fName.trim() ? 'pointer' : 'default' }}>สร้างเคสใหม่</button>
                   ) : (
-                    <button onClick={addVisitToCase} disabled={!pickedCaseId} style={{ fontSize: 12.5, fontWeight: 600, background: pickedCaseId ? '#1F5B54' : '#DCD4C4', color: '#FAF6EF', border: 'none', borderRadius: 6, padding: '7px 14px', cursor: pickedCaseId ? 'pointer' : 'default' }}>+ เพิ่มนัดนี้ในเคส</button>
+                    <button className="motion-cta" onClick={addVisitToCase} disabled={!pickedCaseId} style={{ fontSize: 12.5, fontWeight: 700, cursor: pickedCaseId ? 'pointer' : 'default' }}>เพิ่มนัดนี้ในเคส</button>
                   )}
                 </div>}
 
@@ -1017,7 +1016,7 @@ function ScheduleCalendar() {
                         const s = c.shift ? SHIFT_STYLE[c.shift] : null;
                         return (
                           <div key={c.dstr} style={{ minHeight: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <div className="ov-cell" onClick={e => { e.stopPropagation(); if (!window.matchMedia('(max-width: 600px)').matches) openOverviewPicker(e, c, m); }} onPointerDown={e => startOverviewPress(e, c, m)} onPointerUp={cancelOverviewPress} onPointerCancel={cancelOverviewPress} onPointerLeave={cancelOverviewPress} onContextMenu={e => e.preventDefault()} title={c.shift || 'เลือกห้อง'}
+                          <div className="ov-cell" onClick={e => { e.stopPropagation(); cancelOverviewPress(); openOverviewPicker(e, c, m); }} onPointerDown={e => startOverviewPress(e, c, m)} onPointerUp={cancelOverviewPress} onPointerCancel={cancelOverviewPress} onPointerLeave={cancelOverviewPress} onContextMenu={e => e.preventDefault()} title={c.shift || 'เลือกห้อง'}
                             style={{ width: 34, height: 34, borderRadius: '50%', background: s ? s.soft : '#FFFFFF', color: s ? s.date : '#1F3A35', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', fontSize: 11.5, fontWeight: 600, fontFamily: "'IBM Plex Sans Thai', sans-serif", touchAction: 'manipulation', userSelect: 'none' }}>
                             {c.day}
                           </div>
@@ -1033,15 +1032,15 @@ function ScheduleCalendar() {
           </div>
         )}
 
-        {view === 'deck' && (
+        {false && (
           <div className="view-panel">
             <div className="deck-hint">SWIPE UP / DOWN · {deckItems[deckIndex]?.dstr}</div>
             <div className={`deck-stage ${deckDragging ? 'dragging' : ''}`}
               onTouchStart={e => { if (deckGlideTimer.current) clearTimeout(deckGlideTimer.current); deckGlideTimer.current = null; deckTouchY.current = e.touches[0].clientY; deckTouchTime.current = Date.now(); deckMoved.current = false; setDeckDragging(true); setDeckDragY(0); }}
               onTouchMove={e => { if (deckTouchY.current === null) return; const drag = e.touches[0].clientY - deckTouchY.current; if (Math.abs(drag) > 5) deckMoved.current = true; setDeckDragY(Math.max(-150, Math.min(150, drag))); }}
               onTouchCancel={() => { deckTouchY.current = null; setDeckDragging(false); setDeckDragY(0); }}
-              onTouchEnd={e => { const drag = e.changedTouches[0].clientY - (deckTouchY.current ?? e.changedTouches[0].clientY); const velocity = drag / Math.max(1, Date.now() - deckTouchTime.current); if (Math.abs(drag) > 32 || Math.abs(velocity) > .3) { const distanceSteps = Math.max(1, Math.round(Math.abs(drag) / 58)); const velocitySteps = Math.max(1, Math.ceil(Math.abs(velocity) * 2.2)); const steps = Math.min(5, Math.max(distanceSteps, velocitySteps)); glideDeck(drag < 0 ? 1 : -1, steps); } deckTouchY.current = null; setDeckDragging(false); setDeckDragY(0); }}
-              onWheel={e => { if (Math.abs(e.deltaY) < 1) return; if (deckGlideTimer.current) { clearTimeout(deckGlideTimer.current); deckGlideTimer.current = null; } deckWheelAccum.current += e.deltaY; setDeckDragging(true); setDeckDragY(Math.max(-150, Math.min(150, -deckWheelAccum.current))); if (deckWheelTimer.current) clearTimeout(deckWheelTimer.current); deckWheelTimer.current = setTimeout(() => { const delta = deckWheelAccum.current; const steps = Math.min(6, Math.max(1, Math.round(Math.abs(delta) / 55))); deckWheelAccum.current = 0; setDeckDragging(false); setDeckDragY(0); glideDeck(delta > 0 ? 1 : -1, steps); }, 85); }}>
+              onTouchEnd={e => { const drag = e.changedTouches[0].clientY - (deckTouchY.current ?? e.changedTouches[0].clientY); const velocity = drag / Math.max(1, Date.now() - deckTouchTime.current); if (Math.abs(drag) > 32 || Math.abs(velocity) > .3) glideDeck(drag < 0 ? 1 : -1, 1); deckTouchY.current = null; setDeckDragging(false); setDeckDragY(0); }}
+              onWheel={e => { if (Math.abs(e.deltaY) < 1 || deckWheelCooldown.current) return; if (deckGlideTimer.current) { clearTimeout(deckGlideTimer.current); deckGlideTimer.current = null; } deckWheelAccum.current += e.deltaY; setDeckDragging(true); setDeckDragY(Math.max(-110, Math.min(110, -deckWheelAccum.current))); if (deckWheelTimer.current) clearTimeout(deckWheelTimer.current); deckWheelTimer.current = setTimeout(() => { const delta = deckWheelAccum.current; deckWheelAccum.current = 0; setDeckDragging(false); setDeckDragY(0); deckWheelCooldown.current = true; glideDeck(delta > 0 ? 1 : -1, 1); setTimeout(() => { deckWheelCooldown.current = false; }, 420); }, 85); }}>
               {deckItems.map((c, i) => {
                 const offset = i - deckIndex;
                 const s = c.shift ? SHIFT_STYLE[c.shift] : null;
@@ -1097,7 +1096,7 @@ function ScheduleCalendar() {
         {overviewPicker && (
           <>
             <div onClick={() => setOverviewPicker(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(43,43,35,.08)', zIndex: 80 }} />
-            <div className="overview-shift-popover" style={{ left: Math.min(overviewPicker.x + 8, window.innerWidth - 238), top: Math.min(overviewPicker.y + 8, window.innerHeight - 390) }}>
+            <div className="overview-shift-popover" style={{ left: Math.min(overviewPicker.x + 8, window.innerWidth - 212), top: Math.min(overviewPicker.y + 8, window.innerHeight - 250) }}>
               <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 14, fontWeight: 700, color: '#1F3A35', marginBottom: 2 }}>เลือกห้อง</div>
               <div style={{ fontSize: 11.5, color: '#8A7F63', marginBottom: 11 }}>{overviewPicker.date}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 7 }}>
@@ -1105,7 +1104,7 @@ function ScheduleCalendar() {
               </div>
               <div style={{ display: 'flex', gap: 7, marginTop: 9 }}>
                 <button onClick={() => { setShift(overviewPicker.date, null); setOverviewPicker(null); }} style={{ flex: 1, border: 'none', borderRadius: 10, padding: '8px', background: '#F3EAE3', color: '#5C6D68', cursor: 'pointer', fontWeight: 600 }}>ไม่ระบุ</button>
-                <button onClick={() => { const p = overviewPicker; setOverviewPicker(null); openDay(p.date, p.year, p.month); }} style={{ flex: 1, border: 'none', borderRadius: 10, padding: '8px', background: '#6777B6', color: '#FFFFFF', cursor: 'pointer', fontWeight: 600 }}>เปิดวัน</button>
+                <button className="motion-cta" onClick={() => { const p = overviewPicker; setOverviewPicker(null); openDay(p.date, p.year, p.month); }} style={{ flex: 1, cursor: 'pointer', fontWeight: 700 }}>เปิดวัน</button>
               </div>
             </div>
           </>
@@ -1120,9 +1119,9 @@ function ScheduleCalendar() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
               <div style={{ fontSize: 12.5, fontWeight: 600, color: '#8A7F63' }}>Total {patientListResults.length} cases</div>
-              <CleanSelect className="align-right" value={patientSort} onChange={setPatientSort} ariaLabel="Sort patient list"
+              <CleanSelect className="patient-filter-select align-right" value={patientSort} onChange={setPatientSort} ariaLabel="Sort patient list" iconOnly
                 options={[{ value: 'date', label: 'Date' }, { value: 'name', label: 'A–Z' }, { value: 'hn', label: 'HN' }, { value: 'category', label: 'Work type' }]}
-                style={{ minWidth: 112, borderRadius: 999, padding: '7px 12px', background: '#D3C2CD', color: '#1F5B54', fontFamily: "'Manrope', sans-serif", fontWeight: 800 }} />
+                style={{ background: 'transparent' }} />
             </div>
             <div className="patient-scroll" style={{ flex: 1 }}>
             {patientListResults.map(c => {
@@ -1152,9 +1151,9 @@ function ScheduleCalendar() {
         <div className="view-panel" style={{ background: '#EFCE7B', borderRadius: 18, padding: 16, marginBottom: 14 }}>
           <div style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: 15, color: '#2B2B23', marginBottom: 10 }}>ประเภทงาน</div>
           <form className="category-add-form" onSubmit={e => { e.preventDefault(); addCategory(); }} style={{ display: 'grid', gridTemplateColumns: 'minmax(140px,1fr) minmax(130px,.65fr) auto', gap: 8, marginBottom: 12 }}>
-            <input value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="เพิ่มประเภทงานใหม่" style={{ flex: 1, background: '#FFFFFF', borderRadius: 8, padding: '9px 11px', fontFamily: "'Sarabun', sans-serif", fontSize: 13 }} />
-            <CleanSelect value={newCategoryTheme} onChange={setNewCategoryTheme} options={Object.entries(CATEGORY_THEME_OPTIONS).map(([value, t]) => ({ value, label: t.label }))} style={{ width: '100%', height: '100%', borderRadius: 8, padding: '8px 10px', background: CATEGORY_THEME_OPTIONS[newCategoryTheme].bg, color: CATEGORY_THEME_OPTIONS[newCategoryTheme].text, fontWeight: 700 }} ariaLabel="เลือกสีประเภทงาน" />
-            <button type="submit" disabled={!newCategory.trim()} style={{ border: 'none', borderRadius: 8, padding: '8px 14px', background: newCategory.trim() ? '#6777B6' : '#B9AF9A', color: '#FFFFFF', fontWeight: 700, cursor: newCategory.trim() ? 'pointer' : 'default' }}>+ เพิ่ม</button>
+            <input className="category-name-input" value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="เพิ่มประเภทงานใหม่" style={{ flex: 1, background: '#FFFFFF', borderRadius: 8, padding: '9px 11px', fontFamily: "'Sarabun', sans-serif", fontSize: 13 }} />
+            <CleanSelect className="category-theme-select" value={newCategoryTheme} onChange={setNewCategoryTheme} options={Object.entries(CATEGORY_THEME_OPTIONS).map(([value, t]) => ({ value, label: t.label }))} style={{ width: '100%', height: '100%', borderRadius: 8, padding: '8px 10px', background: CATEGORY_THEME_OPTIONS[newCategoryTheme].bg, color: CATEGORY_THEME_OPTIONS[newCategoryTheme].text, fontWeight: 700 }} ariaLabel="เลือกสีประเภทงาน" />
+            <button className="category-add-button" type="submit" disabled={!newCategory.trim()} style={{ border: 'none', borderRadius: 8, padding: '8px 14px', background: newCategory.trim() ? '#6777B6' : '#B9AF9A', color: '#FFFFFF', fontWeight: 700, cursor: newCategory.trim() ? 'pointer' : 'default' }}>+ เพิ่ม</button>
           </form>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
             {categories.map(cat => { const s = categoryStyles[cat] || CATEGORY_STYLE['อื่นๆ']; return <span key={cat} style={{ display: 'flex', alignItems: 'center', gap: 6, background: s.bg, color: s.text, borderRadius: 4, padding: '5px 7px', fontSize: 12, fontWeight: 700 }}><span>{cat}</span>{!DEFAULT_CATEGORIES.includes(cat) && <button onClick={() => removeCategory(cat)} style={{ border: 'none', background: 'rgba(255,255,255,.35)', borderRadius: 2, padding: 1, cursor: 'pointer', color: s.text, lineHeight: 0 }}><Icon name="x" size={11} /></button>}</span>; })}
