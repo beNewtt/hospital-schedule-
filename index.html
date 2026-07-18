@@ -630,7 +630,7 @@ function ScheduleCalendar() {
     const cancelled = v.status === 'cancelled';
     return (
       <div style={{ padding: '8px 10px', borderRadius: 8, background: cancelled ? '#F3EDE9' : '#FAF6EF', marginBottom: 6, opacity: cancelled ? 0.7 : 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div className="visit-row-inner" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 13, fontWeight: 600, color: cancelled ? '#B9AF9A' : '#000000', minWidth: 92, textDecoration: cancelled ? 'line-through' : 'none' }}>
             {v.time}–{minToTime(timeToMin(v.time) + v.duration)}
           </div>
@@ -693,10 +693,15 @@ function ScheduleCalendar() {
         .nav-icon { width: 31px; height: 31px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: transparent; color: #FFFFFF; cursor: pointer; transition: color .15s ease, transform .15s ease; }
         .nav-icon:hover { color: #EFCE7B !important; transform: translateY(-1px); }
         .nav-icon.active { color: #CBD183; }
-        .nav-group { display: inline-flex; align-items: center; padding: 3px; border-radius: 999px; background: #FFFFFF; }
-        .nav-text { border: none; background: transparent; color: #2B2B23; padding: 6px 11px; border-radius: 999px; font-family: 'Kanit', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: color .2s ease, background .2s ease, transform .2s ease; }
+        .nav-group { position: relative; display: grid; grid-template-columns: repeat(3,1fr); align-items: center; padding: 3px; border-radius: 999px; background: #FFFFFF; overflow: hidden; }
+        .nav-group::before { content: ''; position: absolute; left: 3px; top: 3px; bottom: 3px; width: calc((100% - 6px) / 3); border-radius: 999px; background: #CBD183; opacity: 1; transform: translateX(0); transition: transform 280ms cubic-bezier(.22,.8,.3,1), opacity 160ms ease; }
+        .nav-group.nav-overview::before { transform: translateX(100%); }
+        .nav-group.nav-patients::before { transform: translateX(200%); }
+        .nav-group.nav-settings::before { opacity: 0; }
+        .nav-text { position: relative; z-index: 1; min-width: 64px; border: none; background: transparent; color: #2B2B23; padding: 6px 11px; border-radius: 999px; font-family: 'Kanit', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: color .2s ease, transform .2s ease; }
         .nav-text:hover { color: #D8560E; transform: translateY(-1px); }
-        .nav-text.active { color: #1F5B54; background: #CBD183; }
+        .nav-text.active { color: #1F5B54; background: transparent; }
+        @media (prefers-reduced-motion: reduce) { .nav-group::before { transition-duration: 1ms; } }
         .stepbtn { transition: background 0.15s ease; }
         .stepbtn:hover { background: #1F5B54 !important; color: #FAF6EF !important; }
         .search-item:hover { background: #F0EBDD !important; }
@@ -741,21 +746,30 @@ function ScheduleCalendar() {
           .view-panel { animation-duration: .2s; }
           .history-panel .history-actions { width: 100%; justify-content: flex-end !important; padding-right: 28px; box-sizing: border-box; }
           .history-panel .history-close { position: absolute; top: 12px; right: 10px; }
+          .header-nav-wrap { margin-left: auto !important; margin-right: 0 !important; }
+          .visit-row-inner > span + button { margin-left: auto !important; }
           .new-case-fields { grid-template-columns: minmax(92px,.8fr) minmax(0,1.35fr) !important; }
-          .appointment-time-row { align-items: flex-start !important; }
-          .appointment-time-row { flex-wrap: nowrap !important; gap: 7px !important; }
-          .appointment-time-row > input { flex: 0 0 110px; min-width: 0; }
+          .appointment-time-row { align-items: center !important; }
+          .appointment-time-row { flex-wrap: nowrap !important; gap: 0 !important; }
+          .appointment-time-row > input { flex: 0 0 128px; min-width: 0; }
           .duration-line { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap !important; gap: 6px !important; }
           .duration-line .stepbtn { width: 25px !important; }
-          .duration-line > div > div { width: 46px !important; }
+          .duration-line > div > div { width: 62px !important; }
           .duration-line > span:last-child { font-size: 10px !important; }
         }
         .new-case-category, .new-case-category > button { width: 100%; }
         .settings-corner { position: absolute; right: 16px; top: 12px; z-index: 2; }
-        .case-add-panel input { background: transparent !important; border: none !important; border-radius: 0 !important; box-shadow: inset 0 -1px 0 rgba(31,91,84,.24); transition: box-shadow .18s ease, background .18s ease; }
-        .case-add-panel input:focus { background: rgba(255,249,232,.24) !important; box-shadow: inset 0 -2px 0 #1F5B54; }
-        .case-add-panel .existing-case-search { background: transparent !important; border-radius: 0 !important; box-shadow: inset 0 -1px 0 rgba(31,91,84,.24); }
-        .case-add-panel .existing-case-search input { box-shadow: none !important; }
+        .case-add-panel input { height: 32px; padding-top: 0 !important; padding-bottom: 0 !important; background: transparent !important; border: none !important; border-radius: 8px !important; box-shadow: none !important; transition: background .18s ease; }
+        .case-add-panel input:focus { background: rgba(255,249,232,.42) !important; box-shadow: none !important; }
+        .case-add-panel .existing-case-search { height: 32px; padding-top: 3px !important; padding-bottom: 3px !important; background: transparent !important; border-radius: 8px !important; box-shadow: none !important; }
+        .case-add-panel .existing-case-search input { height: 26px; box-shadow: none !important; }
+        .case-add-panel .appointment-time-row { gap: 0 !important; }
+        .case-add-panel .appointment-time-row input[type="time"] { height: 32px; padding-top: 0 !important; padding-bottom: 0 !important; background: #1F5B54 !important; color: #FFFFFF !important; border-radius: 9px 0 0 9px !important; font-family: 'Nunito', sans-serif !important; font-size: 14px !important; font-weight: 800 !important; letter-spacing: .2px; color-scheme: dark; }
+        .case-add-panel .appointment-time-row input[type="time"]::-webkit-calendar-picker-indicator { filter: brightness(0) invert(1); opacity: .9; }
+        .case-add-panel .duration-line > div { height: 32px; background: #1F5B54; color: #FFFFFF; border-radius: 0 9px 9px 0 !important; }
+        .case-add-panel .duration-line .stepbtn { height: 32px !important; background: transparent !important; color: #FFFFFF !important; }
+        .case-add-panel .duration-line > div > div { width: 62px !important; height: 32px; display: flex; align-items: center; justify-content: center; color: #FFFFFF !important; font-family: 'Nunito', sans-serif !important; font-weight: 800 !important; white-space: nowrap; }
+        .case-add-panel .duration-line > span:last-child { color: #1F5B54 !important; font-weight: 800; }
         .motion-cta { position: relative !important; isolation: isolate; overflow: hidden; min-height: 34px; padding: 7px 13px 7px 38px !important; border: none !important; border-radius: 999px !important; background: #FFF9E8 !important; color: #1F5B54 !important; box-shadow: none !important; transition: color .42s cubic-bezier(.65,0,.076,1), transform .18s ease !important; }
         .motion-cta::before { content: ''; position: absolute; z-index: -1; left: 3px; top: 50%; width: 28px; height: 28px; border-radius: 999px; background: #1F5B54; transform: translateY(-50%); transition: width .42s cubic-bezier(.65,0,.076,1), height .42s cubic-bezier(.65,0,.076,1), left .42s cubic-bezier(.65,0,.076,1); }
         .motion-cta::after { content: '›'; position: absolute; left: 13px; top: 50%; color: #FFF9E8; font-size: 20px; font-weight: 500; line-height: 1; transform: translateY(-53%); transition: transform .42s cubic-bezier(.65,0,.076,1); }
@@ -777,8 +791,8 @@ function ScheduleCalendar() {
             <h1 style={{ fontFamily: "'Kanit', sans-serif", fontSize: 24, fontWeight: 700, margin: 0, color: '#FFFFFF' }}>
               {view === 'calendar' ? `${THAI_MONTH_NAMES[month - 1]} ${year}` : view === 'overview' ? `OVERVIEW ${year}` : view === 'patients' ? 'PATIENT LIST' : 'SETTINGS'}
             </h1>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginLeft: 'auto', marginRight: 46 }}>
-              <div className="nav-group">
+            <div className="header-nav-wrap" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginLeft: 'auto', marginRight: 46 }}>
+              <div className={`nav-group nav-${view}`}>
                 <button onClick={() => setView('calendar')} className={`nav-text ${view === 'calendar' ? 'active' : ''}`}>ปฏิทิน</button>
                 <button onClick={() => setView('overview')} className={`nav-text ${view === 'overview' ? 'active' : ''}`}>ภาพรวม</button>
                 <button onClick={() => setView('patients')} className={`nav-text ${view === 'patients' ? 'active' : ''}`}>คนไข้</button>
@@ -956,7 +970,7 @@ function ScheduleCalendar() {
                     <div className="duration-line" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ display: 'flex', alignItems: 'center', border: 'none', borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
                         <button className="stepbtn" onClick={() => setFDuration(Math.max(15, fDuration - 15))} style={{ border: 'none', background: '#F0EBDD', color: '#1F5B54', width: 28, height: 28, cursor: 'pointer', fontWeight: 700 }}>−</button>
-                        <div style={{ width: 56, textAlign: 'center', fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, fontWeight: 600 }}>{fDuration} น.</div>
+                        <div style={{ width: 56, textAlign: 'center', fontFamily: "'Nunito', sans-serif", fontSize: 13, fontWeight: 800 }}>{fDuration} min</div>
                         <button className="stepbtn" onClick={() => setFDuration(fDuration + 15)} style={{ border: 'none', background: '#F0EBDD', color: '#1F5B54', width: 28, height: 28, cursor: 'pointer', fontWeight: 700 }}>+</button>
                       </div>
                       <span style={{ fontSize: 11.5, color: '#B9AF9A', whiteSpace: 'nowrap' }}>ถึง {minToTime(timeToMin(fTime) + fDuration)}</span>
