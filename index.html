@@ -110,7 +110,7 @@ function Icon({ name, size = 16, color = 'currentColor' }) {
     case 'noEntrySolid': return <svg width={size} height={size} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor" /><rect x="5" y="10.5" width="14" height="3" rx="1.5" fill="#fff" /></svg>;
     case 'cuteSettings': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#E45C32" d="m13.4 1.5 5.2.1.8 4a12 12 0 0 1 2.2 1.3l3.8-1.3 2.5 4.6-3 2.7c.1.8.1 1.7 0 2.5l3.1 2.6-2.5 4.6-3.9-1.2c-.7.5-1.4 1-2.2 1.3l-.7 4-5.2.1-.9-4a12 12 0 0 1-2.2-1.2l-3.8 1.3-2.7-4.5 3-2.8a12 12 0 0 1 0-2.5L3.8 10.5 6.3 6l3.9 1.2c.7-.5 1.4-1 2.2-1.3l1-4.4Z"/><circle cx="16" cy="14.3" r="7.1" fill="#FFD84D"/><circle cx="13.7" cy="13.2" r=".9" fill="#6F4638"/><circle cx="18.3" cy="13.2" r=".9" fill="#6F4638"/><path d="M14.2 16.1c1.2 1 2.4 1 3.6 0" fill="none" stroke="#6F4638" strokeWidth="1.2" strokeLinecap="round"/></svg>;
     case 'cuteHistory': return <svg width={size} height={size} viewBox="0 0 32 32"><g transform="rotate(-3 16 16)"><rect x="5" y="5" width="21" height="23" rx="3" fill="#FFF9E8"/><rect x="9" y="3.5" width="18" height="24" rx="2.4" fill="#95604D"/><rect x="5" y="7" width="6" height="2" rx="1" fill="#FFD84D"/><rect x="5" y="12" width="6" height="2" rx="1" fill="#FFD84D"/><rect x="5" y="17" width="6" height="2" rx="1" fill="#FFD84D"/><rect x="5" y="22" width="6" height="2" rx="1" fill="#FFD84D"/><circle cx="18" cy="15" r="5.2" fill="#FFF9E8"/><circle cx="16.3" cy="14" r=".8" fill="#442B24"/><circle cx="19.7" cy="14" r=".8" fill="#442B24"/><path d="m17 16.2 1-1 1 1-1 1.2Z" fill="#442B24"/><path d="M15.8 18.2c1.4-.8 3-.8 4.4 0" fill="none" stroke="#442B24" strokeWidth="1" strokeLinecap="round"/></g></svg>;
-    case 'cuteCancel': return <svg width={size} height={size} viewBox="0 0 32 32"><rect x="5" y="6" width="22" height="21" rx="6" fill="#FFD84D"/><circle cx="16" cy="15" r="9" fill="#E45C32"/><circle cx="13" cy="13" r="1" fill="#FFF9E8"/><circle cx="19" cy="13" r="1" fill="#FFF9E8"/><rect x="10" y="16" width="12" height="3" rx="1.5" fill="#FFF9E8"/><circle cx="25" cy="7" r="3" fill="#95604D"/></svg>;
+    case 'cuteCancel': return <svg width={size} height={size} viewBox="0 0 32 32"><circle cx="16" cy="18" r="10" fill="#FFD84D"/><circle cx="16" cy="14" r="10" fill="#E45C32"/><rect x="9" y="12" width="14" height="4" rx="2" fill="#FFF9E8"/></svg>;
     case 'cuteRestore': return <svg width={size} height={size} viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="#CBD183"/><path d="M9.1 15.2a7.3 7.3 0 0 1 12.7-4.1" fill="none" stroke="#95604D" strokeWidth="3" strokeLinecap="round"/><path d="m21.2 7.5 4.3 4.2-5.6 1.5Z" fill="#95604D"/><path d="M22.9 17a7.3 7.3 0 0 1-12.7 4.1" fill="none" stroke="#E45C32" strokeWidth="3" strokeLinecap="round"/><path d="m10.8 24.6-4.3-4.2 5.6-1.5Z" fill="#E45C32"/><path d="m16 10.8 1.5 3.1 3.4.5-2.5 2.4.6 3.4-3-1.6-3 1.6.6-3.4-2.5-2.4 3.4-.5Z" fill="#FFD84D"/></svg>;
     case 'cuteFilter': return <svg width={size} height={size} viewBox="0 0 32 32"><rect x="5.5" y="6" width="23" height="23" rx="7" fill="#95604D" opacity=".24"/><rect x="3" y="3" width="24" height="24" rx="7" fill="#FFF9E8"/><path d="M8 10h14M8 16h14M8 22h14" fill="none" stroke="#95604D" strokeWidth="2.4" strokeLinecap="round"/><circle cx="13" cy="10" r="3" fill="#E45C32"/><circle cx="19" cy="16" r="3" fill="#FFD84D"/><circle cx="11" cy="22" r="3" fill="#CBD183"/><circle cx="24.5" cy="5.5" r="3.2" fill="#E45C32"/><path d="m23.2 5.5.9.9 1.7-1.8" fill="none" stroke="#FFF9E8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
     case 'google': return (
@@ -330,6 +330,7 @@ function parseLegacyToCases(apps) {
 function ScheduleCalendar() {
   const [view, setView] = useState('calendar');
   const today0 = new Date();
+  const todayStr = dateKey(today0.getFullYear(), today0.getMonth() + 1, today0.getDate());
   const [year, setYear] = useState(today0.getFullYear());
   const [month, setMonth] = useState(today0.getMonth() + 1);
   const [selected, setSelected] = useState(null);
@@ -341,6 +342,9 @@ function ScheduleCalendar() {
   const [newCategory, setNewCategory] = useState('');
   const [categoryStyles, setCategoryStyles] = useState(CATEGORY_STYLE);
   const [newCategoryTheme, setNewCategoryTheme] = useState('pistachio');
+  const [holidays, setHolidays] = useState({});
+  const [newHolidayDate, setNewHolidayDate] = useState(todayStr);
+  const [newHolidayName, setNewHolidayName] = useState('');
   const [loaded, setLoaded] = useState(false);
 
   const [addMode, setAddMode] = useState('new');
@@ -389,6 +393,10 @@ function ScheduleCalendar() {
       try {
         const ovrRes = await window.storage.get('shift-overrides', false);
         if (ovrRes?.value) setShiftOverrides(JSON.parse(ovrRes.value));
+      } catch (e) {}
+      try {
+        const holidayRes = await window.storage.get('holidays', false);
+        if (holidayRes?.value) setHolidays(JSON.parse(holidayRes.value));
       } catch (e) {}
 
       try {
@@ -462,6 +470,20 @@ function ScheduleCalendar() {
     setShiftOverrides(next);
     try { await window.storage.set('shift-overrides', JSON.stringify(next), false); } catch (e) {}
   };
+  const saveHolidays = async (next) => {
+    setHolidays(next);
+    try { await window.storage.set('holidays', JSON.stringify(next), false); } catch (e) {}
+  };
+  const addHoliday = () => {
+    if (!newHolidayDate) return;
+    saveHolidays({ ...holidays, [newHolidayDate]: newHolidayName.trim() || 'วันหยุด' });
+    saveOverrides({ ...shiftOverrides, [newHolidayDate]: 'off' });
+    setNewHolidayName('');
+  };
+  const removeHoliday = (dstr) => {
+    const nextHolidays = { ...holidays }; delete nextHolidays[dstr]; saveHolidays(nextHolidays);
+    const nextOverrides = { ...shiftOverrides }; delete nextOverrides[dstr]; saveOverrides(nextOverrides);
+  };
   const saveCategories = async (next) => {
     setCategories(next);
     try { await window.storage.set('categories', JSON.stringify(next), false); } catch (e) {}
@@ -517,7 +539,6 @@ function ScheduleCalendar() {
     return !m || SKIP_WORDS.has((m[2] || '').trim());
   });
 
-  const todayStr = dateKey(today0.getFullYear(), today0.getMonth() + 1, today0.getDate());
 
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -705,14 +726,30 @@ function ScheduleCalendar() {
         .stepbtn { transition: background 0.15s ease; }
         .stepbtn:hover { background: #1F5B54 !important; color: #FAF6EF !important; }
         .search-item:hover { background: #F0EBDD !important; }
-        .plist-row { border: none !important; border-radius: 16px !important; transition: background .2s ease, transform .2s ease; }
-        .plist-row:hover { background: #F3F0E6 !important; }
+        .patient-workspace { display: grid; grid-template-columns: 148px minmax(0,1fr); gap: 18px; min-height: 0; flex: 1; }
+        .patient-sidebar { background: #D3C2CD; border-radius: 14px; padding: 9px; align-self: start; display: grid; gap: 5px; }
+        .patient-sort-btn { border: 0; background: transparent; color: #4B4F62; border-radius: 9px; padding: 10px 11px; text-align: left; font-family: 'Nunito', monospace; font-size: 12px; font-weight: 800; cursor: pointer; transition: background .18s ease, color .18s ease, transform .18s ease; }
+        .patient-sort-btn:hover { background: rgba(255,255,255,.42); transform: translateX(2px); }
+        .patient-sort-btn.active { background: #345EAE; color: #FFFFFF; }
+        .patient-list-main { min-width: 0; display: flex; flex-direction: column; }
+        .patient-table-head, .plist-row { display: grid; grid-template-columns: 115px minmax(150px,1.6fr) 90px 58px 145px; gap: 10px; align-items: center; }
+        .patient-table-head { padding: 0 13px 7px; color: #A9AEC2; font-family: 'Nunito', monospace; font-size: 10px; font-weight: 900; letter-spacing: .7px; text-transform: uppercase; }
+        .plist-row { border: none !important; border-radius: 10px !important; padding: 11px 13px !important; margin: 0 !important; background: transparent !important; transition: background .18s ease, transform .18s ease; }
+        .plist-row:nth-child(odd) { background: #E2E3EA !important; }
+        .plist-row:hover { background: #CBD183 !important; transform: translateX(2px); }
+        .patient-hn { color: #345EAE; font-family: 'Nunito', monospace; font-weight: 900; font-size: 12px; }
+        .patient-name { color: #303447; font-family: var(--font-thai-body); font-size: 13px; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .patient-count, .patient-date { color: #5C6176; font-family: 'Nunito', monospace; font-size: 11px; }
+        .patient-date { text-align: right; }
         .search-box { border: none !important; }
         input, select { border: none !important; outline: none; }
         .page-head { position: sticky; top: 0; z-index: 30; background: #6777B6; border-radius: 18px; padding: 18px 20px; box-shadow: 0 8px 22px rgba(103,119,182,.20); }
         .history-panel { position: sticky; top: 112px; z-index: 20; }
-        .case-edit-grid { display: grid !important; grid-template-columns: 110px minmax(180px,2fr) 150px 120px; gap: 7px !important; }
-        .case-edit-grid input, .case-edit-grid select { width: 100% !important; min-width: 0 !important; box-sizing: border-box; }
+        .case-edit-grid { display: grid !important; grid-template-columns: 110px minmax(180px,2fr) 150px 120px; gap: 12px !important; }
+        .case-edit-grid input { width: 100% !important; min-width: 0 !important; height: 34px; box-sizing: border-box; padding: 0 4px !important; border: none !important; border-bottom: 1px solid #C8BEA6 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
+        .case-edit-grid input:focus { border-bottom-color: #1F5B54 !important; }
+        .case-edit-category, .case-edit-category > button { width: 100% !important; min-width: 0 !important; }
+        .case-edit-category > button { height: 34px !important; padding: 0 4px !important; border-radius: 0 !important; background: transparent !important; border-bottom: 1px solid #C8BEA6 !important; box-shadow: none !important; }
         .patient-scroll { overflow-y: auto; padding-right: 4px; display: grid; grid-template-columns: 1fr; gap: 10px; align-content: start; }
         .patient-scroll .plist-row { margin-bottom: 0 !important; }
         .clean-select.patient-filter-select > button { width: 42px; height: 42px; padding: 4px !important; border-radius: 13px !important; background: transparent !important; box-shadow: none !important; justify-content: center !important; transition: transform .2s ease, filter .2s ease; }
@@ -726,11 +763,36 @@ function ScheduleCalendar() {
         .legend-card { overflow: hidden; box-shadow: 0 8px 22px rgba(43,43,35,.10); }
         .legend-head { background: #6777B6; color: #FFFFFF; margin: -16px -16px 14px; padding: 13px 16px; }
         .legend-row { background: #FFFFFF; color: #2B2B23; border-radius: 8px; padding: 7px 9px; }
+        .settings-section { background: transparent !important; border-radius: 0 !important; padding: 18px 4px 22px !important; margin-bottom: 0 !important; border-bottom: 1px solid #D3C2CD; }
+        .settings-title { font-family: 'Nunito', var(--font-thai-body) !important; font-size: 14px !important; font-weight: 900 !important; letter-spacing: .2px; color: #6F7690 !important; margin-bottom: 12px !important; }
+        .settings-section input { background: #E2E3EA !important; color: #303447 !important; border-radius: 8px !important; }
+        .settings-section input::placeholder { color: #A9AEC2; }
+        .holiday-settings > div:last-child > div { background: transparent !important; border-radius: 0 !important; border-bottom: 1px solid rgba(211,194,205,.65); padding: 8px 4px !important; }
+        .category-settings .clean-select > button { box-shadow: none !important; }
+        .category-settings > div:last-child { padding-top: 2px; }
+        .settings-legend { background: transparent !important; box-shadow: none !important; border-radius: 0 !important; padding: 20px 4px !important; }
+        .settings-legend .legend-head { background: transparent !important; color: #6F7690 !important; margin: 0 0 10px !important; padding: 0 !important; }
+        .settings-legend .legend-head > div { color: #6F7690 !important; font-family: 'Nunito', var(--font-thai-body) !important; font-weight: 900 !important; }
+        .settings-legend .legend-row { background: transparent !important; border-radius: 0 !important; padding: 9px 4px !important; margin: 0 !important; border-bottom: 1px solid rgba(211,194,205,.65); align-items: center !important; }
+        .settings-legend .legend-row > span:last-child { color: #4B4F62 !important; }
         @media (max-width: 600px) {
+          .patient-workspace { grid-template-columns: 1fr; gap: 10px; }
+          .patient-sidebar { display: flex; overflow-x: auto; border-radius: 12px; padding: 5px; gap: 4px; }
+          .patient-sort-btn { flex: 1 0 auto; text-align: center; padding: 7px 10px; font-size: 10px; }
+          .patient-table-head { display: none; }
+          .plist-row { grid-template-columns: auto minmax(0,1fr) auto; gap: 5px 9px; padding: 10px 11px !important; background: #FFFFFF !important; border-radius: 13px !important; }
+          .plist-row:nth-child(odd) { background: #E2E3EA !important; }
+          .patient-hn { grid-column: 1; }
+          .patient-name { grid-column: 2 / 4; }
+          .patient-category { grid-column: 1; grid-row: 2; justify-self: start; }
+          .patient-count { grid-column: 2; grid-row: 2; }
+          .patient-date { grid-column: 3; grid-row: 2; white-space: nowrap; }
           .category-add-form { grid-template-columns: minmax(0,1fr) auto !important; }
           .category-name-input { grid-column: 1 / -1; }
           .category-theme-select, .category-theme-select > button { width: 100%; }
           .category-add-button { min-width: 108px; }
+          .holiday-form { grid-template-columns: minmax(0,1fr) auto !important; }
+          .holiday-date { grid-column: 1 / -1; }
           .cell-shift-label { font-size: 8.5px !important; }
           .overview-grid { max-width: none; }
           .overview-month { grid-template-columns: 1fr; min-height: 0; }
@@ -823,11 +885,11 @@ function ScheduleCalendar() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: 0, fontSize: 14, color: '#1F5B54' }}>
                 <div style={{ marginBottom: editingCase ? 9 : 0 }}><span style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", fontWeight: 800, letterSpacing: .5 }}>CASE HISTORY :</span>{!editingCase && <> {historyCase.hn && <span style={{ fontFamily: "'IBM Plex Sans Thai', sans-serif", fontWeight: 700, color: '#6777B6' }}>HN {historyCase.hn} · </span>}<span style={{ fontFamily: "'Sarabun', sans-serif", fontWeight: 400 }}>{historyCase.name}</span> <span style={{ fontWeight: 500, color: '#8A7F63' }}>({historyCase.category})</span>{historyCase.phone && <span style={{ fontWeight: 500, color: '#8A7F63' }}> · Tel: {historyCase.phone}</span>}</>}</div>
-                {editingCase && <div className="case-edit-grid" style={{ background: '#CBD183', borderRadius: 13, padding: 10 }}>
+                {editingCase && <div className="case-edit-grid" style={{ background: 'transparent', borderRadius: 0, padding: 0 }}>
                   <input value={editCaseForm.hn} onChange={e => setEditCaseForm({ ...editCaseForm, hn: e.target.value })} placeholder="HN" style={{ padding: '9px 11px', borderRadius: 8, fontWeight: 700 }} />
                   <input value={editCaseForm.name} onChange={e => setEditCaseForm({ ...editCaseForm, name: e.target.value })} placeholder="ชื่อคนไข้" style={{ padding: '9px 11px', borderRadius: 8, fontFamily: "'Sarabun', sans-serif" }} />
                   <input value={editCaseForm.phone} onChange={e => setEditCaseForm({ ...editCaseForm, phone: e.target.value })} placeholder="เบอร์ติดต่อ" style={{ padding: '9px 11px', borderRadius: 8 }} />
-                  <CleanSelect value={editCaseForm.category} onChange={category => setEditCaseForm({ ...editCaseForm, category })} options={categories.map(x => ({ value: x, label: x }))} style={{ width: '100%', padding: '9px 11px', borderRadius: 9, background: '#FFFFFF', fontWeight: 600 }} ariaLabel="Category" />
+                  <CleanSelect className="case-edit-category" value={editCaseForm.category} onChange={category => setEditCaseForm({ ...editCaseForm, category })} options={categories.map(x => ({ value: x, label: x }))} style={{ width: '100%', padding: '0 4px', borderRadius: 0, background: 'transparent', fontWeight: 600 }} ariaLabel="Category" />
                 </div>}
               </div>
               <div className="history-actions" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 7, flexShrink: 0, marginLeft: 'auto' }}>
@@ -871,7 +933,7 @@ function ScheduleCalendar() {
                   <div key={c.dstr} className="cell" onClick={() => setSelected(c.dstr)}
                     style={{ minHeight: 62, borderRadius: 8, background: s ? s.soft : '#FFFFFF', border: (isSel || isToday) ? '2px solid #FFFFFF' : '2px solid transparent', padding: '6px 6px 4px', position: 'relative', overflow: 'hidden' }}>
                     <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: s ? 13 : 20, lineHeight: 1, fontWeight: s ? 600 : 700, color: s ? s.date : '#B9AF9A' }}>{c.day}</div>
-                    {c.info?.holiday && <div style={{ fontSize: 9, color: '#9C4530', fontWeight: 600, lineHeight: 1.2, marginTop: 1 }}>{c.info.holiday}</div>}
+                    {(holidays[c.dstr] || c.info?.holiday) && <div style={{ fontSize: 9, color: '#FFFFFF', fontWeight: 700, lineHeight: 1.2, marginTop: 1 }}>{holidays[c.dstr] || c.info.holiday}</div>}
                     {s && <div className="cell-shift-label" style={{ fontSize: 9.5, color: s.text, fontWeight: 600, marginTop: 2 }}>{s.label}</div>}
                     {vc > 0 && <div style={{ position: 'absolute', bottom: 4, right: 6, fontSize: 8.5, color: s ? s.count : '#1F5B54', fontWeight: 700 }}>{vc}</div>}
                   </div>
@@ -1126,44 +1188,54 @@ function ScheduleCalendar() {
 
         {view === 'patients' && (
           <div className="view-panel" style={{ marginBottom: 22, height: historyCase ? 'calc(100vh - 390px)' : 'calc(100vh - 225px)', minHeight: 280, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: "'IBM Plex Sans Thai', sans-serif" }}>
-            <div className="search-box" style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', borderRadius: 8, padding: '8px 10px', marginBottom: 12, background: '#FFFFFF' }}>
+            <div className="search-box" style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 10, padding: '9px 12px', marginBottom: 14, background: '#E2E3EA' }}>
               <Icon name="search" size={14} color="#8A7F63" />
               <input placeholder="Search by HN, name, or category" value={patientListQuery} onChange={e => setPatientListQuery(e.target.value)}
-                style={{ border: 'none', outline: 'none', fontSize: 14, flex: 1, fontFamily: "'IBM Plex Sans Thai', sans-serif" }} />
+                style={{ border: 'none', outline: 'none', fontSize: 13, flex: 1, background: 'transparent', fontFamily: "'Nunito', 'IBM Plex Sans Thai', monospace" }} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 600, color: '#8A7F63' }}>Total {patientListResults.length} cases</div>
-              <CleanSelect className="patient-filter-select align-right" value={patientSort} onChange={setPatientSort} ariaLabel="Sort patient list" iconOnly
-                options={[{ value: 'date', label: 'Date' }, { value: 'name', label: 'A–Z' }, { value: 'hn', label: 'HN' }, { value: 'category', label: 'Work type' }]}
-                style={{ background: 'transparent' }} />
-            </div>
-            <div className="patient-scroll" style={{ flex: 1 }}>
+            <div className="patient-workspace">
+              <aside className="patient-sidebar">
+                {[['date','recent'],['name','a–z'],['hn','hn'],['category','work type']].map(([value,label]) => <button key={value} onClick={() => setPatientSort(value)} className={`patient-sort-btn ${patientSort === value ? 'active' : ''}`}>{label}</button>)}
+              </aside>
+              <div className="patient-list-main">
+                <div style={{ fontFamily: "'Nunito', monospace", fontSize: 11, fontWeight: 800, color: '#A9AEC2', margin: '0 0 9px 2px' }}>total / {patientListResults.length} cases</div>
+                <div className="patient-table-head"><span>hn</span><span>patient</span><span>work type</span><span>visits</span><span style={{ textAlign: 'right' }}>last date</span></div>
+                <div className="patient-scroll" style={{ flex: 1 }}>
             {patientListResults.map(c => {
               const cs = categoryStyles[c.category] || categoryStyles['อื่นๆ'] || CATEGORY_STYLE['อื่นๆ'];
               return (
                 <div key={c.id} className="plist-row" onClick={() => setHistoryCaseId(historyCaseId === c.id ? null : c.id)}
-                  style={{ background: '#FFFFFF', border: '1px solid #EAE3D3', borderRadius: 10, padding: '10px 12px', marginBottom: 8, cursor: 'pointer' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    {c.hn && <span style={{ fontSize: 12.5, fontFamily: "'IBM Plex Sans Thai', sans-serif", fontWeight: 700, color: '#6777B6', letterSpacing: .3 }}>HN {c.hn}</span>}
-                    <span style={{ fontFamily: "'Sarabun', sans-serif", fontSize: 15, fontWeight: 400, color: '#1F3A35' }}>{c.name}</span>
-                    <span style={{ fontSize: 10.5, fontWeight: 700, padding: '3px 7px', borderRadius: 4, background: cs.bg, color: cs.text }}>{c.category}</span>
-                    {c.phone && <span style={{ fontSize: 11.5, color: '#B9AF9A' }}>โทร {c.phone}</span>}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 6, fontSize: 11, fontWeight: 400, color: '#5C6D68' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}><Icon name="calendarSolid" size={13} /> {c.activeCount}{c.cancelledCount > 0 ? ` (ยกเลิก ${c.cancelledCount})` : ''}</span>
-                    {c.nextVisit ? <span style={{ marginLeft: 'auto', textAlign: 'right' }}>Next date: <b>{c.nextVisit.date} {c.nextVisit.time}</b></span> : c.lastVisit ? <span style={{ marginLeft: 'auto', textAlign: 'right' }}>Last date: {c.lastVisit.date}</span> : null}
-                  </div>
+                  style={{ cursor: 'pointer' }}>
+                  <span className="patient-hn">{c.hn ? `HN ${c.hn}` : '—'}</span>
+                  <span className="patient-name">{c.name || '—'}{c.phone && <small style={{ color: '#A9AEC2', marginLeft: 7 }}>· {c.phone}</small>}</span>
+                  <span className="patient-category" style={{ fontSize: 9.5, fontWeight: 800, padding: '3px 6px', borderRadius: 5, background: cs.bg, color: cs.text, justifySelf: 'start' }}>{c.category}</span>
+                  <span className="patient-count">{c.activeCount}{c.cancelledCount > 0 ? ` / -${c.cancelledCount}` : ''}</span>
+                  <span className="patient-date">{c.nextVisit ? `${c.nextVisit.date} ${c.nextVisit.time}` : c.lastVisit?.date || '—'}</span>
                 </div>
               );
             })}
             {patientListResults.length === 0 && <div style={{ fontSize: 13, color: '#B9AF9A', fontStyle: 'italic', textAlign: 'center', padding: 20 }}>ไม่พบคนไข้</div>}
+                </div>
+              </div>
             </div>
           </div>
         )}
 
         {view === 'settings' && <>
-        <div className="view-panel" style={{ background: '#EFCE7B', borderRadius: 18, padding: 16, marginBottom: 14 }}>
-          <div style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: 15, color: '#2B2B23', marginBottom: 10 }}>ประเภทงาน</div>
+        <div className="view-panel settings-section holiday-settings" style={{ background: '#CBD183', borderRadius: 18, padding: 16, marginBottom: 14 }}>
+          <div className="settings-title" style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: 15, color: '#1F5B54', marginBottom: 10 }}>วันหยุด</div>
+          <form className="holiday-form" onSubmit={e => { e.preventDefault(); addHoliday(); }} style={{ display: 'grid', gridTemplateColumns: '150px minmax(160px,1fr) auto', gap: 8, marginBottom: 11 }}>
+            <input className="holiday-date" type="date" value={newHolidayDate} onChange={e => setNewHolidayDate(e.target.value)} style={{ minWidth: 0, height: 34, border: 'none', borderRadius: 9, padding: '0 10px', background: '#FFF9E8', fontFamily: "'Nunito', sans-serif", fontWeight: 700 }} />
+            <input value={newHolidayName} onChange={e => setNewHolidayName(e.target.value)} placeholder="ชื่อวันหยุด เช่น วันหยุดพิเศษ" style={{ minWidth: 0, height: 34, border: 'none', borderRadius: 9, padding: '0 11px', background: '#FFF9E8', fontFamily: "'Noto Sans Thai Looped', sans-serif" }} />
+            <button type="submit" style={{ height: 34, border: 'none', borderRadius: 9, padding: '0 14px', background: '#1F5B54', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>+ เพิ่ม</button>
+          </form>
+          <div style={{ display: 'grid', gap: 6 }}>
+            {Object.entries(holidays).sort(([a],[b]) => a.localeCompare(b)).map(([dstr, name]) => <div key={dstr} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 9px', borderRadius: 9, background: 'rgba(255,255,255,.45)' }}><span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 800, color: '#1F5B54', minWidth: 82 }}>{dstr}</span><span style={{ flex: 1, fontSize: 12.5 }}>{name}</span><button onClick={() => removeHoliday(dstr)} type="button" style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 3 }}><Icon name="x" size={14} color="#D8560E" /></button></div>)}
+            {!Object.keys(holidays).length && <div style={{ fontSize: 12, color: '#5C6D68' }}>ยังไม่มีวันหยุดที่เพิ่มเอง</div>}
+          </div>
+        </div>
+        <div className="view-panel settings-section category-settings" style={{ background: '#EFCE7B', borderRadius: 18, padding: 16, marginBottom: 14 }}>
+          <div className="settings-title" style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: 15, color: '#2B2B23', marginBottom: 10 }}>ประเภทงาน</div>
           <form className="category-add-form" onSubmit={e => { e.preventDefault(); addCategory(); }} style={{ display: 'grid', gridTemplateColumns: 'minmax(140px,1fr) minmax(130px,.65fr) auto', gap: 8, marginBottom: 12 }}>
             <input className="category-name-input" value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="เพิ่มประเภทงานใหม่" style={{ flex: 1, background: '#FFFFFF', borderRadius: 8, padding: '9px 11px', fontFamily: "'Sarabun', sans-serif", fontSize: 13 }} />
             <CleanSelect className="category-theme-select" value={newCategoryTheme} onChange={setNewCategoryTheme} options={Object.entries(CATEGORY_THEME_OPTIONS).map(([value, t]) => ({ value, label: t.label }))} style={{ width: '100%', height: '100%', borderRadius: 8, padding: '8px 10px', background: CATEGORY_THEME_OPTIONS[newCategoryTheme].bg, color: CATEGORY_THEME_OPTIONS[newCategoryTheme].text, fontWeight: 700 }} ariaLabel="เลือกสีประเภทงาน" />
@@ -1174,7 +1246,7 @@ function ScheduleCalendar() {
           </div>
         </div>
 
-        <div className="legend-card" style={{ background: '#D3C2CD', border: 'none', borderRadius: 14, padding: 16 }}>
+        <div className="legend-card settings-legend" style={{ background: '#D3C2CD', border: 'none', borderRadius: 14, padding: 16 }}>
           <div className="legend-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 600, fontSize: 15, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="info" size={16} /> หมายเหตุ</div>
             <button onClick={() => setEditingLegend(!editingLegend)} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, border: '1px solid #D3C2CD', background: editingLegend ? '#CBD183' : '#FFFFFF', color: '#2B2B23', borderRadius: 6, padding: '4px 9px', cursor: 'pointer' }}>
