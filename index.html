@@ -728,7 +728,8 @@ function ScheduleCalendar() {
         .calendar-week-grid { grid-template-columns: .72fr repeat(5, minmax(0, 1fr)) .72fr; max-width: 760px; margin-left: auto; margin-right: auto; }
         .calendar-week-grid .cell { aspect-ratio: 1.25 / 1; min-height: 0 !important; }
         .overview-week-grid { grid-template-columns: .72fr repeat(5, minmax(0, 1fr)) .72fr; }
-        .overview-shift-popover { position: fixed; width: 196px; box-sizing: border-box; background: #FFFFFF; border-radius: 15px; padding: 10px; box-shadow: 0 14px 36px rgba(43,43,35,.20); z-index: 81; }
+        .overview-shift-popover { position: fixed; width: 196px; box-sizing: border-box; background: rgba(250,246,239,.58); backdrop-filter: blur(18px) saturate(115%); -webkit-backdrop-filter: blur(18px) saturate(115%); border: 1px solid rgba(255,255,255,.58); border-radius: 15px; padding: 10px; box-shadow: 0 14px 36px rgba(43,43,35,.14); z-index: 81; }
+        .overview-shift-popover::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.60); }
         .overview-shift-popover button { padding: 6px 7px !important; border-radius: 8px !important; font-size: 11.5px; min-height: 30px; }
         .overview-shift-popover > div[style*="grid-template-columns"] { gap: 5px !important; }
         .tab-btn { transition: all 0.15s ease; }
@@ -777,11 +778,13 @@ function ScheduleCalendar() {
         .patient-scroll .plist-row { margin-bottom: 0 !important; }
         .clean-select.patient-filter-select > button { width: 42px; height: 42px; padding: 4px !important; border-radius: 13px !important; background: transparent !important; box-shadow: none !important; justify-content: center !important; transition: transform .2s ease, filter .2s ease; }
         .clean-select.patient-filter-select > button:hover { filter: brightness(.96); transform: translateY(-2px) rotate(-2deg); }
-        .clean-select-menu { position: absolute; top: calc(100% + 7px); left: 0; right: auto; width: 190px; min-width: 100%; max-width: min(240px, calc(100vw - 28px)); max-height: 250px; overflow-y: auto; box-sizing: border-box; padding: 7px; background: #FFFFFF; border: none; border-radius: 16px; box-shadow: 0 16px 38px rgba(43,43,35,.16); z-index: 120; }
+        .clean-select-menu { position: absolute; top: calc(100% + 7px); left: 0; right: auto; width: 190px; min-width: 100%; max-width: min(240px, calc(100vw - 28px)); max-height: 250px; overflow-y: auto; box-sizing: border-box; padding: 7px; background: rgba(243,234,227,.48); backdrop-filter: blur(22px) saturate(120%); -webkit-backdrop-filter: blur(22px) saturate(120%); border: 0; border-radius: 16px; box-shadow: 0 16px 38px rgba(78,68,56,.16), inset 0 1px 0 rgba(255,255,255,.52); z-index: 120; }
         .clean-select.align-right .clean-select-menu { left: auto; right: 0; }
         .clean-select-menu button { width: 100%; border: none; background: transparent; color: #1F3A35; padding: 9px 12px; border-radius: 10px; text-align: left; font-family: var(--font-thai-body); font-size: 12px; font-weight: 500; cursor: pointer; transition: background .15s ease, color .15s ease; }
-        .clean-select-menu button:hover { background: #F3EAE3; }
-        .clean-select-menu button.selected { background: #CBD183; color: #1F5B54; font-weight: 700; }
+        .clean-select-menu button:hover { background: rgba(183,165,143,.28); color: #50668F; }
+        .clean-select-menu button.selected { background: rgba(183,165,143,.68); color: #425D91; font-weight: 800; }
+        .clean-select-menu::-webkit-scrollbar { width: 5px; }
+        .clean-select-menu::-webkit-scrollbar-thumb { background: rgba(138,127,99,.30); border-radius: 99px; }
         .clean-select-arrow { font-family: var(--font-latin); font-size: 15px; line-height: 1; transform: translateY(-2px); }
         .legend-card { overflow: hidden; box-shadow: 0 8px 22px rgba(43,43,35,.10); }
         .legend-head { background: #6777B6; color: #FFFFFF; margin: -16px -16px 14px; padding: 13px 16px; }
@@ -799,9 +802,11 @@ function ScheduleCalendar() {
         .settings-legend .legend-row { background: transparent !important; border-radius: 0 !important; padding: 9px 4px !important; margin: 0 !important; border-bottom: 1px solid rgba(211,194,205,.65); align-items: center !important; }
         .settings-legend .legend-row > span:last-child { color: #4B4F62 !important; }
         @media (max-width: 600px) {
-          .patient-workspace { grid-template-columns: 1fr; gap: 10px; }
-          .patient-mobile-total { display: block; font-family: 'Nunito', monospace; font-size: 10.5px; font-weight: 900; color: #A9AEC2; margin: 0 2px 7px; }
-          .patient-sidebar { display: flex; overflow-x: auto; border-radius: 12px; padding: 5px; gap: 4px; margin-bottom: 2px; }
+          .patient-workspace { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+          .patient-mobile-total { display: block; flex: 0 0 auto; font-family: 'Nunito', monospace; font-size: 10.5px; font-weight: 900; color: #A9AEC2; margin: 0 2px 7px; }
+          .patient-sidebar { position: relative; z-index: 2; display: flex; flex: 0 0 auto; min-height: 42px; overflow-x: auto; overflow-y: hidden; border-radius: 12px; padding: 5px; gap: 4px; margin: 0; box-sizing: border-box; }
+          .patient-list-main { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+          .patient-scroll { padding-top: 2px; }
           .patient-list-main > .patient-desktop-total { display: none; }
           .patient-sort-btn { flex: 1 0 auto; text-align: center; padding: 7px 10px; font-size: 10px; }
           .patient-table-head { display: none; }
@@ -1345,3 +1350,4 @@ root.render(<App />);
 </script>
 </body>
 </html>
+
