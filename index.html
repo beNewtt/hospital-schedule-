@@ -327,6 +327,26 @@ function parseLegacyToCases(apps) {
   return out;
 }
 
+function normalizeClockValue(raw, fallback = '13:00') {
+  const text = String(raw || '').trim().toUpperCase();
+  const meridiem = text.match(/\b(AM|PM)\b/)?.[1];
+  const parts = text.replace(/[^0-9:]/g, '').split(':');
+  let h, m;
+  if (parts.length >= 2) { h = Number(parts[0]); m = Number(parts[1]); }
+  else { const digits = text.replace(/\D/g, ''); if (digits.length < 3) return fallback; const padded = digits.padStart(4, '0').slice(-4); h = Number(padded.slice(0, 2)); m = Number(padded.slice(2)); }
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return fallback;
+  if (meridiem) h = h % 12 + (meridiem === 'PM' ? 12 : 0);
+  h = Math.min(23, Math.max(0, h)); m = Math.min(59, Math.max(0, m));
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+function TimeField({ value, onChange, style = {} }) {
+  const [draft, setDraft] = useState(value || '13:00');
+  useEffect(() => setDraft(value || '13:00'), [value]);
+  const commit = () => { const next = normalizeClockValue(draft, value || '13:00'); setDraft(next); onChange(next); };
+  return <div className="custom-time-field" style={style}><input type="text" inputMode="numeric" value={draft} onChange={e => setDraft(e.target.value.replace(/[^0-9: APMapm]/g, '').slice(0, 8))} onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commit(); e.currentTarget.blur(); } }} aria-label="เวลา" placeholder="13:00" /><Icon name="stopwatchSolid" size={15} color="currentColor" /></div>;
+}
+
 function ScheduleCalendar() {
   const [view, setView] = useState('calendar');
   const today0 = new Date();
@@ -705,7 +725,8 @@ function ScheduleCalendar() {
         .overview-month { background: #FFFFFF; border-radius: 20px; overflow: hidden; display: grid; grid-template-columns: 190px 1fr; min-height: 310px; }
         .overview-month-side { padding: 26px 22px; display: flex; flex-direction: column; }
         .overview-month-calendar { padding: 24px 26px; }
-        .calendar-week-grid { grid-template-columns: .72fr repeat(5, minmax(0, 1fr)) .72fr; max-width: 720px; margin-left: auto; margin-right: auto; }
+        .calendar-week-grid { grid-template-columns: .72fr repeat(5, minmax(0, 1fr)) .72fr; max-width: 760px; margin-left: auto; margin-right: auto; }
+        .calendar-week-grid .cell { aspect-ratio: 1.25 / 1; min-height: 0 !important; }
         .overview-week-grid { grid-template-columns: .72fr repeat(5, minmax(0, 1fr)) .72fr; }
         .overview-shift-popover { position: fixed; width: 196px; box-sizing: border-box; background: #FFFFFF; border-radius: 15px; padding: 10px; box-shadow: 0 14px 36px rgba(43,43,35,.20); z-index: 81; }
         .overview-shift-popover button { padding: 6px 7px !important; border-radius: 8px !important; font-size: 11.5px; min-height: 30px; }
@@ -741,7 +762,9 @@ function ScheduleCalendar() {
         .patient-name { color: #303447; font-family: var(--font-thai-body); font-size: 13px; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .patient-count, .patient-date { color: #5C6176; font-family: 'Nunito', monospace; font-size: 11px; }
         .patient-date { text-align: right; }
-        .search-box { border: none !important; }
+        .patient-search-minimal { border: none !important; border-bottom: 1px solid #D3C2CD !important; border-radius: 0 !important; background: transparent !important; padding: 8px 2px !important; }
+        .patient-search-minimal input { background: transparent !important; box-shadow: none !important; }
+        .patient-mobile-total { display: none; }
         input, select { border: none !important; outline: none; }
         .page-head { position: sticky; top: 0; z-index: 30; background: #6777B6; border-radius: 18px; padding: 18px 20px; box-shadow: 0 8px 22px rgba(103,119,182,.20); }
         .history-panel { position: sticky; top: 112px; z-index: 20; }
@@ -777,7 +800,9 @@ function ScheduleCalendar() {
         .settings-legend .legend-row > span:last-child { color: #4B4F62 !important; }
         @media (max-width: 600px) {
           .patient-workspace { grid-template-columns: 1fr; gap: 10px; }
-          .patient-sidebar { display: flex; overflow-x: auto; border-radius: 12px; padding: 5px; gap: 4px; }
+          .patient-mobile-total { display: block; font-family: 'Nunito', monospace; font-size: 10.5px; font-weight: 900; color: #A9AEC2; margin: 0 2px 7px; }
+          .patient-sidebar { display: flex; overflow-x: auto; border-radius: 12px; padding: 5px; gap: 4px; margin-bottom: 2px; }
+          .patient-list-main > .patient-desktop-total { display: none; }
           .patient-sort-btn { flex: 1 0 auto; text-align: center; padding: 7px 10px; font-size: 10px; }
           .patient-table-head { display: none; }
           .plist-row { grid-template-columns: auto minmax(0,1fr) auto; gap: 5px 9px; padding: 10px 11px !important; background: #FFFFFF !important; border-radius: 13px !important; }
@@ -799,6 +824,7 @@ function ScheduleCalendar() {
           .overview-month-side { min-height: 150px; padding: 20px; }
           .overview-month-calendar { padding: 20px 14px; }
           .calendar-week-grid { grid-template-columns: .52fr repeat(5, minmax(0, 1fr)) .52fr; gap: 5px !important; }
+          .calendar-week-grid .cell { aspect-ratio: auto; min-height: 62px !important; }
           .overview-week-grid { grid-template-columns: .58fr repeat(5, minmax(0, 1fr)) .58fr; }
           .overview-shift-popover { left: 50% !important; right: auto !important; bottom: 16px !important; top: auto !important; width: min(300px, calc(100vw - 28px)); transform: translateX(-50%); }
           .patient-scroll { grid-template-columns: 1fr; }
@@ -813,7 +839,7 @@ function ScheduleCalendar() {
           .new-case-fields { grid-template-columns: minmax(92px,.8fr) minmax(0,1.35fr) !important; }
           .appointment-time-row { align-items: center !important; }
           .appointment-time-row { flex-wrap: nowrap !important; gap: 0 !important; }
-          .appointment-time-row > input { flex: 0 0 128px; min-width: 0; }
+          .appointment-time-row > .custom-time-field { flex: 0 0 128px; min-width: 0; }
           .duration-line { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap !important; gap: 6px !important; }
           .duration-line .stepbtn { width: 25px !important; }
           .duration-line > div > div { width: 62px !important; }
@@ -826,8 +852,9 @@ function ScheduleCalendar() {
         .case-add-panel .existing-case-search { height: 32px; padding-top: 3px !important; padding-bottom: 3px !important; background: transparent !important; border-radius: 8px !important; box-shadow: none !important; }
         .case-add-panel .existing-case-search input { height: 26px; box-shadow: none !important; }
         .case-add-panel .appointment-time-row { gap: 0 !important; }
-        .case-add-panel .appointment-time-row input[type="time"] { height: 32px; padding-top: 0 !important; padding-bottom: 0 !important; background: #1F5B54 !important; color: #FFFFFF !important; border-radius: 9px 0 0 9px !important; font-family: 'Nunito', sans-serif !important; font-size: 14px !important; font-weight: 800 !important; letter-spacing: .2px; color-scheme: dark; }
-        .case-add-panel .appointment-time-row input[type="time"]::-webkit-calendar-picker-indicator { filter: brightness(0) invert(1); opacity: .9; }
+        .custom-time-field { height: 32px; display: inline-flex; align-items: center; gap: 7px; padding: 0 10px; box-sizing: border-box; border: none; border-radius: 9px; background: rgba(31,91,84,.88); color: #FFFFFF; box-shadow: none; }
+        .custom-time-field input { width: 76px; min-width: 0; height: 100%; padding: 0 !important; border: none !important; outline: none; background: transparent !important; color: inherit !important; font-family: 'Nunito', monospace !important; font-size: 14px !important; font-weight: 900 !important; letter-spacing: .3px; box-shadow: none !important; }
+        .case-add-panel .appointment-time-row .custom-time-field { border-radius: 9px 0 0 9px; }
         .case-add-panel .duration-line > div { height: 32px; background: #1F5B54; color: #FFFFFF; border-radius: 0 9px 9px 0 !important; }
         .case-add-panel .duration-line .stepbtn { height: 32px !important; background: transparent !important; color: #FFFFFF !important; }
         .case-add-panel .duration-line > div > div { width: 62px !important; height: 32px; display: flex; align-items: center; justify-content: center; color: #FFFFFF !important; font-family: 'Nunito', sans-serif !important; font-weight: 800 !important; white-space: nowrap; }
@@ -1029,7 +1056,7 @@ function ScheduleCalendar() {
                   )}
 
                   <div className="appointment-time-row" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
-                    <input type="time" value={fTime} onChange={e => setFTime(e.target.value)} style={{ fontSize: 13, border: '1px solid #DCD4C4', borderRadius: 6, padding: '7px 9px', fontFamily: "'IBM Plex Mono', monospace" }} />
+                    <TimeField value={fTime} onChange={setFTime} />
                     <div className="duration-line" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ display: 'flex', alignItems: 'center', border: 'none', borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
                         <button className="stepbtn" onClick={() => setFDuration(Math.max(15, fDuration - 15))} style={{ border: 'none', background: '#F0EBDD', color: '#1F5B54', width: 28, height: 28, cursor: 'pointer', fontWeight: 700 }}>−</button>
@@ -1161,7 +1188,7 @@ function ScheduleCalendar() {
                   <CleanSelect value={calendarEditForm.category} onChange={category => setCalendarEditForm({ ...calendarEditForm, category })} options={categories.map(x => ({ value: x, label: x }))} style={{ width: '100%', padding: '10px 11px', borderRadius: 9, background: 'rgba(255,255,255,.30)', boxShadow: 'none', fontWeight: 600 }} ariaLabel="ประเภทงาน" />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <input type="time" value={calendarEditForm.time} onChange={e => setCalendarEditForm({ ...calendarEditForm, time: e.target.value })} style={{ height: 36, border: 'none', borderRadius: 9, padding: '0 10px', background: 'rgba(255,255,255,.20)', boxShadow: 'none', fontFamily: "'Nunito', monospace", fontWeight: 800 }} />
+                  <TimeField value={calendarEditForm.time} onChange={time => setCalendarEditForm({ ...calendarEditForm, time })} style={{ height: 36, background: 'rgba(255,255,255,.20)', color: '#1F5B54' }} />
                   <div style={{ height: 36, display: 'inline-flex', alignItems: 'center', borderRadius: 9, overflow: 'hidden', background: 'rgba(31,91,84,.82)', boxShadow: '0 5px 14px rgba(31,91,84,.12)', color: '#FFFFFF' }}>
                     <button type="button" onClick={() => setCalendarEditForm({ ...calendarEditForm, duration: Math.max(5, Number(calendarEditForm.duration) - 5) })} style={{ width: 34, height: 36, border: 'none', background: 'transparent', color: '#FFFFFF', cursor: 'pointer', fontSize: 17 }}>−</button>
                     <span style={{ minWidth: 58, textAlign: 'center', fontFamily: "'Nunito', monospace", fontWeight: 900 }}>{calendarEditForm.duration} min</span>
@@ -1198,17 +1225,18 @@ function ScheduleCalendar() {
 
         {view === 'patients' && (
           <div className="view-panel" style={{ marginBottom: 22, height: historyCase ? 'calc(100vh - 390px)' : 'calc(100vh - 225px)', minHeight: 280, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: "'IBM Plex Sans Thai', sans-serif" }}>
-            <div className="search-box" style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 10, padding: '9px 12px', marginBottom: 14, background: '#E2E3EA' }}>
+            <div className="search-box patient-search-minimal" style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 10, padding: '9px 12px', marginBottom: 14, background: '#E2E3EA' }}>
               <Icon name="search" size={14} color="#8A7F63" />
               <input placeholder="Search by HN, name, or category" value={patientListQuery} onChange={e => setPatientListQuery(e.target.value)}
                 style={{ border: 'none', outline: 'none', fontSize: 13, flex: 1, background: 'transparent', fontFamily: "'Nunito', 'IBM Plex Sans Thai', monospace" }} />
             </div>
+            <div className="patient-mobile-total">total / {patientListResults.length} cases</div>
             <div className="patient-workspace">
               <aside className="patient-sidebar">
                 {[['date','recent'],['name','a–z'],['hn','hn'],['category','work type']].map(([value,label]) => <button key={value} onClick={() => setPatientSort(value)} className={`patient-sort-btn ${patientSort === value ? 'active' : ''}`}>{label}</button>)}
               </aside>
               <div className="patient-list-main">
-                <div style={{ fontFamily: "'Nunito', monospace", fontSize: 11, fontWeight: 800, color: '#A9AEC2', margin: '0 0 9px 2px' }}>total / {patientListResults.length} cases</div>
+                <div className="patient-desktop-total" style={{ fontFamily: "'Nunito', monospace", fontSize: 11, fontWeight: 800, color: '#A9AEC2', margin: '0 0 9px 2px' }}>total / {patientListResults.length} cases</div>
                 <div className="patient-table-head"><span>hn</span><span>patient</span><span>work type</span><span>visits</span><span style={{ textAlign: 'right' }}>last date</span></div>
                 <div className="patient-scroll" style={{ flex: 1 }}>
             {patientListResults.map(c => {
