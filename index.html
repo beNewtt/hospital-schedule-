@@ -85,6 +85,17 @@ function Icon({ name, size = 16, color = 'currentColor' }) {
     case 'chevronRight': return <svg {...p}><polyline points="9 18 15 12 9 6" /></svg>;
     case 'x': return <svg {...p}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>;
     case 'pencil': return <svg {...p}><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>;
+    case 'pencilSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="m16.9 2.6 4.5 4.5a2 2 0 0 1 0 2.8L9.2 22H2v-7.2L14.1 2.6a2 2 0 0 1 2.8 0ZM4.5 15.8v3.7h3.7l9.7-9.7-3.7-3.7-9.7 9.7Z"/></svg>;
+    case 'plumpFire': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#FFBE2E" d="M17.2 2.5c2.1 5-1.5 6.8 1.8 9.2 2.2-1.3 3.2-3.1 3.2-5.2 4.2 3.4 6.1 7.2 5.1 11.8C26.1 24 21.5 27 16 27S5.9 24 4.7 18.3c-.9-4.4 1.3-8.7 6.2-12.4-.2 3.4 1.2 5.5 3.3 6.2 2-2.7-.2-5.2 3-9.6Z"/><path fill="#111111" d="M13.8 20.8c0-2.7 1.3-4.8 3.5-6.8 2.5 2.2 3.7 4.4 3 6.8-.5 1.9-1.9 3-3.3 3s-3.2-1.1-3.2-3Z"/><path d="m5 26 22 4M27 26 5 30" stroke="#111111" strokeWidth="3.5" strokeLinecap="round"/></svg>;
+    case 'plumpSave': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#111111" d="M13 3h6v9h4l-7 8-7-8h4V3Z"/><rect x="5" y="19" width="22" height="10" rx="4" fill="#FF7650"/><rect x="10" y="23" width="9" height="2.8" rx="1.4" fill="#111111"/><circle cx="23" cy="24.4" r="1.5" fill="#111111"/></svg>;
+    case 'plumpEdit': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#FF7650" d="M15 5c3-3 7-3 9 0s1 6-1 8l-3 3 3 2-4 3-3-3-6 7c-2 2-6 3-8 0s0-6 2-8L15 5Z"/><path fill="#111111" d="m17 6 3-3 4 4-3 3-4-4ZM4 24l5-1-4-4-1 5Z"/></svg>;
+    case 'plumpOpen': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#FFBE2E" d="M7 10 10 4l5 4h3l5-4 2 7c2 2 3 5 2 9-1 6-5 9-11 9S6 26 5 20c-.6-4 .2-7 2-10Z"/><path fill="#111111" d="M11 16a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm10 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm-5 1 2 2-2 2-2-2 2-2Zm-6 5c4 3 8 3 12 0l1.5 2.2c-5 4-10 4-15 0L10 22Z"/></svg>;
+    case 'plumpHistory': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#F28DB1" d="M7 10 10 4l5 4h3l5-4 2 7c2 2 3 5 2 9-1 6-5 9-11 9S6 26 5 20c-.6-4 .2-7 2-10Z"/><path fill="#111111" d="M11 16a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm10 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm-5 1 2 2-2 2-2-2 2-2Zm-6 5c4 3 8 3 12 0l1.5 2.2c-5 4-10 4-15 0L10 22Z"/></svg>;
+    case 'plumpReschedule': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#FF7650" d="M11 4h10l7 21H4L11 4Z"/><path fill="#FFF7E8" d="m9 17 16-5 2 5-16 5-2-5Z"/><path d="M3 27h26" stroke="#111111" strokeWidth="3.5" strokeLinecap="round"/></svg>;
+    case 'plumpSettings': return <svg width={size} height={size} viewBox="0 0 32 32"><path d="M16 3c1.2 7 3 8.8 10 10-7 1.2-8.8 3-10 10-1.2-7-3-8.8-10-10 7-1.2 8.8-3 10-10Z" fill="#111111"/><path d="M24 17c.7 4.1 1.9 5.3 6 6-4.1.7-5.3 1.9-6 6-.7-4.1-1.9-5.3-6-6 4.1-.7 5.3-1.9 6-6Z" fill="#FFBE2E"/><path d="M8 18c.5 3 1.5 4 4.5 4.5C9.5 23 8.5 24 8 27c-.5-3-1.5-4-4.5-4.5C6.5 22 7.5 21 8 18Z" fill="#FFBE2E"/></svg>;
+    case 'plumpFilter': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#45BCEB" d="M5 5h22a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H15l-6 4v-4H5a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Z"/><path d="M9 11h3M16 11h8M9 16h10M23 16h1M9 21h5M18 21h6" stroke="#111111" strokeWidth="3" strokeLinecap="round"/></svg>;
+    case 'plumpCancel': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#FF7650" d="M7 5h18a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a4 4 0 0 1 4-4Z"/><path d="M10 16h12" stroke="#111111" strokeWidth="4" strokeLinecap="round"/></svg>;
+    case 'plumpRestore': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#6EDD5C" d="M16 4a12 12 0 1 1-10.8 6.8H2l5-6 5 6H8.7A8 8 0 1 0 16 8V4Z"/><path d="M15 10v7l5 3" fill="none" stroke="#111111" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>;
     case 'check': return <svg {...p}><polyline points="20 6 9 17 4 12" /></svg>;
     case 'info': return <svg {...p}><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>;
     case 'history': return <svg {...p}><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg>;
@@ -108,11 +119,11 @@ function Icon({ name, size = 16, color = 'currentColor' }) {
     case 'historySolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 1-8.5 6H1l3.5-4L8 9H5.6A6.5 6.5 0 1 0 12 5.5V3Zm-1 4h2v5.1l3.4 2-1 1.7-4.4-2.6V7Z" /></svg>;
     case 'stopwatchSolid': return <svg width={size} height={size} viewBox="0 0 24 24"><path fill="currentColor" d="M9 1h6a1 1 0 1 1 0 2h-1v1.2a9 9 0 1 1-4 0V3H9a1 1 0 0 1 0-2Zm8.8 3.4L19.2 3l2 2-1.4 1.4-2-2Z" /><path fill="#fff" d="M11 7h2v5.4l3 1.8-1 1.7-4-2.4V7Z" /></svg>;
     case 'noEntrySolid': return <svg width={size} height={size} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor" /><rect x="5" y="10.5" width="14" height="3" rx="1.5" fill="#fff" /></svg>;
-    case 'cuteSettings': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#E45C32" d="m13.4 1.5 5.2.1.8 4a12 12 0 0 1 2.2 1.3l3.8-1.3 2.5 4.6-3 2.7c.1.8.1 1.7 0 2.5l3.1 2.6-2.5 4.6-3.9-1.2c-.7.5-1.4 1-2.2 1.3l-.7 4-5.2.1-.9-4a12 12 0 0 1-2.2-1.2l-3.8 1.3-2.7-4.5 3-2.8a12 12 0 0 1 0-2.5L3.8 10.5 6.3 6l3.9 1.2c.7-.5 1.4-1 2.2-1.3l1-4.4Z"/><circle cx="16" cy="14.3" r="7.1" fill="#FFD84D"/><circle cx="13.7" cy="13.2" r=".9" fill="#6F4638"/><circle cx="18.3" cy="13.2" r=".9" fill="#6F4638"/><path d="M14.2 16.1c1.2 1 2.4 1 3.6 0" fill="none" stroke="#6F4638" strokeWidth="1.2" strokeLinecap="round"/></svg>;
-    case 'cuteHistory': return <svg width={size} height={size} viewBox="0 0 32 32"><g transform="rotate(-3 16 16)"><rect x="5" y="5" width="21" height="23" rx="3" fill="#FFF9E8"/><rect x="9" y="3.5" width="18" height="24" rx="2.4" fill="#95604D"/><rect x="5" y="7" width="6" height="2" rx="1" fill="#FFD84D"/><rect x="5" y="12" width="6" height="2" rx="1" fill="#FFD84D"/><rect x="5" y="17" width="6" height="2" rx="1" fill="#FFD84D"/><rect x="5" y="22" width="6" height="2" rx="1" fill="#FFD84D"/><circle cx="18" cy="15" r="5.2" fill="#FFF9E8"/><circle cx="16.3" cy="14" r=".8" fill="#442B24"/><circle cx="19.7" cy="14" r=".8" fill="#442B24"/><path d="m17 16.2 1-1 1 1-1 1.2Z" fill="#442B24"/><path d="M15.8 18.2c1.4-.8 3-.8 4.4 0" fill="none" stroke="#442B24" strokeWidth="1" strokeLinecap="round"/></g></svg>;
-    case 'cuteCancel': return <svg width={size} height={size} viewBox="0 0 32 32"><circle cx="16" cy="18" r="10" fill="#FFD84D"/><circle cx="16" cy="14" r="10" fill="#E45C32"/><rect x="9" y="12" width="14" height="4" rx="2" fill="#FFF9E8"/></svg>;
-    case 'cuteRestore': return <svg width={size} height={size} viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="#CBD183"/><path d="M9.1 15.2a7.3 7.3 0 0 1 12.7-4.1" fill="none" stroke="#95604D" strokeWidth="3" strokeLinecap="round"/><path d="m21.2 7.5 4.3 4.2-5.6 1.5Z" fill="#95604D"/><path d="M22.9 17a7.3 7.3 0 0 1-12.7 4.1" fill="none" stroke="#E45C32" strokeWidth="3" strokeLinecap="round"/><path d="m10.8 24.6-4.3-4.2 5.6-1.5Z" fill="#E45C32"/><path d="m16 10.8 1.5 3.1 3.4.5-2.5 2.4.6 3.4-3-1.6-3 1.6.6-3.4-2.5-2.4 3.4-.5Z" fill="#FFD84D"/></svg>;
-    case 'cuteFilter': return <svg width={size} height={size} viewBox="0 0 32 32"><rect x="5.5" y="6" width="23" height="23" rx="7" fill="#95604D" opacity=".24"/><rect x="3" y="3" width="24" height="24" rx="7" fill="#FFF9E8"/><path d="M8 10h14M8 16h14M8 22h14" fill="none" stroke="#95604D" strokeWidth="2.4" strokeLinecap="round"/><circle cx="13" cy="10" r="3" fill="#E45C32"/><circle cx="19" cy="16" r="3" fill="#FFD84D"/><circle cx="11" cy="22" r="3" fill="#CBD183"/><circle cx="24.5" cy="5.5" r="3.2" fill="#E45C32"/><path d="m23.2 5.5.9.9 1.7-1.8" fill="none" stroke="#FFF9E8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+    case 'cuteSettings': return <svg width={size} height={size} viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="8" fill="none" stroke="#FFF7E8" strokeWidth="2.4"/><path fill="#FFF7E8" d="M18.3 7.2 19 10c.6.3 1.1.6 1.6 1.1l2.8-.8 1.7 3-2.1 2c.1.6.1 1.2 0 1.8l2.1 2-1.7 3-2.8-.8c-.5.4-1 .8-1.6 1.1l-.7 2.8h-3.5l-.7-2.8a8 8 0 0 1-1.6-1.1l-2.8.8-1.7-3 2.1-2a8 8 0 0 1 0-1.8l-2.1-2 1.7-3 2.8.8c.5-.5 1-.8 1.6-1.1l.7-2.8h3.5ZM16.5 13a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Z"/></svg>;
+    case 'cuteHistory': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#6777B6" d="M8 4h15a3 3 0 0 1 3 3v21H9a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3Zm2 8h11V9H10v3Zm0 6h11v-3H10v3Zm0 6h8v-3h-8v3Z"/><path fill="#FFF7E8" d="M10 9h11v3H10zm0 6h11v3H10zm0 6h8v3h-8z"/></svg>;
+    case 'cuteCancel': return <svg width={size} height={size} viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="8" fill="#D8560E"/><rect x="9" y="14" width="14" height="4" rx="2" fill="#FFF7E8"/></svg>;
+    case 'cuteRestore': return <svg width={size} height={size} viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="8" fill="none" stroke="#1F5B54" strokeWidth="2.4"/><path d="M10 13a7 7 0 1 1-.5 7" fill="none" stroke="#1F5B54" strokeWidth="3" strokeLinecap="round"/><path d="m7.5 12.5 5.8-1-2.1 5.4Z" fill="#1F5B54"/></svg>;
+    case 'cuteFilter': return <svg width={size} height={size} viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="8" fill="none" stroke="#95604D" strokeWidth="2.4"/><path d="M9 10h14M9 16h14M9 22h14" fill="none" stroke="#95604D" strokeWidth="2.5" strokeLinecap="round"/><circle cx="14" cy="10" r="2.5" fill="#FFF7E8" stroke="#95604D" strokeWidth="2"/><circle cx="20" cy="16" r="2.5" fill="#FFF7E8" stroke="#95604D" strokeWidth="2"/><circle cx="12" cy="22" r="2.5" fill="#FFF7E8" stroke="#95604D" strokeWidth="2"/></svg>;
     case 'google': return (
       <svg width={size} height={size} viewBox="0 0 24 24">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -126,20 +137,20 @@ function Icon({ name, size = 16, color = 'currentColor' }) {
 }
 
 const CUTE_ICON_TONES = {
-  yellow: { bg: '#FFD84D', ink: '#6F4638', shadow: '#E45C32' },
+  yellow: { bg: '#D3C2CD', ink: '#1F5B54', shadow: '#6777B6' },
+  blue: { bg: '#6777B6', ink: '#FFF7E8', shadow: '#D3C2CD' },
   orange: { bg: '#E45C32', ink: '#FFF9E8', shadow: '#FFD84D' },
   brown: { bg: '#95604D', ink: '#FFF9E8', shadow: '#FFD84D' },
   cream: { bg: '#FFF9E8', ink: '#6F4638', shadow: '#E45C32' },
 };
 function CuteIcon({ name, size = 12, tone = 'yellow', box = 23 }) {
   const t = CUTE_ICON_TONES[tone] || CUTE_ICON_TONES.yellow;
-  return <span aria-hidden="true" style={{ position: 'relative', width: box, height: box, flex: `0 0 ${box}px`, borderRadius: Math.max(7, box * .34), background: t.bg, color: t.ink, boxShadow: `3px 3px 0 ${t.shadow}`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transform: 'translate(-1px,-1px)' }}>
-    <span style={{ position: 'absolute', width: 4, height: 4, borderRadius: '50%', right: 3, top: 3, background: 'rgba(255,255,255,.75)' }} />
+  return <span aria-hidden="true" style={{ width: box, height: box, flex: `0 0 ${box}px`, borderRadius: Math.max(6, box * .30), background: t.bg, color: t.ink, border: `2px solid ${t.ink}`, boxSizing: 'border-box', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
     <Icon name={name} size={size} color={t.ink} />
   </span>;
 }
 
-function CleanSelect({ value, onChange, options, style = {}, className = '', ariaLabel = 'Select option', iconOnly = false, iconName = 'cuteFilter' }) {
+function CleanSelect({ value, onChange, options, style = {}, className = '', ariaLabel = 'Select option', iconOnly = false, iconName = 'plumpFilter' }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const selected = options.find(o => String(o.value) === String(value)) || options[0];
@@ -215,6 +226,16 @@ const SHIFT_STYLE = {
   'DM':       { bar: '#EFCE7B', soft: '#849E15', date: '#EFCE7B', text: '#EFCE7B', count: '#EFCE7B', label: 'DM' },
   'รพ.สต.':   { bar: '#7A3B42', soft: '#CBD183', date: '#7A3B42', text: '#000000', count: '#7A3B42', label: 'รพ.สต.' },
   '1/1':      { bar: '#F8CABA', soft: '#92A2A6', date: '#F8CABA', text: '#000000', count: '#F8CABA', label: '1/1' },
+};
+const TODAY_CONTRAST = {
+  'off':    { bg: '#FFFFFF', ink: '#2B2B23' },
+  'ปกส':    { bg: '#CBD183', ink: '#2B2B23' },
+  'ฟุ้ง':   { bg: '#EFCE7B', ink: '#2B2B23' },
+  'Screen': { bg: '#6777B6', ink: '#FFFFFF' },
+  'DM':     { bg: '#F8CABA', ink: '#2B2B23' },
+  'รพ.สต.': { bg: '#7A3B42', ink: '#FFFFFF' },
+  '1/1':    { bg: '#D8560E', ink: '#FFFFFF' },
+  default:  { bg: '#6777B6', ink: '#FFFFFF' },
 };
 
 const SHIFT_DEFAULTS = {
@@ -345,6 +366,30 @@ function TimeField({ value, onChange, style = {} }) {
   useEffect(() => setDraft(value || '13:00'), [value]);
   const commit = () => { const next = normalizeClockValue(draft, value || '13:00'); setDraft(next); onChange(next); };
   return <div className="custom-time-field" style={style}><input type="text" inputMode="numeric" value={draft} onChange={e => setDraft(e.target.value.replace(/[^0-9: APMapm]/g, '').slice(0, 8))} onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commit(); e.currentTarget.blur(); } }} aria-label="เวลา" placeholder="13:00" /><Icon name="stopwatchSolid" size={15} color="currentColor" /></div>;
+}
+
+function DateField({ value, onChange, style = {} }) {
+  const initial = /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? value : new Date().toISOString().slice(0, 10);
+  const [open, setOpen] = useState(false);
+  const [popupPos, setPopupPos] = useState({ left: 10, top: 48 });
+  const [cursor, setCursor] = useState(() => { const [y,m] = initial.split('-').map(Number); return { y, m }; });
+  const ref = useRef(null);
+  const popRef = useRef(null);
+  useEffect(() => { const close = e => { if (ref.current && !ref.current.contains(e.target) && (!popRef.current || !popRef.current.contains(e.target))) setOpen(false); }; document.addEventListener('pointerdown', close); return () => document.removeEventListener('pointerdown', close); }, []);
+  useEffect(() => { if (/^\d{4}-\d{2}-\d{2}$/.test(value || '')) { const [y,m] = value.split('-').map(Number); setCursor({ y, m }); } }, [value]);
+  const days = new Date(cursor.y, cursor.m, 0).getDate();
+  const offset = new Date(cursor.y, cursor.m - 1, 1).getDay();
+  const move = delta => setCursor(({ y, m }) => { const d = new Date(y, m - 1 + delta, 1); return { y: d.getFullYear(), m: d.getMonth() + 1 }; });
+  const choose = day => { onChange(`${cursor.y}-${String(cursor.m).padStart(2,'0')}-${String(day).padStart(2,'0')}`); setOpen(false); };
+  const selectedDay = value?.startsWith(`${cursor.y}-${String(cursor.m).padStart(2,'0')}-`) ? Number(value.slice(-2)) : -1;
+  const toggle = () => { if (!open && ref.current) { const r = ref.current.getBoundingClientRect(); setPopupPos({ left: Math.max(10, Math.min(r.left, window.innerWidth - 282)), top: r.bottom + 7 }); } setOpen(v => !v); };
+  return <div ref={ref} className="custom-date-field" style={{ ...style, position: 'relative' }}>
+    <button type="button" onClick={toggle} aria-label="เลือกวันที่"><span>{value || 'เลือกวันที่'}</span><Icon name="calendarSolid" size={15} /></button>
+    {open && ReactDOM.createPortal(<div ref={popRef} className="custom-date-popover" style={{ left: popupPos.left, top: popupPos.top }}>
+      <div className="custom-date-head"><button type="button" onClick={() => move(-1)}><Icon name="chevronLeft" size={17}/></button><strong>{new Date(cursor.y, cursor.m - 1).toLocaleDateString('en-US',{month:'long'})} {cursor.y}</strong><button type="button" onClick={() => move(1)}><Icon name="chevronRight" size={17}/></button></div>
+      <div className="custom-date-grid">{['SUN','MON','TUE','WED','THU','FRI','SAT'].map(x => <b key={x}>{x}</b>)}{Array.from({length: offset},(_,i)=><span key={`e${i}`} />)}{Array.from({length: days},(_,i)=>i+1).map(day => <button type="button" key={day} className={day === selectedDay ? 'selected' : ''} onClick={() => choose(day)}>{day}</button>)}</div>
+    </div>, document.body)}
+  </div>;
 }
 
 function ScheduleCalendar() {
@@ -685,10 +730,10 @@ function ScheduleCalendar() {
             {showJump && <button onClick={() => jumpToVisit(v.date)} style={{ fontSize: 11, color: '#1F5B54', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0, marginTop: 2 }}>{v.date} — ไปที่วันนัด</button>}
           </div>
           <span style={{ fontSize: 10.5, fontWeight: 700, padding: '3px 7px', borderRadius: 4, background: cs.bg, color: cs.text, whiteSpace: 'nowrap' }}>{c.category}</span>
-          {!showJump && <button onClick={() => editPatientFromCalendar(c, v)} title="แก้ไขข้อมูลคนไข้และหมายเหตุ" style={{ width: 30, height: 30, borderRadius: 9, border: 'none', background: 'transparent', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CuteIcon name="pencil" size={12} tone="yellow" box={22} /></button>}
-          <button onClick={() => openPatientHistory(c.id)} title="ดูประวัติเคส" aria-label="ดูประวัติเคส" style={{ width: 34, height: 32, border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="cuteHistory" size={31} /></button>
-          <button onClick={() => toggleCancelVisit(c.id, v.id)} title={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} aria-label={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} style={{ width: 34, height: 32, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name={cancelled ? 'cuteRestore' : 'cuteCancel'} size={31} />
+          {!showJump && <button onClick={() => editPatientFromCalendar(c, v)} title="แก้ไขข้อมูลคนไข้และหมายเหตุ" style={{ width: 30, height: 30, border: 'none', background: 'transparent', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="plumpEdit" size={27} /></button>}
+          <button onClick={() => openPatientHistory(c.id)} title="ดูประวัติเคส" aria-label="ดูประวัติเคส" style={{ width: 30, height: 30, border: 'none', background: 'transparent', cursor: 'pointer', padding: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="plumpHistory" size={28} /></button>
+          <button onClick={() => toggleCancelVisit(c.id, v.id)} title={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} aria-label={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} style={{ width: 30, height: 30, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', padding: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name={cancelled ? 'plumpRestore' : 'plumpCancel'} size={28} />
           </button>
           <button onClick={() => removeVisit(c.id, v.id)} title="ลบนัดนี้" style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 2 }}><Icon name="x" size={14} color="#B9AF9A" /></button>
         </div>
@@ -719,6 +764,7 @@ function ScheduleCalendar() {
         .view-panel { animation: viewIn .28s cubic-bezier(.22,.8,.3,1) both; }
         .cell:hover { transform: translateY(-2px); filter: brightness(.93); box-shadow: 0 4px 10px rgba(43,43,35,0.14); }
         .cell { border-radius: 12px !important; transition: transform .2s ease, filter .2s ease, box-shadow .2s ease; cursor: pointer; }
+        .cell .today-date { width: 25px; height: 25px; margin: -3px 0 0 -3px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--today-bg, #6777B6); color: var(--today-ink, #FFFFFF) !important; font-size: 12px !important; font-weight: 800 !important; box-shadow: 0 3px 9px rgba(43,43,35,.18); }
         .ov-cell { transition: filter .15s ease, transform .15s ease; }
         .ov-cell:hover { filter: brightness(.93); transform: translateY(-1px); }
         .overview-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; max-width: 760px; margin-left: auto; margin-right: auto; }
@@ -822,7 +868,7 @@ function ScheduleCalendar() {
           .category-theme-select, .category-theme-select > button { width: 100%; }
           .category-add-button { min-width: 108px; }
           .holiday-form { grid-template-columns: minmax(0,1fr) auto !important; }
-          .holiday-date { grid-column: 1 / -1; }
+          .holiday-form .custom-date-field { grid-column: 1 / -1; }
           .cell-shift-label { font-size: 8.5px !important; }
           .overview-grid { max-width: none; }
           .overview-month { grid-template-columns: 1fr; min-height: 0; }
@@ -859,6 +905,21 @@ function ScheduleCalendar() {
         .case-add-panel .appointment-time-row { gap: 0 !important; }
         .custom-time-field { height: 32px; display: inline-flex; align-items: center; gap: 7px; padding: 0 10px; box-sizing: border-box; border: none; border-radius: 9px; background: rgba(31,91,84,.88); color: #FFFFFF; box-shadow: none; }
         .custom-time-field input { width: 76px; min-width: 0; height: 100%; padding: 0 !important; border: none !important; outline: none; background: transparent !important; color: inherit !important; font-family: 'Nunito', monospace !important; font-size: 14px !important; font-weight: 900 !important; letter-spacing: .3px; box-shadow: none !important; }
+        .custom-date-field > button { width: 100%; height: 34px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 11px; border: none; border-radius: 9px; background: rgba(226,227,234,.76); color: #303447; font: 800 12px 'Nunito', monospace; cursor: pointer; }
+        .holiday-settings { position: relative; z-index: 60; overflow: visible !important; }
+        .category-settings, .settings-legend { position: relative; z-index: 1; }
+        .custom-date-field { z-index: 200; }
+        .custom-date-popover { position: fixed; z-index: 9999; width: 272px; padding: 12px; box-sizing: border-box; border: none; border-radius: 18px; background: rgba(250,246,239,.86); backdrop-filter: blur(24px) saturate(118%); -webkit-backdrop-filter: blur(24px) saturate(118%); box-shadow: 0 20px 48px rgba(55,48,42,.24); isolation: isolate; overflow: hidden; }
+        .custom-date-popover::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: linear-gradient(145deg, rgba(255,255,255,.35), rgba(239,228,217,.16)); pointer-events: none; }
+        .custom-date-head { display: grid; grid-template-columns: 34px 1fr 34px; align-items: center; margin-bottom: 9px; color: #425D91; text-align: center; }
+        .custom-date-head button { width: 32px; height: 32px; display: grid; place-items: center; border: none; border-radius: 50%; background: transparent; color: #425D91; cursor: pointer; transition: background .16s ease, transform .16s ease; }
+        .custom-date-head button:hover { background: rgba(183,165,143,.26); transform: scale(1.06); }
+        .custom-date-head strong { font: 900 13px 'Nunito', monospace; }
+        .custom-date-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+        .custom-date-grid b { padding: 4px 0 6px; color: #8A7F63; font: 900 8px 'Nunito', monospace; text-align: center; }
+        .custom-date-grid button { aspect-ratio: 1; display: grid; place-items: center; padding: 0; border: none; border-radius: 50%; background: transparent; color: #303447; font: 800 11px 'Nunito', monospace; cursor: pointer; transition: background .15s ease, color .15s ease, transform .15s ease; }
+        .custom-date-grid button:hover { background: rgba(183,165,143,.36); color: #425D91; transform: scale(1.08); }
+        .custom-date-grid button.selected { background: #6777B6; color: #FFF7E8; }
         .case-add-panel .appointment-time-row .custom-time-field { border-radius: 9px 0 0 9px; }
         .case-add-panel .duration-line > div { height: 32px; background: #1F5B54; color: #FFFFFF; border-radius: 0 9px 9px 0 !important; }
         .case-add-panel .duration-line .stepbtn { height: 32px !important; background: transparent !important; color: #FFFFFF !important; }
@@ -876,7 +937,7 @@ function ScheduleCalendar() {
         ::-webkit-scrollbar-thumb { background: #DCD4C4; border-radius: 4px; }
       `}</style>
 
-      <div style={{ width: '100%', maxWidth: view === 'patients' ? 820 : 950, margin: '0 auto', boxSizing: 'border-box', transition: 'max-width .28s cubic-bezier(.22,.8,.3,1)' }}>
+      <div className="app-shell" style={{ width: '100%', maxWidth: 950, margin: '0 auto', boxSizing: 'border-box' }}>
         <header className="page-head" style={{ marginBottom: 16 }}>
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: 2, color: '#CBD183', textTransform: 'uppercase', marginBottom: 4 }}>
             งานโรงพยาบาล &amp; นัดคนไข้
@@ -893,7 +954,7 @@ function ScheduleCalendar() {
               </div>
             </div>
           </div>
-          <button onClick={() => setView('settings')} className={`nav-icon settings-corner ${view === 'settings' ? 'active' : ''}`} title="ตั้งค่า" aria-label="ตั้งค่า"><Icon name="cuteSettings" size={29} /></button>
+          <button onClick={() => setView('settings')} className={`nav-icon settings-corner ${view === 'settings' ? 'active' : ''}`} title="ตั้งค่า" aria-label="ตั้งค่า"><Icon name="plumpSettings" size={29} /></button>
         </header>
 
         {view !== 'patients' && view !== 'settings' && (
@@ -925,8 +986,8 @@ function ScheduleCalendar() {
                 </div>}
               </div>
               <div className="history-actions" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 7, flexShrink: 0, marginLeft: 'auto' }}>
-                <button onClick={() => deleteCase(historyCase.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', borderRadius: 9, background: '#D8560E', color: '#FFFFFF', padding: '5px 10px 5px 6px', cursor: 'pointer', fontWeight: 700, fontSize: 11.5 }}><CuteIcon name="noEntrySolid" size={10} tone="cream" box={19} /> Delete</button>
-                <button onClick={() => editingCase ? saveCaseEdit() : startEditCase(historyCase)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', borderRadius: 9, background: '#CBD183', color: '#1F5B54', padding: '5px 10px 5px 6px', cursor: 'pointer', fontWeight: 700, fontSize: 11.5 }}>{editingCase ? <CuteIcon name="check" size={10} tone="yellow" box={19} /> : <CuteIcon name="pencil" size={10} tone="brown" box={19} />} {editingCase ? 'Save case' : 'Edit case'}</button>
+                <button onClick={() => deleteCase(historyCase.id)} title="Delete case" aria-label="Delete case" style={{ width: 32, height: 32, display: 'grid', placeItems: 'center', border: 'none', background: 'transparent', padding: 2, cursor: 'pointer' }}><Icon name="plumpFire" size={28} /></button>
+                <button onClick={() => editingCase ? saveCaseEdit() : startEditCase(historyCase)} title={editingCase ? 'Save case' : 'Edit case'} aria-label={editingCase ? 'Save case' : 'Edit case'} style={{ width: 32, height: 32, display: 'grid', placeItems: 'center', border: 'none', background: 'transparent', padding: 2, cursor: 'pointer' }}>{editingCase ? <Icon name="plumpSave" size={28} /> : <Icon name="plumpEdit" size={28} />}</button>
                 <button className="history-close" onClick={() => setHistoryCaseId(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="x" size={16} color="#8A7F63" /></button>
               </div>
             </div>
@@ -939,9 +1000,9 @@ function ScheduleCalendar() {
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", color: '#5C6D68', minWidth: 130, textDecoration: cancelled ? 'line-through' : 'none' }}>{v.date} {v.time}</span>
                   <span style={{ flex: '1 1 120px', minWidth: 0, color: cancelled ? '#B9AF9A' : '#1F3A35', textDecoration: cancelled ? 'line-through' : 'none' }}>{v.step || '—'}</span>
                   {cancelled && <span style={{ fontSize: 10, fontWeight: 700, color: '#A33636' }}>ยกเลิกแล้ว</span>}
-                  <button onClick={() => editPatientFromCalendar(historyCase, v)} style={{ border: 'none', borderRadius: 7, background: '#D3C2CD', color: '#1F5B54', padding: '5px 9px', cursor: 'pointer', fontWeight: 800, fontSize: 10.5, whiteSpace: 'nowrap' }}>แก้เวลา</button>
-                  <button onClick={() => jumpToVisit(v.date)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', borderRadius: 7, background: '#6777B6', color: '#FFFFFF', padding: '4px 8px 4px 5px', cursor: 'pointer', fontWeight: 700, fontSize: 10.5, whiteSpace: 'nowrap' }}><CuteIcon name="calendarSolid" size={10} tone="yellow" box={19} /> Open</button>
-                  <button onClick={() => toggleCancelVisit(historyCase.id, v.id)} title={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} style={{ width: 31, height: 31, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', padding: 0 }}><Icon name={cancelled ? 'cuteRestore' : 'cuteCancel'} size={29} /></button>
+                  <button onClick={() => editPatientFromCalendar(historyCase, v)} title="เลื่อนนัด / แก้เวลา" aria-label="เลื่อนนัด / แก้เวลา" style={{ width: 30, height: 30, border: 'none', background: 'transparent', padding: 2, cursor: 'pointer', display: 'grid', placeItems: 'center' }}><Icon name="plumpReschedule" size={27} /></button>
+                  <button onClick={() => jumpToVisit(v.date)} title="Open" aria-label="Open" style={{ width: 30, height: 30, border: 'none', background: 'transparent', padding: 1, cursor: 'pointer', display: 'grid', placeItems: 'center' }}><Icon name="plumpOpen" size={28} /></button>
+                  <button onClick={() => toggleCancelVisit(historyCase.id, v.id)} title={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} style={{ width: 30, height: 30, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', padding: 1 }}><Icon name={cancelled ? 'plumpRestore' : 'plumpCancel'} size={28} /></button>
                   <button onClick={() => removeVisit(historyCase.id, v.id)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><Icon name="x" size={12} color="#B9AF9A" /></button>
                 </div>
               );
@@ -964,8 +1025,8 @@ function ScheduleCalendar() {
                 const vc = countForDate(c.dstr);
                 return (
                   <div key={c.dstr} className="cell" onClick={() => setSelected(c.dstr)}
-                    style={{ minHeight: 62, borderRadius: 8, background: s ? s.soft : '#FFFFFF', border: (isSel || isToday) ? '2px solid #FFFFFF' : '2px solid transparent', padding: '6px 6px 4px', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: s ? 13 : 20, lineHeight: 1, fontWeight: s ? 600 : 700, color: s ? s.date : '#B9AF9A' }}>{c.day}</div>
+                    style={{ minHeight: 62, borderRadius: 8, background: s ? s.soft : '#FFFFFF', border: isSel ? '2px solid #FFFFFF' : '2px solid transparent', padding: '6px 6px 4px', position: 'relative', overflow: 'hidden' }}>
+                    <div className={isToday ? 'today-date' : ''} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: s ? 13 : 20, lineHeight: 1, fontWeight: s ? 600 : 700, color: s ? s.date : '#B9AF9A', '--today-bg': (TODAY_CONTRAST[c.shift] || TODAY_CONTRAST.default).bg, '--today-ink': (TODAY_CONTRAST[c.shift] || TODAY_CONTRAST.default).ink }}>{c.day}</div>
                     {(holidays[c.dstr] || c.info?.holiday) && <div style={{ fontSize: 9, color: '#FFFFFF', fontWeight: 700, lineHeight: 1.2, marginTop: 1 }}>{holidays[c.dstr] || c.info.holiday}</div>}
                     {s && <div className="cell-shift-label" style={{ fontSize: 9.5, color: s.text, fontWeight: 600, marginTop: 2 }}>{s.label}</div>}
                     {vc > 0 && <div style={{ position: 'absolute', bottom: 4, right: 6, fontSize: 8.5, color: s ? s.count : '#1F5B54', fontWeight: 700 }}>{vc}</div>}
@@ -1011,7 +1072,7 @@ function ScheduleCalendar() {
                     <button onClick={() => { setAddMode('new'); setPickedCaseId(null); setAddPanelOpen(true); setAddChoiceOpen(false); }} style={{ border: 'none', borderRadius: 12, padding: '11px 13px', background: 'transparent', color: '#1F3A35', textAlign: 'left', cursor: 'pointer', fontWeight: 700 }}>เคสใหม่</button>
                     <button onClick={() => { setAddMode('existing'); setAddPanelOpen(true); setAddChoiceOpen(false); }} style={{ border: 'none', borderRadius: 12, padding: '11px 13px', background: 'transparent', color: '#1F3A35', textAlign: 'left', cursor: 'pointer', fontWeight: 700 }}>เคสเดิม · นัดต่อเนื่อง</button>
                   </div>}
-                  <button onClick={() => { if (addPanelOpen) { setAddPanelOpen(false); setAddChoiceOpen(false); } else setAddChoiceOpen(v => !v); }} aria-label="เพิ่มเคส" title="เพิ่มเคส" style={{ width: 44, height: 44, borderRadius: 14, border: 'none', background: '#E45C32', color: '#FFF9E8', cursor: 'pointer', display: 'grid', placeItems: 'center', boxShadow: '5px 5px 0 #FFD84D, 0 10px 22px rgba(111,70,56,.18)', fontSize: 28, fontWeight: 700, lineHeight: 1, transform: addPanelOpen ? 'rotate(45deg)' : 'none', transition: 'transform .22s ease, filter .22s ease' }}>+</button>
+                  <button onClick={() => { if (addPanelOpen) { setAddPanelOpen(false); setAddChoiceOpen(false); } else setAddChoiceOpen(v => !v); }} aria-label="เพิ่มเคส" title="เพิ่มเคส" style={{ width: 44, height: 44, borderRadius: 14, border: '3px solid #E45C32', background: '#FFF7E8', color: '#E45C32', cursor: 'pointer', display: 'grid', placeItems: 'center', boxShadow: 'none', fontSize: 28, fontWeight: 800, lineHeight: 1, transform: addPanelOpen ? 'rotate(45deg)' : 'none', transition: 'transform .22s ease, filter .22s ease' }}>+</button>
                 </div>
 
                 {addPanelOpen && <div className="case-add-panel" style={{ background: '#EFCE7B', border: 'none', borderRadius: 10, padding: 14 }}>
@@ -1268,7 +1329,7 @@ function ScheduleCalendar() {
         <div className="view-panel settings-section holiday-settings" style={{ background: '#CBD183', borderRadius: 18, padding: 16, marginBottom: 14 }}>
           <div className="settings-title" style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: 15, color: '#1F5B54', marginBottom: 10 }}>วันหยุด</div>
           <form className="holiday-form" onSubmit={e => { e.preventDefault(); addHoliday(); }} style={{ display: 'grid', gridTemplateColumns: '150px minmax(160px,1fr) auto', gap: 8, marginBottom: 11 }}>
-            <input className="holiday-date" type="date" value={newHolidayDate} onChange={e => setNewHolidayDate(e.target.value)} style={{ minWidth: 0, height: 34, border: 'none', borderRadius: 9, padding: '0 10px', background: '#FFF9E8', fontFamily: "'Nunito', sans-serif", fontWeight: 700 }} />
+            <DateField value={newHolidayDate} onChange={setNewHolidayDate} style={{ minWidth: 0, height: 34, fontFamily: "'Nunito', sans-serif", fontWeight: 700 }} />
             <input value={newHolidayName} onChange={e => setNewHolidayName(e.target.value)} placeholder="ชื่อวันหยุด เช่น วันหยุดพิเศษ" style={{ minWidth: 0, height: 34, border: 'none', borderRadius: 9, padding: '0 11px', background: '#FFF9E8', fontFamily: "'Noto Sans Thai Looped', sans-serif" }} />
             <button type="submit" style={{ height: 34, border: 'none', borderRadius: 9, padding: '0 14px', background: '#1F5B54', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>+ เพิ่ม</button>
           </form>
@@ -1313,7 +1374,7 @@ function ScheduleCalendar() {
         </>}
 
       </div>
-      <footer style={{ textAlign: 'center', fontSize: 10.5, lineHeight: 1.6, color: '#B9AF9A', margin: 'auto -14px 0', padding: '22px 18px 12px' }}>
+      <footer style={{ width: '100%', maxWidth: 950, boxSizing: 'border-box', textAlign: 'center', fontSize: 10.5, lineHeight: 1.6, color: '#B9AF9A', margin: 'auto auto 0', padding: '22px 18px 12px' }}>
         ข้อมูลเวร/นัดของ เม.ย.–ก.ย. 2569 ดึงจากไฟล์ที่อัปโหลด (แปลงเป็นเคสอัตโนมัติ) · กดยกเลิกนัดแทนการลบเพื่อเก็บประวัติไว้ · บันทึกไว้ในเครื่องนี้อัตโนมัติ
       </footer>
     </div>
@@ -1350,4 +1411,3 @@ root.render(<App />);
 </script>
 </body>
 </html>
-
