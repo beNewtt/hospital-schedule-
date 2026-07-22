@@ -409,6 +409,7 @@ function DateField({ value, onChange, style = {} }) {
 
 function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '', onSignOut = null }) {
   const initials = (displayName || email.split('@')[0] || 'HOS').trim().slice(0, 2).toUpperCase();
+  const accountName = email.split('@')[0] || displayName || 'user';
   return <div className="brand-bar">
     <style>{`
       .brand-bar { height:64px; padding:0 max(18px,calc((100vw - 950px)/2)); display:flex; align-items:center; justify-content:space-between; gap:18px; background:#F3EAE3; color:#26304F; border-bottom:1px solid rgba(211,194,205,.72); box-sizing:border-box; font-family:'Nunito',sans-serif; }
@@ -426,7 +427,7 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
       @media(max-width:600px){ .brand-bar{height:54px;padding:0 14px}.brand-logo{width:34px;height:34px;flex-basis:34px;border-radius:10px;font-size:11px}.brand-title{font-size:14px}.brand-subtitle{display:none}.brand-user{gap:5px}.brand-avatar{width:27px;height:27px;font-size:9px}.brand-email{max-width:92px;font-size:9px}.brand-signout{display:none} }
     `}</style>
     <div className="brand-id"><div className="brand-logo">HOS</div><div><div className="brand-title">HOS SCHEDULE</div><div className="brand-subtitle">งานโรงพยาบาล &amp; นัดคนไข้</div></div></div>
-    <div className="brand-user"><span className="brand-online"/><span className="brand-avatar">{photoURL ? <img src={photoURL} alt={displayName || email} referrerPolicy="no-referrer"/> : initials}</span><span className="brand-email">{email}</span><button className="brand-action" onClick={() => window.dispatchEvent(new CustomEvent('hos-open-settings'))} title="ตั้งค่า" aria-label="ตั้งค่า">⚙️</button>{onSignOut && <button className="brand-action brand-signout" onClick={onSignOut}>ออก</button>}</div>
+    <div className="brand-user"><span className="brand-online"/><span className="brand-avatar">{photoURL ? <img src={photoURL} alt={displayName || email} referrerPolicy="no-referrer"/> : initials}</span><span className="brand-email" title={email}>{accountName}</span><button className="brand-action" onClick={() => window.dispatchEvent(new CustomEvent('hos-open-settings'))} title="ตั้งค่า" aria-label="ตั้งค่า">⚙️</button>{onSignOut && <button className="brand-action brand-signout" onClick={onSignOut}>ออก</button>}</div>
   </div>;
 }
 
@@ -460,6 +461,10 @@ function ScheduleCalendar() {
   const [patientListQuery, setPatientListQuery] = useState('');
   const [patientSort, setPatientSort] = useState('date');
   const [overviewPicker, setOverviewPicker] = useState(null);
+  const [overviewMonthIndex, setOverviewMonthIndex] = useState(today0.getMonth());
+  const overviewSwipeX = useRef(null);
+  useEffect(() => { setOverviewMonthIndex(year === today0.getFullYear() ? today0.getMonth() : 0); }, [year]);
+  const moveOverviewMonth = direction => setOverviewMonthIndex(current => Math.max(0, Math.min(11, current + direction)));
   const overviewPressTimer = useRef(null);
   const openOverviewPicker = (e, c, m) => setOverviewPicker({ date: c.dstr, year, month: m, x: e.clientX, y: e.clientY });
   const startOverviewPress = (e, c, m) => {
@@ -813,7 +818,15 @@ function ScheduleCalendar() {
         .cell .today-date { width: 25px; height: 25px; margin: -6px 0 0 -3px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--today-bg, #6777B6); color: var(--today-ink, #FFFFFF) !important; font-size: 12px !important; font-weight: 800 !important; line-height: 1 !important; box-shadow: 0 3px 9px rgba(43,43,35,.18); }
         .ov-cell { transition: filter .15s ease, transform .15s ease; }
         .ov-cell:hover { filter: brightness(.93); transform: translateY(-1px); }
-        .overview-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; max-width: 760px; margin-left: auto; margin-right: auto; }
+        .overview-grid { position:relative; max-width:760px; margin-left:auto; margin-right:auto; padding:18px 22px 34px; touch-action:pan-y; }
+        .overview-grid::before,.overview-grid::after{content:'';position:absolute;left:50%;transform:translateX(-50%);height:100%;border-radius:22px;background:#fff;pointer-events:none;box-shadow:0 12px 28px rgba(65,54,73,.08)}
+        .overview-grid::before{width:calc(100% - 30px);top:8px;opacity:.58;z-index:0}.overview-grid::after{width:calc(100% - 58px);top:17px;opacity:.30;z-index:0}
+        .overview-grid .overview-month{position:relative;z-index:2;animation:overviewCardIn .32s cubic-bezier(.22,.8,.3,1)}
+        .overview-deck-controls{position:absolute;z-index:4;left:4px;right:4px;top:50%;transform:translateY(-50%);display:flex;justify-content:space-between;pointer-events:none}
+        .overview-deck-controls button{pointer-events:auto;width:36px;height:36px;border:0;border-radius:50%;background:rgba(243,234,227,.88);color:#6777B6;box-shadow:0 5px 16px rgba(65,54,73,.12);cursor:pointer;font-size:21px;font-weight:800}
+        .overview-deck-controls button:disabled{opacity:.2;cursor:default}
+        .overview-deck-dots{position:relative;z-index:3;display:flex;justify-content:center;gap:5px;margin-top:14px}.overview-deck-dots button{width:6px;height:6px;padding:0;border:0;border-radius:50%;background:#D3C2CD;cursor:pointer}.overview-deck-dots button.active{width:18px;border-radius:8px;background:#6777B6}
+        @keyframes overviewCardIn{from{opacity:.35;transform:translateX(16px) scale(.985)}to{opacity:1;transform:none}}
         .overview-month { background: #FFFFFF; border-radius: 20px; overflow: hidden; display: grid; grid-template-columns: 190px 1fr; min-height: 310px; }
         .overview-month-side { padding: 26px 22px; display: flex; flex-direction: column; }
         .overview-month-calendar { padding: 24px 26px; }
@@ -916,7 +929,7 @@ function ScheduleCalendar() {
           .holiday-form { grid-template-columns: minmax(0,1fr) auto !important; }
           .holiday-form .custom-date-field { grid-column: 1 / -1; }
           .cell-shift-label { font-size: 8.5px !important; }
-          .overview-grid { max-width: none; }
+          .overview-grid { max-width:none;padding:14px 10px 30px; }
           .overview-month { grid-template-columns: 1fr; min-height: 0; }
           .overview-month-side { min-height: 150px; padding: 20px; }
           .overview-month-calendar { padding: 20px 14px; }
@@ -1212,8 +1225,13 @@ function ScheduleCalendar() {
         )}
 
         {view === 'overview' && (
-          <div className="view-panel overview-grid" style={{ marginBottom: 22 }}>
-            {THAI_MONTH_NAMES.map((mname, idx) => {
+          <div className="view-panel overview-grid" style={{ marginBottom: 22 }}
+            onPointerDown={e => { overviewSwipeX.current = e.clientX; }}
+            onPointerUp={e => { if (overviewSwipeX.current === null) return; const dx = e.clientX - overviewSwipeX.current; overviewSwipeX.current = null; if (Math.abs(dx) > 45) moveOverviewMonth(dx < 0 ? 1 : -1); }}
+            onPointerCancel={() => { overviewSwipeX.current = null; }}>
+            <div className="overview-deck-controls"><button disabled={overviewMonthIndex === 0} onClick={() => moveOverviewMonth(-1)} aria-label="เดือนก่อนหน้า">‹</button><button disabled={overviewMonthIndex === 11} onClick={() => moveOverviewMonth(1)} aria-label="เดือนถัดไป">›</button></div>
+            {[overviewMonthIndex].map(idx => {
+              const mname = THAI_MONTH_NAMES[idx];
               const m = idx + 1;
               const mc = buildCells(year, m);
               const weeks = [];
@@ -1255,6 +1273,7 @@ function ScheduleCalendar() {
                 </div>
               );
             })}
+            <div className="overview-deck-dots">{THAI_MONTH_NAMES.map((_, idx) => <button key={idx} className={idx === overviewMonthIndex ? 'active' : ''} onClick={() => setOverviewMonthIndex(idx)} aria-label={`เดือน ${idx + 1}`} />)}</div>
           </div>
         )}
 
