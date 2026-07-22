@@ -94,7 +94,7 @@ function Icon({ name, size = 16, color = 'currentColor' }) {
     plumpReschedule: '🗓️', plumpSettings: '⚙️', plumpFilter: '🎛️', plumpCancel: '⛔', plumpRestore: '↩️',
     cuteSettings: '⚙️', cuteHistory: '📖', cuteCancel: '⛔', cuteRestore: '↩️', cuteFilter: '🎛️'
   };
-  if (emojiIcons[name]) return <span aria-hidden="true" style={{ width: size, height: size, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif", fontSize: Math.max(13, Math.round(size * .65)), lineHeight: 1, fontWeight: 400 }}>{emojiIcons[name]}</span>;
+  if (emojiIcons[name]) return <span aria-hidden="true" style={{ width: size, height: size, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif", fontSize: Math.max(10, Math.round(size * .48)), lineHeight: 1, fontWeight: 400 }}>{emojiIcons[name]}</span>;
   switch (name) {
     case 'chevronLeft': return <svg {...p}><polyline points="15 18 9 12 15 6" /></svg>;
     case 'chevronRight': return <svg {...p}><polyline points="9 18 15 12 9 6" /></svg>;
@@ -167,23 +167,33 @@ function CuteIcon({ name, size = 12, tone = 'yellow', box = 23 }) {
 
 function CleanSelect({ value, onChange, options, style = {}, className = '', ariaLabel = 'Select option', iconOnly = false, iconName = 'plumpFilter' }) {
   const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState({ left: 0, top: 0, width: 190 });
   const ref = useRef(null);
+  const menuRef = useRef(null);
   const selected = options.find(o => String(o.value) === String(value)) || options[0];
   useEffect(() => {
-    const close = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const close = e => { if (ref.current && !ref.current.contains(e.target) && (!menuRef.current || !menuRef.current.contains(e.target))) setOpen(false); };
     document.addEventListener('pointerdown', close);
     return () => document.removeEventListener('pointerdown', close);
   }, []);
+  const toggleMenu = () => {
+    if (!open && ref.current) {
+      const r = ref.current.getBoundingClientRect();
+      const width = Math.max(190, r.width);
+      setMenuPos({ left: Math.max(8, Math.min(r.left, window.innerWidth - width - 8)), top: Math.max(8, Math.min(r.bottom + 7, window.innerHeight - 265)), width });
+    }
+    setOpen(!open);
+  };
   return (
     <div ref={ref} className={`clean-select ${className}`} style={{ position: 'relative', display: 'inline-block' }}>
-      <button type="button" aria-label={`${ariaLabel}: ${selected?.label ?? selected?.value}`} title={iconOnly ? (selected?.label ?? selected?.value) : undefined} aria-expanded={open} onClick={() => setOpen(!open)}
+      <button type="button" aria-label={`${ariaLabel}: ${selected?.label ?? selected?.value}`} title={iconOnly ? (selected?.label ?? selected?.value) : undefined} aria-expanded={open} onClick={toggleMenu}
         style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, border: 'none', cursor: 'pointer' }}>
         {iconOnly ? <Icon name={iconName} size={32} /> : <><span>{selected?.label ?? selected?.value}</span><span className="clean-select-arrow">⌄</span></>}
       </button>
-      {open && (
-        <div className="clean-select-menu">
+      {open && ReactDOM.createPortal(
+        <div ref={menuRef} className="clean-select-menu" style={{ position: 'fixed', left: menuPos.left, top: menuPos.top, width: menuPos.width, minWidth: menuPos.width, maxWidth: 'calc(100vw - 16px)', right: 'auto', zIndex: 200 }}>
           {options.map(o => <button type="button" key={String(o.value)} className={String(o.value) === String(value) ? 'selected' : ''} onClick={() => { onChange(o.value); setOpen(false); }}><span>{o.label ?? o.value}</span></button>)}
-        </div>
+        </div>, document.body
       )}
     </div>
   );
@@ -837,6 +847,8 @@ function ScheduleCalendar() {
         .overview-shift-popover::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.60); }
         .overview-shift-popover button { padding: 6px 7px !important; border-radius: 8px !important; font-size: 11.5px; min-height: 30px; }
         .overview-shift-popover > div[style*="grid-template-columns"] { gap: 5px !important; }
+        .calendar-room-legend{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;margin:4px auto 20px;max-width:880px}.calendar-room-pill{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:999px;padding:7px 11px;background:#E9DDD2;color:#5C6D68;font-size:10.5px;font-weight:700;cursor:pointer}.calendar-room-pill .dot{width:7px;height:7px;border-radius:50%;flex:0 0 7px}.calendar-room-pill small{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;font-weight:500;opacity:.72}.calendar-modal-backdrop{position:fixed;inset:0;z-index:70;background:rgba(31,58,53,.28);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}.calendar-day-modal{position:fixed;z-index:71;left:50%;top:50%;transform:translate(-50%,-50%);width:min(880px,calc(100vw - 30px));max-height:calc(100vh - 34px);overflow-y:auto;background:#FAF6EF;border-radius:22px;padding:18px;box-sizing:border-box;box-shadow:0 24px 70px rgba(43,43,35,.24);animation:dayModalIn .24s ease-out}@keyframes dayModalIn{from{opacity:0;transform:translate(-50%,-47%) scale(.98)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+        .calendar-room-legend{justify-content:flex-start;margin-left:0;margin-right:0}
         .tab-btn { transition: all 0.15s ease; }
         .nav-icon { width: 31px; height: 31px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: transparent; color: #FFFFFF; cursor: pointer; transition: color .15s ease, transform .15s ease; }
         .nav-icon:hover { color: #EFCE7B !important; transform: translateY(-1px); }
@@ -947,6 +959,7 @@ function ScheduleCalendar() {
           .case-add-panel .appointment-time-row .duration-line > span:last-child { display: block; width: 100%; padding-right: 2px; text-align: right; font-size: 9.5px !important; white-space: nowrap; }
           .overview-week-grid { grid-template-columns: .58fr repeat(5, minmax(0, 1fr)) .58fr; }
           .overview-shift-popover { left: 50% !important; right: auto !important; bottom: 16px !important; top: auto !important; width: min(300px, calc(100vw - 28px)); transform: translateX(-50%); }
+          .calendar-room-legend{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding:0 4px 5px;margin-bottom:15px;scrollbar-width:none}.calendar-room-pill{flex:0 0 auto}.calendar-room-pill small{display:none}.calendar-day-modal{width:calc(100vw - 18px);max-height:calc(100vh - 18px);padding:12px;border-radius:18px}
           .patient-scroll { grid-template-columns: 1fr; }
           .page-head { position: relative; top: auto; border-radius: 18px; padding: 16px; }
           .history-panel { position: relative; top: auto; }
@@ -1103,8 +1116,13 @@ function ScheduleCalendar() {
               })}
             </div>
 
+            <div className="calendar-room-legend">
+              {Object.entries(SHIFT_STYLE).map(([key, style]) => <button key={key} className="calendar-room-pill" onClick={() => { const first = cells.find(c => c && c.shift === key); if (first) setSelected(first.dstr); }} title={shiftNotes[key] || key}><span className="dot" style={{ background: style.soft }} /><span>{style.label || key}</span></button>)}
+            </div>
+
             {selected && (
-              <div style={{ background: '#FFFFFF', border: 'none', borderRadius: 12, padding: 16, marginBottom: 22 }}>
+              <><div className="calendar-modal-backdrop" onClick={() => { setSelected(null); setHistoryCaseId(null); setAddPanelOpen(false); setAddChoiceOpen(false); }} />
+              <div className="calendar-day-modal">
                 <div style={{ background: selShift ? SHIFT_STYLE[selShift]?.soft : '#FFFFFF', borderRadius: 14, padding: '12px 14px', marginBottom: 12, transition: 'background-color .25s ease' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                   <div>
@@ -1140,7 +1158,7 @@ function ScheduleCalendar() {
                     <button onClick={() => { setAddMode('new'); setPickedCaseId(null); setAddPanelOpen(true); setAddChoiceOpen(false); }} style={{ border: 'none', borderRadius: 12, padding: '11px 13px', background: 'transparent', color: '#1F3A35', textAlign: 'left', cursor: 'pointer', fontWeight: 700 }}>เคสใหม่</button>
                     <button onClick={() => { setAddMode('existing'); setAddPanelOpen(true); setAddChoiceOpen(false); }} style={{ border: 'none', borderRadius: 12, padding: '11px 13px', background: 'transparent', color: '#1F3A35', textAlign: 'left', cursor: 'pointer', fontWeight: 700 }}>เคสเดิม · นัดต่อเนื่อง</button>
                   </div>}
-                  <button onClick={() => { if (addPanelOpen) { setAddPanelOpen(false); setAddChoiceOpen(false); } else setAddChoiceOpen(v => !v); }} aria-label="เพิ่มเคส" title="เพิ่มเคส" style={{ width: 44, height: 44, borderRadius: 14, border: '3px solid #E45C32', background: '#FFF7E8', color: '#E45C32', cursor: 'pointer', display: 'grid', placeItems: 'center', boxShadow: 'none', fontSize: 28, fontWeight: 800, lineHeight: 1, transform: addPanelOpen ? 'rotate(45deg)' : 'none', transition: 'transform .22s ease, filter .22s ease' }}>+</button>
+                  <button onClick={() => { if (addPanelOpen) { setAddPanelOpen(false); setAddChoiceOpen(false); } else setAddChoiceOpen(v => !v); }} aria-label="เพิ่มเคส" title="เพิ่มเคส" style={{ width: 34, height: 34, borderRadius: 11, border: '2px solid #E45C32', background: '#FFF7E8', color: '#E45C32', cursor: 'pointer', display: 'grid', placeItems: 'center', boxShadow: 'none', fontSize: 21, fontWeight: 800, lineHeight: 1, transform: addPanelOpen ? 'rotate(45deg)' : 'none', transition: 'transform .22s ease, filter .22s ease' }}>+</button>
                 </div>
 
                 {addPanelOpen && <div className="case-add-panel" style={{ background: '#EFCE7B', border: 'none', borderRadius: 10, padding: 14 }}>
@@ -1219,7 +1237,7 @@ function ScheduleCalendar() {
                     </ul>
                   </details>
                 )}
-              </div>
+              </div></>
             )}
           </>
         )}
