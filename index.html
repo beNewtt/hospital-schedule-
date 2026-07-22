@@ -80,6 +80,12 @@ window.storage = {
 /* ---------- minimal inline icon set (replaces lucide-react for standalone use) ---------- */
 function Icon({ name, size = 16, color = 'currentColor' }) {
   const p = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  const emojiIcons = {
+    plumpFire: '🔥', plumpSave: '💾', plumpEdit: '✏️', plumpOpen: '📂', plumpHistory: '📖',
+    plumpReschedule: '🗓️', plumpSettings: '⚙️', plumpFilter: '🎛️', plumpCancel: '⛔', plumpRestore: '↩️',
+    cuteSettings: '⚙️', cuteHistory: '📖', cuteCancel: '⛔', cuteRestore: '↩️', cuteFilter: '🎛️'
+  };
+  if (emojiIcons[name]) return <span aria-hidden="true" style={{ width: size, height: size, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif", fontSize: Math.max(13, Math.round(size * .65)), lineHeight: 1, fontWeight: 400 }}>{emojiIcons[name]}</span>;
   switch (name) {
     case 'chevronLeft': return <svg {...p}><polyline points="15 18 9 12 15 6" /></svg>;
     case 'chevronRight': return <svg {...p}><polyline points="9 18 15 12 9 6" /></svg>;
@@ -797,8 +803,8 @@ function ScheduleCalendar() {
         .stepbtn { transition: background 0.15s ease; }
         .stepbtn:hover { background: #1F5B54 !important; color: #FAF6EF !important; }
         .search-item:hover { background: #F0EBDD !important; }
-        .patient-workspace { display: grid; grid-template-columns: 148px minmax(0,1fr); gap: 18px; min-height: 0; flex: 1; }
-        .patient-sidebar { background: #D3C2CD; border-radius: 14px; padding: 9px; align-self: start; display: grid; gap: 5px; }
+        .patient-workspace { display: grid; grid-template-columns: 124px minmax(0,1fr); gap: 16px; min-height: 0; flex: 1; }
+        .patient-sidebar { background: #D3C2CD; border-radius: 14px; padding: 7px; align-self: start; display: grid; gap: 4px; }
         .patient-sort-btn { border: 0; background: transparent; color: #4B4F62; border-radius: 9px; padding: 10px 11px; text-align: left; font-family: 'Nunito', monospace; font-size: 12px; font-weight: 800; cursor: pointer; transition: background .18s ease, color .18s ease, transform .18s ease; }
         .patient-sort-btn:hover { background: rgba(255,255,255,.42); transform: translateX(2px); }
         .patient-sort-btn.active { background: #345EAE; color: #FFFFFF; }
@@ -880,6 +886,15 @@ function ScheduleCalendar() {
           .calendar-week-grid { grid-template-columns: .52fr repeat(5, minmax(0, 1fr)) .52fr; gap: 5px !important; }
           .calendar-week-grid .cell { aspect-ratio: auto; min-height: 62px !important; }
           .custom-date-popover { left: 50% !important; top: 50% !important; right: auto !important; bottom: auto !important; width: min(300px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); overflow-y: auto; overscroll-behavior: contain; transform: translate(-50%, -50%); }
+          .case-add-panel .appointment-time-row { display: grid !important; grid-template-columns: 92px 108px minmax(112px,1fr); align-items: start !important; gap: 5px !important; width: 100%; }
+          .case-add-panel .appointment-time-row .custom-date-field, .case-add-panel .appointment-time-row .custom-date-field > button { width: 92px !important; min-width: 0 !important; }
+          .case-add-panel .appointment-time-row .custom-date-field > button { gap: 3px !important; padding: 0 5px !important; font-size: 10px !important; }
+          .case-add-panel .appointment-time-row .custom-date-field > button span { white-space: nowrap; }
+          .case-add-panel .appointment-time-row .custom-time-field { width: 108px; min-width: 0; padding: 0 6px; border-radius: 9px !important; }
+          .case-add-panel .appointment-time-row .custom-time-field input { width: 69px; }
+          .case-add-panel .appointment-time-row .duration-line { min-width: 0; display: grid !important; grid-template-columns: minmax(0,1fr); gap: 2px !important; }
+          .case-add-panel .appointment-time-row .duration-line > div { width: 100%; border-radius: 9px !important; }
+          .case-add-panel .appointment-time-row .duration-line > span:last-child { display: block; width: 100%; padding-right: 2px; text-align: right; font-size: 9.5px !important; white-space: nowrap; }
           .overview-week-grid { grid-template-columns: .58fr repeat(5, minmax(0, 1fr)) .58fr; }
           .overview-shift-popover { left: 50% !important; right: auto !important; bottom: 16px !important; top: auto !important; width: min(300px, calc(100vw - 28px)); transform: translateX(-50%); }
           .patient-scroll { grid-template-columns: 1fr; }
@@ -1304,7 +1319,7 @@ function ScheduleCalendar() {
             <div className="patient-mobile-total">total / {patientListResults.length} cases</div>
             <div className="patient-workspace">
               <aside className="patient-sidebar">
-                {[['date','recent'],['name','a–z'],['hn','hn'],['category','work type']].map(([value,label]) => <button key={value} onClick={() => setPatientSort(value)} className={`patient-sort-btn ${patientSort === value ? 'active' : ''}`}>{label}</button>)}
+                {[['date','Recent'],['name','A–Z'],['hn','HN'],['category','Work Type']].map(([value,label]) => <button key={value} onClick={() => setPatientSort(value)} className={`patient-sort-btn ${patientSort === value ? 'active' : ''}`}>{label}</button>)}
               </aside>
               <div className="patient-list-main">
                 <div className="patient-desktop-total" style={{ fontFamily: "'Nunito', monospace", fontSize: 11, fontWeight: 800, color: '#A9AEC2', margin: '0 0 9px 2px' }}>total / {patientListResults.length} cases</div>
