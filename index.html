@@ -435,12 +435,13 @@ function ScheduleCalendar() {
   const [calendarEditForm, setCalendarEditForm] = useState({ hn: '', name: '', phone: '', category: 'ตรวจ', time: '13:00', duration: 30, step: '' });
   useEffect(() => { setEditingCase(false); }, [historyCaseId]);
   useEffect(() => { if (view !== 'patients') { setHistoryCaseId(null); setEditingCase(false); } }, [view]);
-  useEffect(() => { setAddPanelOpen(false); setAddChoiceOpen(false); setCalendarEdit(null); }, [selected]);
+  useEffect(() => { setAddPanelOpen(false); setAddChoiceOpen(false); setCalendarEdit(null); if (selected) setFDate(selected); }, [selected]);
 
   const [fHn, setFHn] = useState('');
   const [fName, setFName] = useState('');
   const [fPhone, setFPhone] = useState('');
   const [fCategory, setFCategory] = useState('ตรวจ');
+  const [fDate, setFDate] = useState(todayStr);
   const [fTime, setFTime] = useState('13:00');
   const [fDuration, setFDuration] = useState(30);
   const [fStep, setFStep] = useState('');
@@ -633,16 +634,16 @@ function ScheduleCalendar() {
     });
   }, [patientListQuery, patientSort, cases]);
 
-  const resetNewForm = () => { setFHn(''); setFName(''); setFPhone(''); setFCategory('ตรวจ'); setFTime('13:00'); setFDuration(30); setFStep(''); };
+  const resetNewForm = () => { setFHn(''); setFName(''); setFPhone(''); setFCategory('ตรวจ'); setFDate(selected || todayStr); setFTime('13:00'); setFDuration(30); setFStep(''); };
 
   const createCase = () => {
-    if (!selected || !fName.trim()) return;
+    if (!fDate || !fName.trim()) return;
     const id = uid();
     const next = {
       ...cases,
       [id]: {
         id, hn: fHn.trim(), name: fName.trim(), phone: fPhone.trim(), category: fCategory,
-        visits: [{ id: uid(), date: selected, time: fTime, duration: fDuration, step: fStep.trim() }],
+        visits: [{ id: uid(), date: fDate, time: fTime, duration: fDuration, step: fStep.trim() }],
       },
     };
     saveCases(next);
@@ -651,9 +652,9 @@ function ScheduleCalendar() {
   };
 
   const addVisitToCase = () => {
-    if (!selected || !pickedCaseId || !cases[pickedCaseId]) return;
+    if (!fDate || !pickedCaseId || !cases[pickedCaseId]) return;
     const c = cases[pickedCaseId];
-    const nextCase = { ...c, visits: [...c.visits, { id: uid(), date: selected, time: fTime, duration: fDuration, step: fStep.trim() }] };
+    const nextCase = { ...c, visits: [...c.visits, { id: uid(), date: fDate, time: fTime, duration: fDuration, step: fStep.trim() }] };
     saveCases({ ...cases, [pickedCaseId]: nextCase });
     setPickedCaseId(null); setSearchQuery(''); resetNewForm();
     setAddPanelOpen(false);
@@ -730,6 +731,7 @@ function ScheduleCalendar() {
             {showJump && <button onClick={() => jumpToVisit(v.date)} style={{ fontSize: 11, color: '#1F5B54', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0, marginTop: 2 }}>{v.date} — ไปที่วันนัด</button>}
           </div>
           <span style={{ fontSize: 10.5, fontWeight: 700, padding: '3px 7px', borderRadius: 4, background: cs.bg, color: cs.text, whiteSpace: 'nowrap' }}>{c.category}</span>
+          {!showJump && !cancelled && <button onClick={() => { const d = new Date((selected || v.date) + 'T00:00:00'); d.setDate(d.getDate() + 1); setFDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); setAddMode('existing'); setPickedCaseId(c.id); setSearchQuery(''); setFTime(v.time || '13:00'); setFDuration(v.duration || 30); setFStep(''); setAddChoiceOpen(false); setAddPanelOpen(true); }} title="นัดต่อวันถัดไป" aria-label="นัดต่อวันถัดไป" style={{ minWidth: 58, height: 30, border: 'none', borderRadius: 9, background: '#E5E9D0', color: '#1F5B54', cursor: 'pointer', padding: '2px 8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 11.5, fontWeight: 800 }}><span aria-hidden="true">🗓</span><span>นัดต่อ</span></button>}
           {!showJump && <button onClick={() => editPatientFromCalendar(c, v)} title="แก้ไขข้อมูลคนไข้และหมายเหตุ" style={{ width: 30, height: 30, border: 'none', background: 'transparent', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="plumpEdit" size={27} /></button>}
           <button onClick={() => openPatientHistory(c.id)} title="ดูประวัติเคส" aria-label="ดูประวัติเคส" style={{ width: 30, height: 30, border: 'none', background: 'transparent', cursor: 'pointer', padding: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="plumpHistory" size={28} /></button>
           <button onClick={() => toggleCancelVisit(c.id, v.id)} title={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} aria-label={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} style={{ width: 30, height: 30, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', padding: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -764,16 +766,17 @@ function ScheduleCalendar() {
         .view-panel { animation: viewIn .28s cubic-bezier(.22,.8,.3,1) both; }
         .cell:hover { transform: translateY(-2px); filter: brightness(.93); box-shadow: 0 4px 10px rgba(43,43,35,0.14); }
         .cell { border-radius: 12px !important; transition: transform .2s ease, filter .2s ease, box-shadow .2s ease; cursor: pointer; }
-        .cell .today-date { width: 25px; height: 25px; margin: -3px 0 0 -3px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--today-bg, #6777B6); color: var(--today-ink, #FFFFFF) !important; font-size: 12px !important; font-weight: 800 !important; box-shadow: 0 3px 9px rgba(43,43,35,.18); }
+        .cell .calendar-date-number { height: 25px; display: flex; align-items: flex-start; line-height: 1; }
+        .cell .today-date { width: 25px; height: 25px; margin: -6px 0 0 -3px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--today-bg, #6777B6); color: var(--today-ink, #FFFFFF) !important; font-size: 12px !important; font-weight: 800 !important; line-height: 1 !important; box-shadow: 0 3px 9px rgba(43,43,35,.18); }
         .ov-cell { transition: filter .15s ease, transform .15s ease; }
         .ov-cell:hover { filter: brightness(.93); transform: translateY(-1px); }
         .overview-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; max-width: 760px; margin-left: auto; margin-right: auto; }
         .overview-month { background: #FFFFFF; border-radius: 20px; overflow: hidden; display: grid; grid-template-columns: 190px 1fr; min-height: 310px; }
         .overview-month-side { padding: 26px 22px; display: flex; flex-direction: column; }
         .overview-month-calendar { padding: 24px 26px; }
-        .calendar-week-grid { grid-template-columns: .72fr repeat(5, minmax(0, 1fr)) .72fr; max-width: 760px; margin-left: auto; margin-right: auto; }
+        .calendar-week-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); max-width: 760px; margin-left: auto; margin-right: auto; }
         .calendar-week-grid .cell { aspect-ratio: 1.25 / 1; min-height: 0 !important; }
-        .overview-week-grid { grid-template-columns: .72fr repeat(5, minmax(0, 1fr)) .72fr; }
+        .overview-week-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
         .overview-shift-popover { position: fixed; width: 196px; box-sizing: border-box; background: rgba(250,246,239,.58); backdrop-filter: blur(18px) saturate(115%); -webkit-backdrop-filter: blur(18px) saturate(115%); border: 1px solid rgba(255,255,255,.58); border-radius: 15px; padding: 10px; box-shadow: 0 14px 36px rgba(43,43,35,.14); z-index: 81; }
         .overview-shift-popover::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.60); }
         .overview-shift-popover button { padding: 6px 7px !important; border-radius: 8px !important; font-size: 11.5px; min-height: 30px; }
@@ -1026,7 +1029,7 @@ function ScheduleCalendar() {
                 return (
                   <div key={c.dstr} className="cell" onClick={() => setSelected(c.dstr)}
                     style={{ minHeight: 62, borderRadius: 8, background: s ? s.soft : '#FFFFFF', border: isSel ? '2px solid #FFFFFF' : '2px solid transparent', padding: '6px 6px 4px', position: 'relative', overflow: 'hidden' }}>
-                    <div className={isToday ? 'today-date' : ''} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: s ? 13 : 20, lineHeight: 1, fontWeight: s ? 600 : 700, color: s ? s.date : '#B9AF9A', '--today-bg': (TODAY_CONTRAST[c.shift] || TODAY_CONTRAST.default).bg, '--today-ink': (TODAY_CONTRAST[c.shift] || TODAY_CONTRAST.default).ink }}>{c.day}</div>
+                    <div className="calendar-date-number" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: s ? 13 : 20, fontWeight: s ? 600 : 700, color: s ? s.date : '#B9AF9A', '--today-bg': (TODAY_CONTRAST[c.shift] || TODAY_CONTRAST.default).bg, '--today-ink': (TODAY_CONTRAST[c.shift] || TODAY_CONTRAST.default).ink }}><span className={isToday ? 'today-date' : ''}>{c.day}</span></div>
                     {(holidays[c.dstr] || c.info?.holiday) && <div style={{ fontSize: 9, color: '#FFFFFF', fontWeight: 700, lineHeight: 1.2, marginTop: 1 }}>{holidays[c.dstr] || c.info.holiday}</div>}
                     {s && <div className="cell-shift-label" style={{ fontSize: 9.5, color: s.text, fontWeight: 600, marginTop: 2 }}>{s.label}</div>}
                     {vc > 0 && <div style={{ position: 'absolute', bottom: 4, right: 6, fontSize: 8.5, color: s ? s.count : '#1F5B54', fontWeight: 700 }}>{vc}</div>}
@@ -1122,6 +1125,7 @@ function ScheduleCalendar() {
                   )}
 
                   <div className="appointment-time-row" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                    <DateField value={fDate} onChange={setFDate} ariaLabel="วันที่นัด" />
                     <TimeField value={fTime} onChange={setFTime} />
                     <div className="duration-line" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ display: 'flex', alignItems: 'center', border: 'none', borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
