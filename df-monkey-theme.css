@@ -1,0 +1,934 @@
+/* HOS Schedule — DF Tracker visual system */
+:root{
+  /* ===== THEME TOKENS: edit this block to recolor the whole site ===== */
+  --theme-canvas:#FFFFFF;
+  --theme-surface:#FFFFFF;
+  --theme-soft:#E8ECF7;
+  --theme-tint:#C8D0E6;
+  --theme-primary:#35227F;
+  --theme-secondary:#3159C9;
+  --theme-text:#29236F;
+  --theme-muted:#6076B5;
+  --theme-line:rgba(49,89,201,.20);
+  --theme-hover:rgba(49,89,201,.09);
+  --theme-panel-alpha:rgba(255,255,255,.94);
+  --theme-soft-alpha:rgba(200,208,230,.38);
+  --theme-overlay:rgba(53,34,127,.24);
+  --theme-focus:rgba(49,89,201,.28);
+  --theme-shadow:rgba(53,34,127,.16);
+  --theme-online:#4ACB8A;
+  --theme-category-bg:rgba(200,208,230,.50);
+  --theme-category-text:#5269AA;
+  --theme-danger:#B45B66;
+
+  /* Compatibility aliases: every component now follows the theme tokens. */
+  --df-bg:var(--theme-canvas);
+  --df-panel:var(--theme-surface);
+  --df-panel-2:var(--theme-soft);
+  --df-ink:var(--theme-text);
+  --df-muted:var(--theme-muted);
+  --df-line:var(--theme-line);
+  --df-accent:var(--theme-secondary);
+  --df-accent-strong:var(--theme-primary);
+  --df-accent-soft:var(--theme-soft);
+  --df-hot:var(--theme-secondary);
+  --df-green:var(--theme-online);
+
+  /* ===== ROOM TOKENS: independent from the whole-site theme ===== */
+  --df-dot-red:#E95F69;
+  --df-dot-purple:#8B70E8;
+  --df-dot-cyan:#4DB9DF;
+  --df-dot-green:#5AC38F;
+  --df-dot-yellow:#E5B957;
+  --df-dot-orange:#DC805D;
+  --df-body:"Noto Sans Thai Looped","Tahoma",sans-serif;
+  --df-heading:"Kanit","Noto Sans Thai Looped",sans-serif;
+  --df-mono:"Nunito","IBM Plex Mono","SFMono-Regular",Consolas,monospace;
+}
+
+*{box-sizing:border-box}
+html{background:var(--df-bg);scroll-behavior:smooth}
+body,#root{min-height:100%;margin:0;background:var(--df-bg)!important;color:var(--df-ink)!important}
+#root>div{background:var(--theme-canvas)!important;color:var(--theme-text)!important}
+body,button,input,textarea,select{font-family:var(--df-body)!important}
+button{color:inherit}
+h1,h2,h3,.settings-title{font-family:var(--df-heading)!important}
+button:focus-visible,[role="button"]:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{
+  outline:2px solid var(--theme-secondary)!important;
+  outline-offset:2px!important;
+}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:var(--theme-tint);border-radius:99px}
+
+/* Whole-site chrome uses only the theme tokens. Semantic room colors are
+   applied separately by the room selectors/dots below. */
+.view-panel,.settings-workspace,.patient-workspace,.patient-list-main{color:var(--theme-text)!important}
+.search-box,.patient-search-minimal{background:transparent!important;color:var(--theme-text)!important}
+.search-box svg,.patient-search-minimal svg{color:var(--theme-muted)!important}
+.search-box input::placeholder,.patient-search-minimal input::placeholder{color:var(--theme-muted)!important}
+.category-settings>div:last-child>span button{
+  background:var(--theme-tint)!important;color:var(--theme-primary)!important;
+}
+.settings-section input,.case-edit-grid input,.patient-edit-modal input,.patient-edit-modal textarea{
+  background:var(--theme-soft)!important;color:var(--theme-text)!important;
+}
+.holiday-form>div>button,.holiday-form>button,.category-add-button{
+  background:var(--theme-primary)!important;color:#fff!important;
+}
+
+/* One compact DF-style masthead */
+.brand-bar{
+  width:min(960px,calc(100% - 32px))!important;height:72px!important;
+  margin:0 auto!important;padding:0!important;background:transparent!important;
+  color:var(--df-ink)!important;border:0!important;border-bottom:1px solid var(--df-line)!important;
+  border-radius:0!important;box-shadow:none!important;
+}
+.brand-id,.brand-user{gap:10px!important}
+.brand-logo{
+  width:42px!important;height:42px!important;flex-basis:42px!important;border-radius:10px!important;
+  background:var(--df-accent-strong)!important;color:#fff!important;
+  font:900 12px var(--df-mono)!important;
+}
+.brand-title{font:800 16px/1.1 var(--df-heading)!important;color:var(--df-ink)!important;letter-spacing:-.02em!important}
+.brand-subtitle{font:450 10px/1.35 var(--df-body)!important;color:var(--df-muted)!important}
+.brand-online{width:8px!important;height:8px!important;background:var(--df-green)!important}
+.brand-avatar{width:34px!important;height:34px!important;border:2px solid var(--theme-tint)!important;box-shadow:none!important}
+.brand-email{font:800 11px var(--df-mono)!important;color:var(--df-ink)!important}
+.brand-action{width:28px!important;height:28px!important;color:var(--df-muted)!important;background:transparent!important}
+.brand-action svg,.brand-action i{width:14px!important;height:14px!important;color:inherit!important}
+.brand-action:hover{color:var(--df-hot)!important;transform:rotate(8deg)!important}
+
+.app-shell{max-width:960px!important;margin:0 auto!important;padding:0 16px 28px!important;background:transparent!important}
+.app-shell>.page-head{
+  position:relative!important;left:auto!important;top:auto!important;transform:none!important;
+  width:100%!important;min-height:128px!important;margin:0 0 16px!important;padding:42px 12px 18px!important;
+  background:transparent!important;border:0!important;border-bottom:1px solid var(--df-line)!important;
+  border-radius:0!important;box-shadow:none!important;color:var(--df-ink)!important;
+}
+.page-head>div:first-child{font:500 10px var(--df-mono)!important;color:var(--theme-secondary)!important;letter-spacing:2px!important}
+.page-head h1,.page-head h2{
+  margin:0!important;color:var(--df-ink)!important;font:500 29px/1.08 var(--df-heading)!important;
+  letter-spacing:-.035em!important;
+}
+.header-nav-wrap{margin:0!important}
+.nav-group{
+  position:relative!important;display:flex!important;gap:0!important;padding:4px!important;
+  background:var(--df-panel-2)!important;border-radius:999px!important;box-shadow:none!important;
+}
+.nav-group::before{border-radius:999px!important;background:var(--df-accent-strong)!important;border:0!important;box-shadow:none!important}
+.nav-text{
+  position:relative!important;z-index:1!important;min-width:80px!important;padding:8px 12px!important;
+  border:0!important;background:transparent!important;border-radius:999px!important;
+  color:var(--df-muted)!important;font:800 11px var(--df-body)!important;
+}
+.nav-text:hover{color:var(--df-ink)!important}
+.nav-text.active{color:#fff!important}
+
+/* Month/year control */
+.app-shell>.page-head+div[style*="border-bottom"]{
+  min-height:48px!important;margin:0 0 20px!important;padding:0 8px 10px!important;
+  border-bottom:1px solid var(--df-line)!important;
+}
+
+/* Calendar is one ruled table */
+.calendar-table{
+  width:100%!important;margin:0 0 12px!important;padding:0!important;
+  background:transparent!important;border:0!important;border-radius:0!important;
+  overflow:hidden!important;box-shadow:none!important;
+}
+.calendar-week-grid{grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:0!important;width:100%!important;margin:0!important}
+.calendar-weekdays{border:0!important}
+.calendar-weekdays>div{
+  min-height:38px!important;display:grid!important;place-items:center!important;
+  border-top:1px solid var(--df-line)!important;border-right:1px solid var(--df-line)!important;border-bottom:1px solid var(--df-line)!important;color:var(--df-muted)!important;
+  font:800 9px var(--df-mono)!important;letter-spacing:.05em!important;
+}
+.calendar-weekdays>div:first-child{border-left:1px solid var(--df-line)!important}
+.calendar-days>.cell{
+  min-width:0!important;min-height:104px!important;padding:9px!important;
+  border:0!important;border-right:1px solid var(--df-line)!important;border-bottom:1px solid var(--df-line)!important;
+  border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:hidden!important;
+  transition:background .16s ease,color .16s ease!important;
+}
+.calendar-days>.cell:nth-child(7n+1){border-left:1px solid var(--df-line)!important}
+.calendar-days>.cell:nth-child(7n){border-right:1px solid var(--df-line)!important}
+.calendar-days>.cell:nth-last-child(-n+7){border-bottom:1px solid var(--df-line)!important}
+.calendar-days>.empty-cell{background:transparent!important}
+.calendar-days>.cell:not(.empty-cell):hover{background:var(--theme-hover)!important;transform:none!important;filter:none!important}
+.calendar-days>.cell.is-selected{background:var(--theme-hover)!important;box-shadow:inset 0 0 0 2px var(--theme-secondary)!important}
+.calendar-days>.cell.is-today{background:var(--theme-primary)!important;color:#fff!important}
+.calendar-days>.cell.is-today *{color:#fff!important}
+.calendar-date-line{display:flex!important;align-items:center!important;gap:7px!important;min-height:22px!important}
+.calendar-date-number{
+  width:auto!important;height:auto!important;min-width:0!important;margin:0!important;padding:0!important;
+  display:inline!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;
+  color:var(--df-ink)!important;font:800 13px/1 var(--df-mono)!important;
+}
+.calendar-room-dot{width:7px!important;height:7px!important;display:inline-block!important;border-radius:50%!important;box-shadow:0 0 0 1px var(--theme-line)}
+.calendar-days>.cell[data-shift="off"] .calendar-room-dot,
+.ov-cell[data-shift="off"] .ov-room-dot,
+.calendar-room-pill[data-shift="off"] .dot{background:#2B2B23!important}
+.calendar-days>.cell[data-shift="ปกส"] .calendar-room-dot,
+.ov-cell[data-shift="ปกส"] .ov-room-dot,
+.calendar-room-pill[data-shift="ปกส"] .dot{background:var(--df-dot-red)!important}
+.calendar-days>.cell[data-shift="ฟุ้ง"] .calendar-room-dot,
+.ov-cell[data-shift="ฟุ้ง"] .ov-room-dot,
+.calendar-room-pill[data-shift="ฟุ้ง"] .dot{background:var(--df-dot-purple)!important}
+.calendar-days>.cell[data-shift="Screen"] .calendar-room-dot,
+.ov-cell[data-shift="Screen"] .ov-room-dot,
+.calendar-room-pill[data-shift="Screen"] .dot{background:var(--df-dot-cyan)!important}
+.calendar-days>.cell[data-shift="DM"] .calendar-room-dot,
+.ov-cell[data-shift="DM"] .ov-room-dot,
+.calendar-room-pill[data-shift="DM"] .dot{background:var(--df-dot-yellow)!important}
+.calendar-days>.cell[data-shift="รพ.สต."] .calendar-room-dot,
+.ov-cell[data-shift="รพ.สต."] .ov-room-dot,
+.calendar-room-pill[data-shift="รพ.สต."] .dot{background:var(--df-dot-green)!important}
+.calendar-days>.cell[data-shift="1/1"] .calendar-room-dot,
+.ov-cell[data-shift="1/1"] .ov-room-dot,
+.calendar-room-pill[data-shift="1/1"] .dot{background:var(--df-dot-orange)!important}
+.cell-shift-label{margin-top:15px!important;color:var(--room-text)!important;font:650 10px/1.25 var(--df-body)!important}
+.cell[data-shift="off"] .cell-shift-label{color:#a64f4f!important;font:800 11px var(--df-mono)!important}
+.cell[data-shift="ปกส"] .cell-shift-label,
+.cell[data-shift="ฟุ้ง"] .cell-shift-label{color:var(--theme-muted)!important}
+.calendar-visit-count{
+  position:absolute!important;right:8px!important;bottom:7px!important;
+  color:var(--df-ink)!important;font:800 9px var(--df-mono)!important;
+}
+.calendar-room-legend{
+  display:flex!important;justify-content:flex-start!important;align-items:center!important;flex-wrap:wrap!important;
+  gap:6px!important;margin:10px 0 24px!important;padding:0!important;
+}
+.calendar-room-pill{
+  min-height:28px!important;padding:5px 9px!important;border:0!important;border-radius:999px!important;
+  background:var(--df-panel-2)!important;color:var(--df-muted)!important;font:750 10px var(--df-body)!important;
+}
+.calendar-room-pill:hover{background:var(--theme-tint)!important;color:var(--df-ink)!important}
+.calendar-room-pill .dot{width:7px!important;height:7px!important;border-radius:50%!important}
+
+/* Shared modal language */
+.calendar-modal-backdrop,.patient-edit-backdrop{
+  background:var(--theme-overlay)!important;backdrop-filter:blur(7px)!important;-webkit-backdrop-filter:blur(7px)!important;
+}
+.calendar-day-modal,.patient-edit-modal{
+  width:min(720px,calc(100vw - 28px))!important;max-height:calc(100dvh - 28px)!important;
+  padding:0!important;background:var(--df-panel)!important;border:1px solid var(--theme-line)!important;
+  border-radius:18px!important;box-shadow:0 24px 72px var(--theme-shadow)!important;overflow:auto!important;
+}
+.calendar-day-modal{padding-bottom:14px!important}
+.day-modal-head{
+  margin:0 0 14px!important;padding:20px 24px!important;background:var(--df-panel-2)!important;
+  border:0!important;border-bottom:1px solid var(--df-line)!important;border-radius:0!important;box-shadow:none!important;
+}
+.day-modal-head>div:first-child{align-items:center!important}
+.day-modal-head>div:first-child>div>div:first-child{
+  color:var(--df-ink)!important;font:600 22px/1.2 var(--df-heading)!important;
+}
+.day-modal-head>div:last-child{margin-top:14px!important;gap:10px!important}
+.day-modal-head>div:last-child>span{color:var(--df-ink)!important}
+.calendar-day-modal>div:not(.day-modal-head):not(.day-add-control):not(.case-add-panel){margin-left:24px!important;margin-right:24px!important}
+.calendar-day-modal>div[style*="PATIENT"],.calendar-day-modal .patient-list-title{font-family:var(--df-mono)!important}
+.day-room-select>.clean-select-trigger{
+  min-width:130px!important;padding:7px 8px!important;background:transparent!important;border:0!important;border-radius:0!important;
+  color:var(--df-ink)!important;box-shadow:none!important;font-weight:800!important;
+}
+.calendar-day-modal[data-shift="off"] .day-room-select>.clean-select-trigger{color:#2b2b23!important}
+.calendar-day-modal[data-shift="ปกส"] .day-room-select>.clean-select-trigger{color:var(--df-dot-red)!important}
+.calendar-day-modal[data-shift="ฟุ้ง"] .day-room-select>.clean-select-trigger{color:var(--df-dot-purple)!important}
+.calendar-day-modal[data-shift="Screen"] .day-room-select>.clean-select-trigger{color:var(--df-dot-cyan)!important}
+.calendar-day-modal[data-shift="DM"] .day-room-select>.clean-select-trigger{color:#b07a00!important}
+.calendar-day-modal[data-shift="รพ.สต."] .day-room-select>.clean-select-trigger{color:#25966a!important}
+.calendar-day-modal[data-shift="1/1"] .day-room-select>.clean-select-trigger{color:var(--df-dot-orange)!important}
+.day-add-control{margin:4px 22px 12px!important}
+.day-add-button{
+  width:31px!important;height:31px!important;border:1.5px solid var(--theme-secondary)!important;border-radius:50%!important;
+  background:transparent!important;color:var(--theme-secondary)!important;box-shadow:none!important;
+}
+.add-choice-popover{
+  right:0!important;bottom:42px!important;width:200px!important;padding:6px!important;
+  border:1px solid var(--df-line)!important;border-radius:12px!important;background:var(--df-panel)!important;
+  box-shadow:0 18px 44px var(--theme-shadow)!important;
+}
+.add-choice-popover button{border-radius:8px!important;font-size:12px!important}
+
+/* Custom selects and pickers: one clean portal style */
+.clean-select-trigger{
+  min-height:34px!important;border:0!important;border-radius:8px!important;background:var(--df-panel-2)!important;
+  color:var(--df-ink)!important;box-shadow:none!important;font-size:12px!important;
+}
+.clean-select-trigger:hover{background:var(--theme-tint)!important}
+.clean-select-menu{
+  max-width:calc(100vw - 20px)!important;max-height:min(310px,calc(100dvh - 24px))!important;padding:6px!important;
+  overflow:auto!important;border:1px solid var(--theme-line)!important;border-radius:13px!important;
+  background:var(--theme-panel-alpha)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important;
+  box-shadow:0 18px 48px var(--theme-shadow)!important;z-index:10050!important;
+}
+.clean-select-menu button{
+  min-height:34px!important;padding:8px 10px!important;border:0!important;border-radius:8px!important;
+  background:transparent!important;color:var(--df-ink)!important;font:550 12px var(--df-body)!important;
+}
+.clean-select-menu button:hover{background:var(--df-panel-2)!important;color:var(--df-ink)!important}
+.clean-select-menu button.selected{background:var(--theme-tint)!important;color:var(--theme-primary)!important;font-weight:800!important}
+
+.custom-date-field{z-index:auto!important}
+.custom-date-field>button{
+  min-height:34px!important;border:0!important;border-radius:8px!important;background:var(--df-accent-soft)!important;
+  color:var(--theme-text)!important;box-shadow:none!important;font:800 12px var(--df-mono)!important;
+}
+.custom-date-popover{
+  position:fixed!important;z-index:9999!important;left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;
+  width:min(292px,calc(100vw - 24px))!important;max-height:calc(100dvh - 24px)!important;padding:12px!important;
+  transform:translate(-50%,-50%)!important;overflow-y:auto!important;overscroll-behavior:contain!important;
+  border:1px solid var(--theme-line)!important;border-radius:16px!important;
+  background:var(--theme-panel-alpha)!important;backdrop-filter:blur(20px)!important;-webkit-backdrop-filter:blur(20px)!important;
+  box-shadow:0 20px 52px var(--theme-shadow)!important;
+}
+.custom-date-popover::before{display:none!important}
+.custom-date-head{color:var(--df-accent)!important}
+.custom-date-head button{background:transparent!important;color:var(--df-accent)!important;border-radius:50%!important}
+.custom-date-head button:hover{background:var(--df-panel-2)!important}
+.custom-date-head strong{font:900 13px var(--df-mono)!important}
+.custom-date-grid{gap:3px!important}
+.custom-date-grid b{color:var(--theme-muted)!important;font:900 8px var(--df-mono)!important}
+.custom-date-grid button{
+  border:0!important;border-radius:8px!important;background:transparent!important;color:var(--theme-text)!important;
+  font:800 11px var(--df-mono)!important;
+}
+.custom-date-grid button:hover{background:var(--df-panel-2)!important;transform:none!important}
+.custom-date-grid button.selected{background:var(--df-accent)!important;color:#fff!important}
+
+.custom-time-field{
+  min-height:34px!important;padding:0 10px!important;border:0!important;border-radius:8px!important;
+  background:var(--df-ink)!important;color:#fff!important;box-shadow:none!important;
+}
+.custom-time-field input{font:900 13px var(--df-mono)!important;color:#fff!important}
+
+/* Add/edit case forms */
+.case-add-panel{
+  margin:0 22px!important;padding:14px!important;background:var(--theme-soft)!important;border:0!important;border-radius:12px!important;box-shadow:none!important;
+}
+.case-add-panel input,.case-add-panel textarea,.case-edit-grid input,.patient-edit-modal input,.patient-edit-modal textarea{
+  border:0!important;border-bottom:1px solid var(--theme-line)!important;border-radius:0!important;
+  background:transparent!important;color:var(--df-ink)!important;box-shadow:none!important;font-size:12.5px!important;
+}
+.case-add-panel input:focus,.case-add-panel textarea:focus,.case-edit-grid input:focus,.patient-edit-modal input:focus,.patient-edit-modal textarea:focus{
+  outline:0!important;border-bottom-color:var(--df-accent)!important;
+}
+.case-add-panel .motion-cta{
+  min-height:32px!important;padding:6px 12px!important;border:0!important;border-radius:8px!important;
+  background:var(--df-ink)!important;color:#fff!important;
+}
+.motion-cta::before,.motion-cta::after{display:none!important}
+.patient-edit-modal{padding:18px!important}
+.patient-edit-modal>div:nth-child(2){background:var(--df-panel-2)!important;border-radius:12px!important;box-shadow:none!important}
+
+/* Visit rows and deliberately compact action icons */
+.visit-row{
+  border:0!important;border-bottom:1px solid var(--df-line)!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;
+}
+.visit-row button,.visit-row-inner>button,.history-actions button,.history-visit-row button{
+  border:0!important;background:transparent!important;box-shadow:none!important;
+}
+.visit-row button svg,.visit-row-inner>button:not(:first-child) svg,.history-actions button svg,.history-visit-row button svg{
+  width:14px!important;height:14px!important;max-width:14px!important;max-height:14px!important;
+}
+.visit-row-inner>button:not(:first-child):not([aria-label="นัดต่อวันถัดไป"]),
+.history-actions button,.history-visit-row button{
+  width:26px!important;height:26px!important;min-width:26px!important;min-height:26px!important;padding:4px!important;
+}
+.visit-row button:hover,.visit-row-inner>button:hover,.history-actions button:hover,.history-visit-row button:hover{color:var(--df-hot)!important}
+
+/* Patient history: focused DF-style modal, without nested outlines */
+.case-history-backdrop{
+  position:fixed!important;inset:0!important;z-index:980!important;
+  background:var(--theme-overlay)!important;
+  backdrop-filter:blur(7px)!important;-webkit-backdrop-filter:blur(7px)!important;
+}
+.history-panel.case-history-modal{
+  position:fixed!important;left:50%!important;top:50%!important;z-index:981!important;
+  width:min(760px,calc(100vw - 32px))!important;max-height:calc(100dvh - 32px)!important;
+  margin:0!important;padding:0!important;overflow:auto!important;
+  transform:translate(-50%,-50%)!important;
+  border:0!important;border-radius:18px!important;background:var(--df-panel)!important;
+  box-shadow:0 26px 76px var(--theme-shadow)!important;font-family:var(--df-body)!important;
+}
+.case-history-header{
+  position:sticky!important;top:0!important;z-index:3!important;
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:start!important;gap:14px!important;
+  margin:0!important;padding:20px 22px 16px!important;background:var(--theme-panel-alpha)!important;
+  backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important;
+}
+.case-history-heading{min-width:0!important}
+.case-history-kicker{
+  display:block!important;margin-bottom:7px!important;color:var(--df-ink)!important;
+  font:900 13px var(--df-mono)!important;letter-spacing:.055em!important;
+}
+.case-history-patient{
+  display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:5px 8px!important;
+  min-width:0!important;color:var(--df-ink)!important;font:500 13px var(--df-body)!important;
+}
+.case-history-patient strong{color:var(--theme-secondary)!important;font:900 11px var(--df-mono)!important}
+.case-history-category{
+  padding:3px 7px!important;border-radius:6px!important;
+  font:800 9.5px var(--df-body)!important;
+}
+.case-history-phone{color:var(--df-muted)!important;font:600 10px var(--df-mono)!important}
+.history-actions{
+  display:flex!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:nowrap!important;
+  gap:3px!important;width:auto!important;margin:0!important;padding:0!important;
+}
+.history-actions button,.history-action{
+  width:26px!important;height:26px!important;min-width:26px!important;min-height:26px!important;padding:5px!important;
+  border:0!important;border-radius:7px!important;background:transparent!important;color:var(--df-muted)!important;
+}
+.history-actions button:hover{background:var(--df-panel-2)!important;color:var(--df-ink)!important}
+.history-actions .danger:hover{background:var(--theme-hover)!important;color:var(--theme-primary)!important}
+.history-actions .history-close{
+  position:static!important;top:auto!important;right:auto!important;
+  margin-left:3px!important;color:var(--theme-muted)!important;
+}
+
+.case-edit-surface{
+  margin:0 22px 18px!important;padding:16px!important;border:0!important;border-radius:12px!important;
+  background:var(--df-panel-2)!important;
+}
+.case-edit-grid{
+  display:grid!important;grid-template-columns:110px minmax(180px,1.7fr) minmax(140px,1fr) minmax(120px,.8fr)!important;
+  gap:10px!important;
+}
+.case-edit-field{display:grid!important;gap:5px!important;min-width:0!important}
+.case-edit-field>span{color:var(--df-muted)!important;font:800 9px var(--df-mono)!important;text-transform:uppercase!important;letter-spacing:.05em!important}
+.case-history-modal .case-edit-grid input,
+.case-history-modal .case-edit-category>button{
+  width:100%!important;height:38px!important;min-width:0!important;box-sizing:border-box!important;
+  padding:0 11px!important;border:0!important;border-radius:8px!important;background:var(--theme-surface)!important;
+  color:var(--df-ink)!important;box-shadow:none!important;font:600 12px var(--df-body)!important;
+}
+.case-history-modal .case-edit-grid input:focus{outline:2px solid var(--theme-focus)!important}
+.case-edit-footer{display:flex!important;justify-content:flex-end!important;gap:7px!important;margin-top:13px!important}
+.case-edit-footer button{
+  min-height:32px!important;padding:6px 12px!important;border:0!important;border-radius:8px!important;
+  background:var(--theme-surface)!important;color:var(--df-muted)!important;font:800 10px var(--df-body)!important;
+}
+.case-edit-footer button.primary{
+  display:inline-flex!important;align-items:center!important;gap:6px!important;
+  background:var(--df-accent-strong)!important;color:#fff!important;
+}
+
+.case-history-visits{display:grid!important;gap:8px!important;margin:0!important;padding:0 22px 22px!important;background:transparent!important}
+.case-history-visits-title{margin:0 0 2px!important;color:var(--df-muted)!important;font:900 9px var(--df-mono)!important;letter-spacing:.08em!important}
+.history-visit-row{
+  display:grid!important;grid-template-columns:62px 142px minmax(120px,1fr) auto!important;align-items:center!important;gap:8px 12px!important;
+  min-width:0!important;margin:0!important;padding:10px 12px!important;border:0!important;border-radius:10px!important;
+  background:var(--theme-soft-alpha)!important;color:var(--df-ink)!important;font-size:12px!important;
+}
+.history-visit-row.is-cancelled{opacity:.62!important}
+.history-visit-index{color:var(--theme-secondary)!important;font:900 10.5px var(--df-mono)!important}
+.history-visit-date{white-space:nowrap!important;color:var(--df-muted)!important;font:600 10.5px var(--df-mono)!important}
+.history-visit-step{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font:500 12px var(--df-body)!important}
+.history-visit-status{color:var(--df-hot)!important;font:800 9px var(--df-body)!important}
+.history-visit-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:2px!important;white-space:nowrap!important}
+.history-visit-actions button{
+  width:26px!important;height:26px!important;min-width:26px!important;min-height:26px!important;padding:5px!important;
+  border:0!important;border-radius:7px!important;background:transparent!important;color:var(--df-muted)!important;
+}
+.history-visit-actions button:hover{background:var(--theme-hover)!important;color:var(--df-ink)!important}
+
+.patient-search-minimal{
+  min-height:42px!important;margin:0 0 10px!important;padding:8px 12px!important;
+  border:0!important;border-bottom:1px solid var(--df-line)!important;border-radius:0!important;background:transparent!important;
+}
+.patient-search-minimal input{min-width:0!important;font:500 13px var(--df-body)!important;color:var(--df-ink)!important}
+.patient-workspace{display:flex!important;flex-direction:column!important;gap:9px!important;min-height:0!important}
+.patient-sidebar{
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important;align-self:stretch!important;
+  min-height:38px!important;padding:4px!important;background:var(--df-panel-2)!important;border-radius:9px!important;
+}
+.patient-sort-btn{
+  min-height:30px!important;padding:6px 10px!important;border:0!important;border-radius:6px!important;
+  background:transparent!important;color:var(--df-muted)!important;text-align:center!important;font:850 10px var(--df-mono)!important;
+}
+.patient-sort-btn:hover{background:var(--theme-hover)!important;transform:none!important}
+.patient-sort-btn.active{background:var(--df-accent-strong)!important;color:#fff!important}
+.patient-list-main{min-width:0!important}
+.patient-desktop-total,.patient-mobile-total{color:var(--df-muted)!important;font:850 10px var(--df-mono)!important}
+.patient-mobile-total{display:none!important}
+.patient-table-head,.plist-row{
+  display:grid!important;grid-template-columns:120px minmax(170px,1.7fr) 105px 60px minmax(120px,145px)!important;
+  gap:12px!important;align-items:center!important;
+}
+.patient-table-head{
+  padding:8px 12px!important;color:var(--df-muted)!important;text-transform:uppercase!important;
+  font:900 9px var(--df-mono)!important;letter-spacing:.08em!important;
+}
+.patient-scroll{min-height:0!important;overflow:auto!important;gap:0!important}
+.plist-row{
+  min-height:56px!important;margin:0!important;padding:10px 12px!important;border:0!important;border-bottom:1px solid var(--df-line)!important;border-radius:0!important;
+  background:transparent!important;color:var(--theme-text)!important;box-shadow:none!important;font-size:12px!important;
+}
+.plist-row:nth-child(odd){background:var(--theme-soft-alpha)!important}
+body #root .patient-scroll .plist-row:hover,
+body #root .patient-scroll .plist-row:nth-child(odd):hover{
+  background:rgba(49,89,201,.15)!important;
+  box-shadow:inset 3px 0 0 var(--theme-secondary)!important;
+  transform:none!important;
+}
+.patient-hn{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;color:var(--theme-secondary)!important;font:900 11px var(--df-mono)!important}
+.patient-name{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;color:var(--df-ink)!important;font:500 12.5px var(--df-body)!important}
+.patient-category{max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.patient-count,.patient-date{min-width:0!important;color:var(--df-muted)!important;font:650 10px var(--df-mono)!important}
+.patient-date{white-space:nowrap!important;text-align:right!important}
+
+/* Overview: month card remains, days become DF-style number + dot */
+.overview-grid{
+  position:relative!important;max-width:860px!important;margin:0 auto 22px!important;padding:12px!important;
+  background:var(--theme-soft-alpha)!important;border:1px solid var(--df-line)!important;border-radius:18px!important;
+  box-shadow:0 16px 42px var(--theme-shadow)!important;overflow:visible!important;
+}
+.overview-grid::before,.overview-grid::after{background:var(--theme-soft)!important;box-shadow:0 12px 28px var(--theme-shadow)!important}
+.overview-month{display:grid!important;grid-template-columns:220px minmax(0,1fr)!important;overflow:hidden!important;border-radius:14px!important;background:var(--theme-surface)!important}
+.overview-month-side{padding:30px 26px!important;border-radius:0!important;background:var(--theme-tint)!important;color:var(--theme-primary)!important}
+.overview-month-side *{color:var(--theme-primary)!important}
+.overview-month-calendar{padding:28px 34px!important;background:var(--theme-surface)!important}
+.overview-month-calendar>div:first-child{color:var(--theme-primary)!important}
+.overview-week-grid{grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:8px!important}
+.ov-cell{
+  width:38px!important;height:38px!important;display:flex!important;flex-direction:column!important;align-items:center!important;
+  justify-content:center!important;gap:5px!important;border:0!important;border-radius:8px!important;background:transparent!important;
+  color:var(--df-ink)!important;font:800 11px var(--df-mono)!important;transition:background .16s ease!important;
+}
+.ov-cell:hover{background:var(--df-panel-2)!important}
+.ov-day-number{line-height:1!important}
+.ov-room-dot{width:7px!important;height:7px!important;border-radius:50%!important}
+.overview-deck-controls button{background:var(--df-panel)!important;color:var(--theme-secondary)!important;border-radius:50%!important}
+.overview-deck-dots button{width:7px!important;height:7px!important;border-radius:50%!important;background:var(--theme-tint)!important}
+.overview-deck-dots button.active{background:var(--theme-primary)!important}
+.overview-shift-popover{
+  position:fixed!important;z-index:9999!important;width:210px!important;padding:12px!important;
+  border:1px solid var(--theme-line)!important;border-radius:14px!important;background:var(--theme-panel-alpha)!important;
+  backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important;
+  box-shadow:0 20px 52px var(--theme-shadow)!important;
+}
+.overview-shift-popover button{min-height:34px!important;border:0!important;border-radius:8px!important;font-size:11px!important}
+.overview-shift-popover .overview-room-option{filter:saturate(.90) contrast(.98)!important}
+.overview-shift-popover .motion-cta{
+  background:var(--theme-soft)!important;color:var(--theme-muted)!important;
+}
+.overview-picker-date{font:650 10px var(--df-mono)!important}
+
+/* Settings follows Monkeytype's information-left / controls-right rhythm */
+.settings-workspace{border-top:1px solid var(--df-line)!important}
+body .settings-section,body .settings-legend{
+  position:relative!important;display:grid!important;grid-template-columns:210px minmax(0,1fr)!important;
+  column-gap:36px!important;row-gap:12px!important;margin:0!important;padding:28px 10px!important;
+  border:0!important;border-bottom:1px solid var(--df-line)!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;
+}
+body .settings-title,body .settings-legend .legend-head{
+  position:static!important;grid-column:1!important;grid-row:1 / span 2!important;width:auto!important;margin:0!important;padding:1px 0!important;
+  color:var(--df-muted)!important;background:transparent!important;align-self:start!important;
+}
+body .settings-legend .legend-head{display:block!important;position:relative!important}
+body .settings-legend .legend-head .legend-edit-button{position:absolute!important;top:0!important;right:0!important}
+.settings-title{font:600 15px var(--df-heading)!important}
+.settings-title::after{display:block;margin-top:6px;max-width:180px;color:var(--theme-muted)!important;font:500 10px/1.5 var(--df-body)!important}
+.holiday-settings .settings-title::after{content:"กำหนดวันหยุดเพิ่มเติมเพื่อแสดงในปฏิทิน"}
+.category-settings .settings-title::after{content:"เพิ่มประเภทงานและเลือกคู่สีสำหรับป้ายกำกับ"}
+.holiday-form,.category-add-form{grid-column:2!important;align-items:center!important;margin:0!important}
+.settings-section>div:last-child{grid-column:2!important}
+.settings-section input{
+  min-height:40px!important;border:0!important;border-radius:8px!important;background:var(--df-accent-soft)!important;
+  color:var(--df-ink)!important;box-shadow:none!important;font-size:12px!important;
+}
+.settings-section input::placeholder{color:var(--theme-muted)!important}
+.holiday-form>button,.category-add-button{
+  width:40px!important;height:40px!important;padding:0!important;border:0!important;border-radius:8px!important;
+  background:var(--df-accent-strong)!important;color:#fff!important;font-size:17px!important;
+}
+body .category-theme-select>.clean-select-trigger{
+  min-height:40px!important;padding:8px 12px!important;
+  filter:saturate(.88) contrast(.98)!important;
+}
+body .settings-legend .legend-head>div{font:600 15px var(--df-heading)!important;color:var(--df-muted)!important}
+body .settings-legend .legend-head::after{
+  content:"แก้ข้อความอธิบายห้องที่ใช้ทั่วทั้งเว็บไซต์";display:block;margin-top:6px;max-width:180px;
+  color:var(--theme-muted)!important;font:500 10px/1.5 var(--df-body)!important;
+}
+.legend-edit-button{
+  width:26px!important;height:26px!important;border:0!important;border-radius:6px!important;
+  background:var(--df-accent-strong)!important;color:#fff!important;
+}
+body .settings-legend .legend-row{
+  grid-column:2!important;min-height:42px!important;margin:0!important;padding:7px 4px!important;border:0!important;border-bottom:1px solid var(--df-line)!important;
+  border-radius:0!important;background:transparent!important;align-items:center!important;
+}
+.settings-legend>button:last-child{grid-column:2!important;justify-self:start!important}
+
+/* File notes belong to the modal content, never to the viewport edge. */
+.calendar-day-modal>details{margin:14px 24px 0!important;padding-top:9px!important;border-top:1px solid var(--df-line)!important}
+.calendar-day-modal>details summary{line-height:1.45!important;color:var(--theme-muted)!important}
+
+/* Interaction/status polish */
+.visit-row-inner>button[aria-label="นัดต่อวันถัดไป"]{
+  background:var(--theme-soft)!important;color:var(--theme-muted)!important;
+}
+.visit-row-inner>button[aria-label="นัดต่อวันถัดไป"]:hover{
+  background:var(--theme-tint)!important;color:var(--theme-primary)!important;
+}
+.visit-row-inner>button:last-child,
+.history-close,
+.history-visit-actions>button:last-child{
+  color:var(--theme-danger)!important;
+}
+.visit-row-inner>button:last-child:hover,
+.history-close:hover,
+.history-visit-actions>button:last-child:hover{
+  background:rgba(184,92,104,.10)!important;color:var(--theme-danger)!important;
+}
+.calendar-day-modal .day-room-select>button{
+  min-width:108px!important;
+  padding:7px 4px 7px 18px!important;
+  color:var(--df-ink)!important;
+}
+.calendar-day-modal .day-room-select>button::before{
+  content:"";position:absolute;left:2px;top:50%;width:7px;height:7px;border-radius:50%;
+  background:var(--day-head-bg,var(--df-accent));transform:translateY(-50%);
+}
+.calendar-day-modal .day-add-button{
+  border-color:var(--df-accent-strong)!important;
+  background:transparent!important;
+  color:var(--df-accent-strong)!important;
+}
+
+footer{color:var(--theme-muted)!important;font:450 9.5px/1.5 var(--df-body)!important}
+
+@media(max-width:760px){
+  .brand-bar{width:calc(100% - 24px)!important;height:58px!important}
+  .brand-logo{width:34px!important;height:34px!important;flex-basis:34px!important;font-size:10px!important}
+  .brand-title{font-size:13px!important}.brand-subtitle{display:none!important}
+  .brand-avatar{width:28px!important;height:28px!important}.brand-email{max-width:70px!important;font-size:9px!important}
+  .app-shell{padding:0 10px 24px!important}
+  .app-shell>.page-head{min-height:124px!important;padding:28px 8px 14px!important}
+  .page-head h1,.page-head h2{font-size:25px!important}
+  .page-head>div:last-child{align-items:flex-end!important}
+  .header-nav-wrap{width:100%!important;display:flex!important;justify-content:flex-end!important}
+  .nav-text{min-width:70px!important;padding:7px 9px!important;font-size:10px!important}
+
+  .calendar-days>.cell{min-height:76px!important;padding:6px!important}
+  .calendar-weekdays>div{min-height:30px!important;font-size:7.5px!important}
+  .calendar-date-number{font-size:11px!important}
+  .calendar-room-dot{width:6px!important;height:6px!important}
+  .cell-shift-label{margin-top:9px!important;font-size:8px!important}
+  .calendar-visit-count{right:5px!important;bottom:4px!important;font-size:7.5px!important}
+
+  .calendar-day-modal{
+    left:8px!important;right:8px!important;bottom:8px!important;top:auto!important;transform:none!important;
+    width:auto!important;max-height:calc(100dvh - 16px)!important;border-radius:18px!important;
+  }
+  .day-modal-head{padding:16px!important}
+  .day-modal-head>div:first-child>div>div:first-child{font-size:18px!important}
+  .calendar-day-modal>div:not(.day-modal-head):not(.day-add-control):not(.case-add-panel){margin-left:16px!important;margin-right:16px!important}
+  .case-add-panel{margin:0 12px!important}
+  .new-case-fields{grid-template-columns:90px minmax(0,1fr)!important}
+  .new-case-fields>*:nth-child(3),.new-case-fields>*:nth-child(4){grid-column:auto!important}
+  .appointment-time-row{display:grid!important;grid-template-columns:92px 108px minmax(100px,1fr)!important;gap:5px!important}
+
+  .patient-workspace{display:block!important}
+  .patient-sidebar{
+    position:relative!important;display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:3px!important;
+    margin:0 0 9px!important;padding:4px!important;border-radius:9px!important;
+  }
+  .patient-sort-btn{min-height:32px!important;padding:6px 4px!important;text-align:center!important;font-size:9px!important}
+  .patient-desktop-total{display:none!important}.patient-mobile-total{display:block!important;margin:0 2px 7px!important}
+  .patient-table-head{display:none!important}
+  .plist-row{
+    grid-template-columns:auto minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;
+    gap:7px 10px!important;min-height:68px!important;padding:11px 8px!important;border-radius:0!important;
+  }
+  .plist-row .patient-hn{grid-column:1!important;grid-row:1!important}
+  .plist-row .patient-name{grid-column:2!important;grid-row:1!important}
+  .plist-row .patient-category{grid-column:3!important;grid-row:1!important;justify-self:end!important}
+  .plist-row .patient-count{grid-column:1!important;grid-row:2!important}
+  .plist-row .patient-date{grid-column:2/4!important;grid-row:2!important;justify-self:end!important;text-align:right!important}
+
+  .history-panel.case-history-modal{
+    left:8px!important;right:8px!important;top:auto!important;bottom:8px!important;
+    width:auto!important;max-height:calc(100dvh - 16px)!important;transform:none!important;border-radius:18px!important;
+  }
+  .case-history-header{padding:16px!important;gap:8px!important}
+  .case-history-kicker{font-size:11px!important}
+  .case-history-patient{font-size:12px!important}
+  .history-actions{align-self:start!important}
+  .case-edit-surface{margin:0 12px 14px!important;padding:13px!important}
+  .case-edit-grid{grid-template-columns:1fr 1fr!important;gap:10px!important}
+  .case-history-visits{padding:0 12px 16px!important}
+  .history-visit-row{
+    grid-template-columns:auto minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;
+    gap:6px 10px!important;padding:10px!important;
+  }
+  .history-visit-index{grid-column:1!important;grid-row:1!important}
+  .history-visit-date{grid-column:2!important;grid-row:1!important}
+  .history-visit-step{grid-column:1/3!important;grid-row:2!important}
+  .history-visit-status{grid-column:3!important;grid-row:1!important}
+  .history-visit-actions{grid-column:3!important;grid-row:2!important}
+
+  .overview-grid{padding:8px!important;border-radius:14px!important}
+  .overview-month{display:block!important}
+  .overview-month-side{display:flex!important;align-items:center!important;gap:12px!important;min-height:auto!important;padding:14px 16px!important}
+  .overview-month-side>div:first-child{font-size:38px!important}
+  .overview-month-side>div:nth-child(2){margin-top:0!important}
+  .overview-month-side>div:last-child{display:none!important}
+  .overview-month-calendar{padding:20px 12px!important}
+  .overview-week-grid{gap:4px!important}
+  .ov-cell{width:30px!important;height:32px!important;font-size:9.5px!important}
+  .overview-shift-popover{
+    left:50%!important;right:auto!important;top:auto!important;bottom:14px!important;
+    width:min(300px,calc(100vw - 24px))!important;transform:translateX(-50%)!important;
+  }
+
+  body .settings-section,body .settings-legend{
+    display:grid!important;grid-template-columns:1fr!important;gap:12px!important;padding:20px 4px 24px!important
+  }
+  body .settings-title,body .settings-legend .legend-head{
+    position:static!important;grid-column:1!important;grid-row:auto!important;width:auto!important;margin:0!important
+  }
+  .settings-title::after,body .settings-legend .legend-head::after{max-width:none!important}
+  .holiday-form,.category-add-form,.settings-section>div:last-child,body .settings-legend .legend-row,.settings-legend>button:last-child{grid-column:1!important}
+  .holiday-form,.category-add-form{grid-template-columns:minmax(0,1fr) 42px!important}
+  .holiday-form>.custom-date-field{grid-column:1/-1!important;grid-row:1!important}
+  .holiday-form>input{grid-column:1!important;grid-row:2!important}
+  .holiday-form>button{grid-column:2!important;grid-row:2!important}
+  .category-add-form>input{grid-column:1/-1!important;grid-row:1!important}
+  .category-add-button{grid-column:2!important;grid-row:2!important}
+  .category-theme-select{grid-column:1!important;grid-row:2!important}
+  .calendar-day-modal>details{margin:14px 16px 0!important}
+}
+
+@media(max-width:430px){
+  .brand-email{display:none!important}
+  .page-head h1,.page-head h2{font-size:23px!important}
+  .nav-text{min-width:64px!important}
+  .calendar-days>.cell{min-height:68px!important;padding:5px!important}
+  .calendar-weekdays>div{font-size:7px!important}
+  .cell-shift-label{font-size:7.5px!important}
+  .appointment-time-row{grid-template-columns:84px 100px minmax(94px,1fr)!important}
+  .custom-date-popover{left:50%!important;top:50%!important;width:min(290px,calc(100vw - 24px))!important;transform:translate(-50%,-50%)!important}
+}
+
+/* =========================================================
+   FINAL QA PASS — interaction, contrast and stacking
+   Keep this block last so legacy inline styles cannot win.
+   ========================================================= */
+body #root .patient-scroll .plist-row,
+body #root .patient-scroll .plist-row:nth-child(odd){
+  transition:background-color .16s ease,box-shadow .16s ease!important;
+}
+body #root .patient-scroll .plist-row:hover,
+body #root .patient-scroll .plist-row:nth-child(odd):hover{
+  background:var(--theme-primary)!important;
+  box-shadow:inset 3px 0 0 var(--theme-secondary)!important;
+  color:#fff!important;
+  transform:none!important;
+}
+body #root .patient-scroll .plist-row:hover .patient-hn,
+body #root .patient-scroll .plist-row:hover .patient-name{
+  color:#fff!important;
+}
+body #root .patient-scroll .plist-row:hover .patient-count,
+body #root .patient-scroll .plist-row:hover .patient-date,
+body #root .patient-scroll .plist-row:hover .patient-name small{
+  color:var(--theme-soft)!important;
+}
+
+body #root .calendar-table{
+  border:1px solid var(--theme-line)!important;
+  overflow:hidden!important;
+}
+body #root .calendar-weekdays>div{
+  border:0!important;
+  border-right:1px solid var(--theme-line)!important;
+  border-bottom:1px solid var(--theme-line)!important;
+}
+body #root .calendar-weekdays>div:last-child{border-right:0!important}
+body #root .calendar-days>.cell{
+  border:0!important;
+  border-right:1px solid var(--theme-line)!important;
+  border-bottom:1px solid var(--theme-line)!important;
+}
+body #root .calendar-days>.cell:nth-child(7n){border-right:0!important}
+body #root .calendar-days>.cell:nth-last-child(-n+7){border-bottom:0!important}
+body #root .calendar-days>.cell[data-shift="ปกส"]:not(.is-today) .cell-shift-label,
+body #root .calendar-days>.cell[data-shift="ฟุ้ง"]:not(.is-today) .cell-shift-label{
+  color:#8797C3!important;
+}
+
+body #root .overview-shift-popover .motion-cta{
+  background:var(--theme-soft)!important;
+  color:var(--theme-muted)!important;
+}
+body #root .overview-shift-popover .motion-cta:hover{
+  background:var(--theme-tint)!important;
+  color:var(--theme-primary)!important;
+}
+body #root .visit-row-inner>button[aria-label="นัดต่อวันถัดไป"]{
+  background:var(--theme-soft)!important;
+  color:var(--theme-muted)!important;
+}
+body #root .visit-row-inner>button[aria-label="นัดต่อวันถัดไป"]:hover{
+  background:var(--theme-tint)!important;
+  color:var(--theme-primary)!important;
+}
+body #root .calendar-day-modal>details summary,
+body #root .calendar-file-notes summary{
+  color:#7185BE!important;
+}
+body #root .visit-row-inner>button:last-child,
+body #root .history-close,
+body #root .history-visit-actions>button:last-child{
+  color:var(--theme-danger)!important;
+}
+body #root .visit-row-inner>button:last-child:hover,
+body #root .history-close:hover,
+body #root .history-visit-actions>button:last-child:hover{
+  background:rgba(180,91,102,.10)!important;
+  color:var(--theme-danger)!important;
+}
+
+/* Work-type colors come from each category's saved theme. Keep the color
+   slightly softened without replacing it with the global website theme. */
+body #root .visit-row .patient-category,
+body #root .case-history-category,
+body #root .case-edit-category>.clean-select-trigger,
+body #root .category-settings>div:last-child>span,
+body #root .category-theme-select>.clean-select-trigger{
+  filter:saturate(.88) contrast(.98)!important;
+}
+body #root .category-theme-select>.clean-select-trigger{
+  border:0!important;
+  box-shadow:none!important;
+}
+body #root button[aria-label="ลบนัด"],
+body #root button[aria-label="ลบนัดนี้"]{
+  color:var(--theme-danger)!important;
+}
+body #root button[aria-label="ลบนัด"] svg,
+body #root button[aria-label="ลบนัดนี้"] svg{
+  color:inherit!important;
+}
+body>.clean-select-menu{
+  z-index:2147483000!important;
+  pointer-events:auto!important;
+  background:rgba(255,255,255,.98)!important;
+  color:var(--theme-text)!important;
+  box-shadow:0 18px 48px var(--theme-shadow)!important;
+}
+body>.clean-select-menu button:hover,
+body>.clean-select-menu button.selected,
+body>.clean-select-menu button[aria-selected="true"]{
+  background:var(--theme-soft)!important;
+  color:var(--theme-primary)!important;
+}
+
+/* Appointment composer: date, start time and duration are one visual family.
+   Legacy inline rules used three different heights/colors, which made the row
+   look staggered in the day modal. */
+body #root .case-add-panel .appointment-time-row{
+  display:grid!important;
+  grid-template-columns:minmax(96px,1fr) minmax(104px,1fr) minmax(170px,1.55fr)!important;
+  align-items:stretch!important;
+  gap:6px!important;
+  width:100%!important;
+}
+body #root .case-add-panel .appointment-time-row .custom-date-field,
+body #root .case-add-panel .appointment-time-row .custom-date-field>button,
+body #root .case-add-panel .appointment-time-row .custom-time-field,
+body #root .case-add-panel .appointment-time-row .duration-line{
+  width:100%!important;
+  min-width:0!important;
+  height:36px!important;
+  min-height:36px!important;
+  margin:0!important;
+}
+body #root .case-add-panel .appointment-time-row .custom-date-field>button,
+body #root .case-add-panel .appointment-time-row .custom-time-field{
+  border:0!important;
+  border-radius:9px!important;
+  background:var(--theme-primary)!important;
+  color:#fff!important;
+  box-shadow:none!important;
+}
+body #root .case-add-panel .appointment-time-row .custom-date-field>button{
+  padding:0 9px!important;
+  gap:5px!important;
+  font:900 11px var(--df-mono)!important;
+}
+body #root .case-add-panel .appointment-time-row .custom-date-field>button svg,
+body #root .case-add-panel .appointment-time-row .custom-time-field svg{
+  color:#fff!important;
+}
+body #root .case-add-panel .appointment-time-row .custom-time-field{
+  padding:0 9px!important;
+}
+body #root .case-add-panel .appointment-time-row .custom-time-field input{
+  width:min(76px,calc(100% - 23px))!important;
+  height:36px!important;
+  color:#fff!important;
+}
+body #root .case-add-panel .appointment-time-row .duration-line{
+  display:grid!important;
+  grid-template-columns:minmax(96px,1fr) auto!important;
+  align-items:stretch!important;
+  gap:0!important;
+  overflow:hidden!important;
+  border-radius:9px!important;
+  background:var(--theme-primary)!important;
+  color:#fff!important;
+}
+body #root .case-add-panel .appointment-time-row .duration-line>div{
+  width:100%!important;
+  min-width:0!important;
+  height:36px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+body #root .case-add-panel .appointment-time-row .duration-line .stepbtn,
+body #root .case-add-panel .appointment-time-row .duration-line>div>div{
+  height:36px!important;
+  background:transparent!important;
+  color:#fff!important;
+}
+body #root .case-add-panel .appointment-time-row .duration-line .stepbtn{
+  width:26px!important;
+}
+body #root .case-add-panel .appointment-time-row .duration-line>div>div{
+  width:auto!important;
+  min-width:54px!important;
+}
+body #root .case-add-panel .appointment-time-row .duration-line>span:last-child{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:auto!important;
+  height:36px!important;
+  padding:0 9px!important;
+  border-left:1px solid rgba(255,255,255,.22)!important;
+  background:rgba(255,255,255,.08)!important;
+  color:#fff!important;
+  font:800 9.5px var(--df-mono)!important;
+  white-space:nowrap!important;
+}
+
+@media(max-width:430px){
+  body #root .case-add-panel .appointment-time-row{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  body #root .case-add-panel .appointment-time-row .custom-date-field,
+  body #root .case-add-panel .appointment-time-row .custom-date-field>button,
+  body #root .case-add-panel .appointment-time-row .custom-time-field{
+    width:100%!important;
+  }
+  body #root .case-add-panel .appointment-time-row .duration-line{
+    grid-column:1/-1!important;
+  }
+}

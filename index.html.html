@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HOS Schedule — DF × Monkeytype</title>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.25.0/babel.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" crossorigin="anonymous">
+<style>
+  html, body { margin: 0; padding: 0; background: var(--theme-canvas, #FFFFFF); overflow-x: hidden; }
+</style>
+<link rel="stylesheet" href="./df-monkey-theme.css?v=20260725-45" />
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef } = React;
+
+/* =========================================================
+   FIREBASE CONFIG — แก้ตรงนี้ก่อนใช้งานจริง
+   เอาค่าจาก Firebase Console > Project settings > SDK setup and configuration
+   (ใช้โปรเจกต์เดียวกับ DF Tracker ก็ได้ แค่เพิ่ม collection ใหม่ ไม่ชนกัน)
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyAGiQuXeOZ0js1DsQwYZ291-2FzcFMRaDw",
+  authDomain: "hos-schedule.firebaseapp.com",
+  projectId: "hos-schedule",
+  storageBucket: "hos-schedule.firebasestorage.app",
+  messagingSenderId: "140357375442",
+  appId: "1:140357375442:web:6d973ba4c1b7350d08240b",
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+let currentUid = null;
+
+/* ---------- Firestore-backed storage shim ----------
+   Same get/set/delete/list signature as before, but now reads/writes
+   Firestore under users/{uid}/data/{key} so data syncs across devices.
+   Requires signing in first (see AuthGate below). */
+window.storage = {
+  async get(key, shared) {
+    if (!currentUid) throw new Error('not signed in');
+    const ref = shared
+      ? db.collection('shared').doc(key)
+      : db.collection('users').doc(currentUid).collection('data').doc(key);
+    const snap = await ref.get();
+    if (!snap.exists) throw new Error('key not found');
+    return { key, value: snap.data().value, shared: !!shared };
+  },
+  async set(key, value, shared) {
+    if (!currentUid) throw new Error('not signed in');
+    const ref = shared
+      ? db.collection('shared').doc(key)
+      : db.collection('users').doc(currentUid).collection('data').doc(key);
+    if (!shared && key === 'cases') {
+      const previous = await ref.get();
+      if (previous.exists && previous.data()?.value !== value) {
+        await db.collection('users').doc(currentUid).collection('data').doc('cases-backup-before-last-save').set({
+          value: previous.data().value,
+          backedUpAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    }
+    await ref.set({ value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    return { key, value, shared: !!shared };
+  },
+  async delete(key, shared) {
+    if (!currentUid) throw new Error('not signed in');
+    const ref = shared
+      ? db.collection('shared').doc(key)
+      : db.collection('users').doc(currentUid).collection('data').doc(key);
+    await ref.delete();
+    return { key, deleted: true, shared: !!shared };
+  },
+  async list(prefix, shared) {
+    if (!currentUid) throw new Error('not signed in');
+    const col = shared ? db.collection('shared') : db.collection('users').doc(currentUid).collection('data');
+    const snap = await col.get();
+    const keys = snap.docs.map(d => d.id).filter(k => !prefix || k.startsWith(prefix));
+    return { keys, prefix: prefix || '', shared: !!shared };
+  },
+};
+
+/* ---------- minimal inline icon set (replaces lucide-react for standalone use) ---------- */
+function Icon({ name, size = 16, color = 'currentColor' }) {
+  const p = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  const fontAwesomeIcons = {
+    pencilSolid: 'fas fa-pencil-alt',
+    trashSolid: 'fas fa-trash-alt',
+    saveSolid: 'fas fa-save',
+    folderOpenSolid: 'fas fa-folder-open',
+    filterSolid: 'fas fa-filter',
+    rotateSolid: 'fas fa-redo-alt',
+    settingsSolid: 'fas fa-cog',
+    historySolid: 'fas fa-history',
+    calendarClock: 'fas fa-calendar-check',
+    calendarSolid: 'fas fa-calendar-alt',
+    noEntrySolid: 'fas fa-ban',
+    search: 'fas fa-search',
+    info: 'fas fa-info-circle',
+    chevronLeft: 'fas fa-chevron-left',
+    chevronRight: 'fas fa-chevron-right',
+    chevronDown: 'fas fa-chevron-down',
+    plus: 'fas fa-plus',
+    minus: 'fas fa-minus',
+    x: 'fas fa-times',
+    check: 'fas fa-check',
+    pencil: 'fas fa-pencil-alt',
+    stopwatchSolid: 'fas fa-stopwatch',
+    crownSolid: 'fas fa-crown',
+    google: 'fab fa-google',
+    plumpFire: 'fas fa-trash-alt',
+    plumpSave: 'fas fa-save',
+    plumpEdit: 'fas fa-pencil-alt',
+    plumpOpen: 'fas fa-folder-open',
+    plumpHistory: 'fas fa-history',
+    plumpReschedule: 'fas fa-calendar-alt',
+    plumpSettings: 'fas fa-cog',
+    plumpFilter: 'fas fa-filter',
+    plumpCancel: 'fas fa-ban',
+    plumpRestore: 'fas fa-redo-alt',
+    cuteSettings: 'fas fa-cog',
+    cuteHistory: 'fas fa-history',
+    cuteCancel: 'fas fa-ban',
+    cuteRestore: 'fas fa-redo-alt',
+    cuteFilter: 'fas fa-filter'
+  };
+  if (fontAwesomeIcons[name]) return <i aria-hidden="true" className={fontAwesomeIcons[name]} style={{ width: size, height: size, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color, fontSize: size, lineHeight: 1 }} />;
+  switch (name) {
+    case 'chevronLeft': return <svg {...p}><polyline points="15 18 9 12 15 6" /></svg>;
+    case 'chevronRight': return <svg {...p}><polyline points="9 18 15 12 9 6" /></svg>;
+    case 'x': return <svg {...p}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>;
+    case 'pencil': return <svg {...p}><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>;
+    case 'pencilSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="m16.9 2.6 4.5 4.5a2 2 0 0 1 0 2.8L9.2 22H2v-7.2L14.1 2.6a2 2 0 0 1 2.8 0ZM4.5 15.8v3.7h3.7l9.7-9.7-3.7-3.7-9.7 9.7Z"/></svg>;
+    case 'trashSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M8 2h8l1 2h4v3H3V4h4l1-2Zm-3 7h14l-1 12H6L5 9Zm4 2v7h2v-7H9Zm4 0v7h2v-7h-2Z"/></svg>;
+    case 'saveSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M3 2h15l3 3v17H3V2Zm4 2v6h10V4H7Zm1 10v6h8v-6H8Z"/></svg>;
+    case 'folderOpenSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M2 4h8l2 2h10v3H5L3 20h16l3-9H5L2 22V4Z"/></svg>;
+    case 'filterSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4Z"/></svg>;
+    case 'rotateSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 1-8.5 6H1l4-5 4 5H6.2A6 6 0 1 0 12 6V3Z"/></svg>;
+    case 'plumpFire': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#FFBE2E" d="M17.2 2.5c2.1 5-1.5 6.8 1.8 9.2 2.2-1.3 3.2-3.1 3.2-5.2 4.2 3.4 6.1 7.2 5.1 11.8C26.1 24 21.5 27 16 27S5.9 24 4.7 18.3c-.9-4.4 1.3-8.7 6.2-12.4-.2 3.4 1.2 5.5 3.3 6.2 2-2.7-.2-5.2 3-9.6Z"/><path fill="#111111" d="M13.8 20.8c0-2.7 1.3-4.8 3.5-6.8 2.5 2.2 3.7 4.4 3 6.8-.5 1.9-1.9 3-3.3 3s-3.2-1.1-3.2-3Z"/><path d="m5 26 22 4M27 26 5 30" stroke="#111111" strokeWidth="3.5" strokeLinecap="round"/></svg>;
+    case 'plumpSave': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#111111" d="M13 3h6v9h4l-7 8-7-8h4V3Z"/><rect x="5" y="19" width="22" height="10" rx="4" fill="#FF7650"/><rect x="10" y="23" width="9" height="2.8" rx="1.4" fill="#111111"/><circle cx="23" cy="24.4" r="1.5" fill="#111111"/></svg>;
+    case 'plumpEdit': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#FF7650" d="M15 5c3-3 7-3 9 0s1 6-1 8l-3 3 3 2-4 3-3-3-6 7c-2 2-6 3-8 0s0-6 2-8L15 5Z"/><path fill="#111111" d="m17 6 3-3 4 4-3 3-4-4ZM4 24l5-1-4-4-1 5Z"/></svg>;
+    case 'plumpOpen': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#FFBE2E" d="M7 10 10 4l5 4h3l5-4 2 7c2 2 3 5 2 9-1 6-5 9-11 9S6 26 5 20c-.6-4 .2-7 2-10Z"/><path fill="#111111" d="M11 16a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm10 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm-5 1 2 2-2 2-2-2 2-2Zm-6 5c4 3 8 3 12 0l1.5 2.2c-5 4-10 4-15 0L10 22Z"/></svg>;
+    case 'plumpHistory': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#F28DB1" d="M7 10 10 4l5 4h3l5-4 2 7c2 2 3 5 2 9-1 6-5 9-11 9S6 26 5 20c-.6-4 .2-7 2-10Z"/><path fill="#111111" d="M11 16a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm10 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm-5 1 2 2-2 2-2-2 2-2Zm-6 5c4 3 8 3 12 0l1.5 2.2c-5 4-10 4-15 0L10 22Z"/></svg>;
+    case 'plumpReschedule': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#FF7650" d="M11 4h10l7 21H4L11 4Z"/><path fill="#FFF7E8" d="m9 17 16-5 2 5-16 5-2-5Z"/><path d="M3 27h26" stroke="#111111" strokeWidth="3.5" strokeLinecap="round"/></svg>;
+    case 'plumpSettings': return <svg width={size} height={size} viewBox="0 0 32 32"><path d="M16 3c1.2 7 3 8.8 10 10-7 1.2-8.8 3-10 10-1.2-7-3-8.8-10-10 7-1.2 8.8-3 10-10Z" fill="#111111"/><path d="M24 17c.7 4.1 1.9 5.3 6 6-4.1.7-5.3 1.9-6 6-.7-4.1-1.9-5.3-6-6 4.1-.7 5.3-1.9 6-6Z" fill="#FFBE2E"/><path d="M8 18c.5 3 1.5 4 4.5 4.5C9.5 23 8.5 24 8 27c-.5-3-1.5-4-4.5-4.5C6.5 22 7.5 21 8 18Z" fill="#FFBE2E"/></svg>;
+    case 'plumpFilter': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#45BCEB" d="M5 5h22a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H15l-6 4v-4H5a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Z"/><path d="M9 11h3M16 11h8M9 16h10M23 16h1M9 21h5M18 21h6" stroke="#111111" strokeWidth="3" strokeLinecap="round"/></svg>;
+    case 'plumpCancel': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#FF7650" d="M7 5h18a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a4 4 0 0 1 4-4Z"/><path d="M10 16h12" stroke="#111111" strokeWidth="4" strokeLinecap="round"/></svg>;
+    case 'plumpRestore': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#6EDD5C" d="M16 4a12 12 0 1 1-10.8 6.8H2l5-6 5 6H8.7A8 8 0 1 0 16 8V4Z"/><path d="M15 10v7l5 3" fill="none" stroke="#111111" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+    case 'check': return <svg {...p}><polyline points="20 6 9 17 4 12" /></svg>;
+    case 'info': return <svg {...p}><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>;
+    case 'history': return <svg {...p}><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg>;
+    case 'search': return <svg {...p}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>;
+    case 'ban': return <svg {...p}><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></svg>;
+    case 'rotateCcw': return <svg {...p}><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>;
+    case 'users': return <svg {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
+    case 'calendarClock': return <svg {...p}><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><circle cx="16" cy="16" r="3" /><path d="M16 14.5V16l1 1" /></svg>;
+    case 'calendar': return <svg {...p}><rect x="3" y="4" width="18" height="17" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>;
+    case 'grid': return <svg {...p}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>;
+    case 'settings': return <svg {...p}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.12 2.12-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1 1.55V20.3h-3v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.88.34l-.06.06-2.12-2.12.06-.06A1.7 1.7 0 0 0 7.08 15a1.7 1.7 0 0 0-1.55-1H5.4v-3h.13a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.12-2.12.06.06a1.7 1.7 0 0 0 1.88.34 1.7 1.7 0 0 0 1-1.55V4.7h3v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.12 2.12-.06.06A1.7 1.7 0 0 0 19.4 10a1.7 1.7 0 0 0 1.55 1h.13v3h-.13a1.7 1.7 0 0 0-1.55 1Z" /></svg>;
+    case 'calendarSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v9a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-9Z" /></svg>;
+    case 'gridSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="9" height="9" rx="2" /><rect x="13" y="2" width="9" height="9" rx="2" /><rect x="2" y="13" width="9" height="9" rx="2" /><rect x="13" y="13" width="9" height="9" rx="2" /></svg>;
+    case 'usersSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8" r="4" /><path d="M1.5 20a7.5 7.5 0 0 1 15 0 1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1Z" /><circle cx="18" cy="8" r="3" /><path d="M17.2 13.2A6.5 6.5 0 0 1 22.5 20a1 1 0 0 1-1 1h-3.2a9.4 9.4 0 0 0-2.2-7.1c.35-.3.72-.52 1.1-.7Z" /></svg>;
+    case 'settingsSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.2 7.2 0 0 0-1.63-.95L14.37 2.8a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.49.42l-.37 2.51c-.58.24-1.12.56-1.62.95L5.15 5.3a.5.5 0 0 0-.61.22L2.62 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.05.31-.08.65-.08.94s.03.63.08.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.4-.96c.49.39 1.03.71 1.62.95l.37 2.51c.04.24.24.42.49.42h3.84a.5.5 0 0 0 .5-.42l.36-2.51c.59-.24 1.13-.56 1.63-.95l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.02-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z" /></svg>;
+    case 'crownSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="m3.2 7.2 4.3 3.1L11 4.8a1.15 1.15 0 0 1 2 0l3.5 5.5 4.3-3.1a1 1 0 0 1 1.55 1.05l-1.8 8.15H3.45l-1.8-8.15A1 1 0 0 1 3.2 7.2ZM4 18h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2Z" /></svg>;
+    case 'keyboardSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h18a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm1.5 3v2H7V8H4.5ZM8 8v2h2.5V8H8Zm3.5 0v2H14V8h-2.5ZM15 8v2h2.5V8H15Zm3.5 0v2H21V8h-2.5Zm-14 3.5v2H7v-2H4.5Zm3.5 0v2h2.5v-2H8Zm3.5 0v2H14v-2h-2.5Zm3.5 0v2h2.5v-2H15Zm3.5 0v2H21v-2h-2.5ZM7 15v2h10v-2H7Z" /></svg>;
+    case 'userPlusSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="7" r="4" /><path d="M1.5 20a7.5 7.5 0 0 1 15 0 1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1ZM19 9V6h2v3h3v2h-3v3h-2v-3h-3V9h3Z" /></svg>;
+    case 'stackSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 10 5-10 5L2 7l10-5Zm-8.8 9.2L12 15.6l8.8-4.4L22 13l-10 5-10-5 1.2-1.8Zm0 5L12 20.6l8.8-4.4L22 18l-10 5-10-5 1.2-1.8Z" /></svg>;
+    case 'banSolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20ZM6.7 8.1l9.2 9.2a7 7 0 0 0-9.2-9.2Zm10.6 7.8L8.1 6.7a7 7 0 0 0 9.2 9.2Z" clipRule="evenodd" /></svg>;
+    case 'historySolid': return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 1-8.5 6H1l3.5-4L8 9H5.6A6.5 6.5 0 1 0 12 5.5V3Zm-1 4h2v5.1l3.4 2-1 1.7-4.4-2.6V7Z" /></svg>;
+    case 'stopwatchSolid': return <svg width={size} height={size} viewBox="0 0 24 24"><path fill="currentColor" d="M9 1h6a1 1 0 1 1 0 2h-1v1.2a9 9 0 1 1-4 0V3H9a1 1 0 0 1 0-2Zm8.8 3.4L19.2 3l2 2-1.4 1.4-2-2Z" /><path fill="#fff" d="M11 7h2v5.4l3 1.8-1 1.7-4-2.4V7Z" /></svg>;
+    case 'noEntrySolid': return <svg width={size} height={size} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor" /><rect x="5" y="10.5" width="14" height="3" rx="1.5" fill="#fff" /></svg>;
+    case 'cuteSettings': return <svg width={size} height={size} viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="8" fill="none" stroke="#FFF7E8" strokeWidth="2.4"/><path fill="#FFF7E8" d="M18.3 7.2 19 10c.6.3 1.1.6 1.6 1.1l2.8-.8 1.7 3-2.1 2c.1.6.1 1.2 0 1.8l2.1 2-1.7 3-2.8-.8c-.5.4-1 .8-1.6 1.1l-.7 2.8h-3.5l-.7-2.8a8 8 0 0 1-1.6-1.1l-2.8.8-1.7-3 2.1-2a8 8 0 0 1 0-1.8l-2.1-2 1.7-3 2.8.8c.5-.5 1-.8 1.6-1.1l.7-2.8h3.5ZM16.5 13a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Z"/></svg>;
+    case 'cuteHistory': return <svg width={size} height={size} viewBox="0 0 32 32"><path fill="#6777B6" d="M8 4h15a3 3 0 0 1 3 3v21H9a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3Zm2 8h11V9H10v3Zm0 6h11v-3H10v3Zm0 6h8v-3h-8v3Z"/><path fill="#FFF7E8" d="M10 9h11v3H10zm0 6h11v3H10zm0 6h8v3h-8z"/></svg>;
+    case 'cuteCancel': return <svg width={size} height={size} viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="8" fill="#D8560E"/><rect x="9" y="14" width="14" height="4" rx="2" fill="#FFF7E8"/></svg>;
+    case 'cuteRestore': return <svg width={size} height={size} viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="8" fill="none" stroke="#1F5B54" strokeWidth="2.4"/><path d="M10 13a7 7 0 1 1-.5 7" fill="none" stroke="#1F5B54" strokeWidth="3" strokeLinecap="round"/><path d="m7.5 12.5 5.8-1-2.1 5.4Z" fill="#1F5B54"/></svg>;
+    case 'cuteFilter': return <svg width={size} height={size} viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="8" fill="none" stroke="#95604D" strokeWidth="2.4"/><path d="M9 10h14M9 16h14M9 22h14" fill="none" stroke="#95604D" strokeWidth="2.5" strokeLinecap="round"/><circle cx="14" cy="10" r="2.5" fill="#FFF7E8" stroke="#95604D" strokeWidth="2"/><circle cx="20" cy="16" r="2.5" fill="#FFF7E8" stroke="#95604D" strokeWidth="2"/><circle cx="12" cy="22" r="2.5" fill="#FFF7E8" stroke="#95604D" strokeWidth="2"/></svg>;
+    case 'google': return (
+      <svg width={size} height={size} viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+      </svg>
+    );
+    default: return null;
+  }
+}
+
+const CUTE_ICON_TONES = {
+  yellow: { bg: '#D3C2CD', ink: '#1F5B54', shadow: '#6777B6' },
+  blue: { bg: '#6777B6', ink: '#FFF7E8', shadow: '#D3C2CD' },
+  orange: { bg: '#E45C32', ink: '#FFF9E8', shadow: '#FFD84D' },
+  brown: { bg: '#95604D', ink: '#FFF9E8', shadow: '#FFD84D' },
+  cream: { bg: '#FFF9E8', ink: '#6F4638', shadow: '#E45C32' },
+};
+function CuteIcon({ name, size = 12, tone = 'yellow', box = 23 }) {
+  const t = CUTE_ICON_TONES[tone] || CUTE_ICON_TONES.yellow;
+  return <span aria-hidden="true" style={{ width: box, height: box, flex: `0 0 ${box}px`, borderRadius: Math.max(6, box * .30), background: t.bg, color: t.ink, border: `2px solid ${t.ink}`, boxSizing: 'border-box', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+    <Icon name={name} size={size} color={t.ink} />
+  </span>;
+}
+
+function CleanSelect({ value, onChange, options, style = {}, className = '', ariaLabel = 'Select option', iconOnly = false, iconName = 'plumpFilter' }) {
+  const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState({ left: 0, top: 0, width: 190 });
+  const ref = useRef(null);
+  const menuRef = useRef(null);
+  const selected = options.find(o => String(o.value) === String(value)) || options[0];
+  useEffect(() => {
+    const close = e => { if (ref.current && !ref.current.contains(e.target) && (!menuRef.current || !menuRef.current.contains(e.target))) setOpen(false); };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, []);
+  const toggleMenu = () => {
+    if (!open && ref.current) {
+      const r = ref.current.getBoundingClientRect();
+      const width = Math.max(190, r.width);
+      setMenuPos({ left: Math.max(8, Math.min(r.left, window.innerWidth - width - 8)), top: Math.max(8, Math.min(r.bottom + 7, window.innerHeight - 265)), width });
+    }
+    setOpen(!open);
+  };
+  return (
+    <div ref={ref} className={`clean-select ${className}`} style={{ position: 'relative', display: 'inline-block' }}>
+      <button type="button" aria-label={`${ariaLabel}: ${selected?.label ?? selected?.value}`} title={iconOnly ? (selected?.label ?? selected?.value) : undefined} aria-expanded={open} onClick={toggleMenu}
+        style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, border: 'none', cursor: 'pointer' }}>
+        {iconOnly ? <Icon name={iconName} size={18} /> : <><span>{selected?.label ?? selected?.value}</span><span className="clean-select-arrow"><Icon name="chevronDown" size={11}/></span></>}
+      </button>
+      {open && ReactDOM.createPortal(
+        <div ref={menuRef} className="clean-select-menu" style={{ position: 'fixed', left: menuPos.left, top: menuPos.top, width: menuPos.width, minWidth: menuPos.width, maxWidth: 'calc(100vw - 16px)', right: 'auto', zIndex: 2147483000 }}>
+          {options.map(o => <button type="button" key={String(o.value)} aria-selected={String(o.value) === String(value)} className={String(o.value) === String(value) ? 'selected' : ''} onClick={() => { onChange(o.value); setOpen(false); }}><span>{o.label ?? o.value}</span></button>)}
+        </div>, document.body
+      )}
+    </div>
+  );
+}
+
+function LoadingScreen() {
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAF6EF', fontFamily: 'sans-serif', color: '#8A7F63' }}>
+      กำลังโหลด...
+    </div>
+  );
+}
+
+function SignInScreen() {
+  const [error, setError] = useState('');
+  const signIn = async () => {
+    setError('');
+    try {
+      await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    } catch (e) {
+      setError('เข้าสู่ระบบไม่สำเร็จ: ' + e.message);
+    }
+  };
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--theme-canvas, #FFFFFF)', fontFamily: "'Sarabun', sans-serif", padding: 20 }}>
+      <div style={{ background: 'var(--theme-primary)', border: 'none', borderRadius: 26, padding: '38px 34px 34px', maxWidth: 380, width: '100%', textAlign: 'center', boxShadow: '0 22px 55px var(--theme-shadow)' }}>
+        <div style={{ width: 52, height: 52, borderRadius: '50%', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--theme-soft)', color: 'var(--theme-primary)' }}><Icon name="crownSolid" size={24} /></div>
+        <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 21, fontWeight: 700, color: '#FFFFFF', marginBottom: 7 }}>งานโรงพยาบาล &amp; นัดคนไข้</div>
+        <div style={{ fontSize: 13, color: 'var(--theme-tint)', marginBottom: 25 }}>เข้าสู่ระบบเพื่อซิงก์ข้อมูลข้ามอุปกรณ์</div>
+        <button onClick={signIn} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', padding: '12px 16px', borderRadius: 14, border: 'none', background: '#CBD183', fontSize: 14, fontWeight: 700, color: '#2B2B23', cursor: 'pointer', boxShadow: '0 7px 18px rgba(43,43,35,.12)' }}>
+          <Icon name="google" size={18} /> เข้าสู่ระบบด้วย Google
+        </button>
+        {error && <div style={{ fontSize: 11.5, color: '#A33636', marginTop: 12 }}>{error}</div>}
+      </div>
+    </div>
+  );
+}
+
+const SCHEDULE_DATA = {"2026-04-01":{"appointments":["13:00 room 5"],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-02":{"appointments":["13:00 Screen","13:30 385129 ติ๋ม TN","14:00 155848 สว่าง TNช("],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-03":{"appointments":[],"clinic":"CK","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-04":{"appointments":[],"clinic":"Bantoom","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-05":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-06":{"appointments":[],"clinic":"ไม่ลง","holiday":"หยุดจักกรี","shift":null,"shiftNotes":[]},"2026-04-07":{"appointments":["13:00 ประชุม zoom","13:30 7172 แสง TMD","14:00 **โทรเลื่อนเป็นวันที่ 20","14:30 095-2368071"],"clinic":"ไม่ลง","holiday":"Orentation","shift":null,"shiftNotes":[]},"2026-04-08":{"appointments":["13:00 room 4","13:30 ศิวดล ใจดี recheck Cr","14:00 ไม่มาตามนัด"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-09":{"appointments":["13:00 room 6","13:30 90705 บุญธ.(( RCT","14:00 ( **รอหาวันนัด(ชชช(ช(((((ช((","14:30 ( xช((ช("],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-10":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-11":{"appointments":[],"clinic":"HugFunFull","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-12":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-13":{"appointments":[],"clinic":"ไม่ลง","holiday":"สงกรานต์","shift":null,"shiftNotes":[]},"2026-04-14":{"appointments":[],"clinic":"ไม่ลง","holiday":"สงกรานต์","shift":null,"shiftNotes":[]},"2026-04-15":{"appointments":[],"clinic":"ไม่ลง","holiday":"สงกรานต์","shift":null,"shiftNotes":[]},"2026-04-16":{"appointments":["13:00 214901 มานะ RCT"],"clinic":"ไม่ลง","holiday":"ล","shift":null,"shiftNotes":[]},"2026-04-17":{"appointments":[],"clinic":"CK","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-18":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-19":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-20":{"appointments":["13:00 7172 แสง TMD","13:30 F/U traumatic OCC","14:00 สงวน ชิดสนิท"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-21":{"appointments":["13:00 88693 จิรา TP","13:30 reline >> รอส่ง lab"],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-22":{"appointments":["13:00 3436 อภิ CD","13:30 Recheck ต่อ"],"clinic":"HugFun","holiday":"screen","shift":null,"shiftNotes":[]},"2026-04-23":{"appointments":["13:00 เตียงเสริม","13:30 ทำ present + หมอพร้อม"],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-24":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-25":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-26":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-27":{"appointments":["13:00 Screen"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-28":{"appointments":["13:00 room 5"],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-04-29":{"appointments":["13:00 room 6"],"clinic":"OT โรงบาล","holiday":"OT","shift":null,"shiftNotes":[]},"2026-04-30":{"appointments":["13:00 155848 สว่าง TN","13:30 ไม่มาตามนัด"],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-01":{"appointments":["1/1"],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-02":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-03":{"appointments":[],"clinic":"HugFunFull","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-04":{"appointments":[],"clinic":"HugFunFull","holiday":"หยุดฉัตรมงคล","shift":"off","shiftNotes":[]},"2026-05-05":{"appointments":["ฟุ้ง","13:00 off"],"clinic":"CK","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-06":{"appointments":["ฟุ้ง","13:00 363292 สุดที่รัก RCT","13:30 097-9397727","14:00 LTMI TMC #21 + dam"],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-07":{"appointments":["ฟุ้ง","13:00 90705 บุญธ. RCT","13:30 082-9315934","14:00 OC LT MI #24"],"clinic":null,"holiday":null,"shift":null,"shiftNotes":[]},"2026-05-08":{"appointments":["Screen"],"clinic":null,"holiday":null,"shift":null,"shiftNotes":[]},"2026-05-10":{"appointments":[],"clinic":"x","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-11":{"appointments":["ฟุ้ง","13:00 214901 มานะ RCT","13:30 098-7465869","14:00 FRC #45, WL 22.5"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-12":{"appointments":["ฟุ้ง","13:00 7172 แสง TMD","13:30 095-2368071","14:00 นัดพิมพ์าปาก RPD ??"],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-13":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":"off","shiftNotes":[]},"2026-05-14":{"appointments":["ปกส"],"clinic":"CK","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-15":{"appointments":["ฟุ้ง","19","ฟุ้ง","13:00 363292 สุดที่รัก RCT","13:30 097-9397727"],"clinic":null,"holiday":"5848","shift":null,"shiftNotes":[]},"2026-05-17":{"appointments":[],"clinic":"HugFunFull","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-18":{"appointments":[],"clinic":"OT โรงบาล","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-19":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-20":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-22":{"appointments":[],"clinic":"CK","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-23":{"appointments":[],"clinic":"Bantoom","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-24":{"appointments":[],"clinic":"Bantoom","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-25":{"appointments":["ฟุ้ง","13:00 90705 บุญธ. RCT","13:30 082-9315934","14:00 MI TMC #24"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-26":{"appointments":["ปกส","13:00 ห้ามนัดคนไข้"],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-27":{"appointments":["Screen","13:00 268967 ไหน","13:30 F/u affter off splint + ลงคิว RCT"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-28":{"appointments":["1/1/2026","13:00 สาธิต มังคลาด Recheck/Reline LTP","13:30 reline +/- Ext.","14:00 351,640 ศิริกาน URPD"],"clinic":null,"holiday":null,"shift":null,"shiftNotes":["Reline LTP/ Repair","Prep rest for RPD"]},"2026-05-29":{"appointments":["ฟุ้ง"],"clinic":"CK","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-30":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-05-31":{"appointments":[],"clinic":"x","holiday":null,"shift":null,"shiftNotes":[]},"2026-06-01":{"appointments":[],"clinic":"x","holiday":null,"shift":"off","shiftNotes":[]},"2026-06-02":{"appointments":["ปกส","13:00 214901 มานะ RCT","13:30 098-7465869","14:00 Recheck RPD"],"clinic":"CDC","holiday":null,"shift":"ปกส","shiftNotes":["TP","RPD"]},"2026-06-03":{"appointments":[],"clinic":"CK","holiday":null,"shift":"off","shiftNotes":[]},"2026-06-04":{"appointments":["ฟุ้ง","13:00 88693 จิราพรรณ แซ่จ๋าว Insert UTP","13:30 N/V - 6/7/69"],"clinic":"ไม่ลง","holiday":null,"shift":"ฟุ้ง","shiftNotes":["TP"]},"2026-06-05":{"appointments":["ฟุ้ง"],"clinic":"CK","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-06":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-06-07":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-06-08":{"appointments":["Screen"],"clinic":"OT โรงบาล","holiday":null,"shift":"Screen","shiftNotes":[]},"2026-06-09":{"appointments":["ฟุ้ง","13:00 จันทร์ ใจมูล","13:30 Off splint + แก้ OCC","14:00 209481 วิไลยวรรณ B24"],"clinic":"CDC","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-10":{"appointments":["ปกส","13:00 3436 อภิชาติ CD","13:30 Recheck CD"],"clinic":"HugFun","holiday":null,"shift":"ปกส","shiftNotes":[]},"2026-06-11":{"appointments":["ฟุ้ง","13:00 ✅ Lab แสงอรุน splint","13:30 insert upper splint + check OCC  (095-2368071)"],"clinic":null,"holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-12":{"appointments":["ฟุ้ง"],"clinic":"CK","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-14":{"appointments":[],"clinic":"Bantoom","holiday":null,"shift":null,"shiftNotes":[]},"2026-06-15":{"appointments":["ฟุ้ง","13:00 65424 ศศิประภา UTP","13:30 Insert UTP (3 ซี่)"],"clinic":"HugFun","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-16":{"appointments":["ฟุ้ง","13:00 300716 อินทรา RCT","13:30 remed + dam construct on 31OM"],"clinic":"CDC","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-17":{"appointments":["Screen","13:00 343086 พิยุทธ f/u*ยกเลิกนัด ไม่สะดวก","13:30 214901 มานะ UTP","14:00 insert UTP"],"clinic":"HugFun","holiday":null,"shift":"Screen","shiftNotes":[]},"2026-06-18":{"appointments":["ฟุ้ง","13:00 363292 สุดที่รัก RCT","13:30 097-9397727","14:00 TMC FRC #21 **ledge ปลาย"],"clinic":"CK","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-19":{"appointments":["Screen"],"clinic":null,"holiday":null,"shift":"Screen","shiftNotes":[]},"2026-06-20":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-06-21":{"appointments":[],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-06-22":{"appointments":["Screen"],"clinic":"OT โรงบาล","holiday":null,"shift":"Screen","shiftNotes":[]},"2026-06-23":{"appointments":["ฟุ้ง","13:00 90705 บุญธ. RCT","13:30 082-9315934","14:00 MI TMC #24"],"clinic":"CDC","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-24":{"appointments":["DM","13:00 351640 ศิริกานต RPD","13:30 try framwork URPD"],"clinic":"HugFun","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-25":{"appointments":["1/1","13:00 84550 นางคั้ว แซ่ย่าง insert SD","13:30 insert SD & LTP คนไข้ฝาก"],"clinic":null,"holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-26":{"appointments":["ฟุ้ง"],"clinic":"CK","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-28":{"appointments":[],"clinic":"HugFunFull","holiday":null,"shift":null,"shiftNotes":[]},"2026-06-29":{"appointments":["ฟุ้ง","13:00 214901 มานะ UTP","13:30 insert UTP"],"clinic":"HugFun","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-06-30":{"appointments":["ฟุ้ง","13:00 33620 ลวน 16OM","13:30 14727 จิราวรรณ Imp RPD"],"clinic":"CDC","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-01":{"appointments":["ปกส","13:00 385129 ติ๋ม ตุ้ยวงค์ F/U - TN"],"clinic":"x","holiday":null,"shift":"ปกส","shiftNotes":[]},"2026-07-02":{"appointments":["Screen","13:00 249618 ณรงค์ศักดิ์ St. off 36-37A","13:30 265078 ทศพล อุดสร้อย ตัดไหม 12-23A"],"clinic":null,"holiday":null,"shift":"Screen","shiftNotes":[]},"2026-07-03":{"appointments":["ฟุ้ง","ฟุ้ง","13:00 395460 บังเอิญ สุทธประภา Boder M.","13:30 081-4888439"],"clinic":"HugFun","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-04":{"appointments":["ฟุ้ง"],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-05":{"appointments":["1/1","13:00 นายประเสริฐ ศรีขันทะ TP (New) - 0871869763"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-06":{"appointments":["ฟุ้ง","13:00 88693 จิราพรรณ แซ่จ๋าว Recheck UTP","13:30 84550 คั่ว แซ่ย่าง Recheck USD","14:00 65424 ศศิประภา กาติ๊บ try in tooth UTP","Screen"],"clinic":"HugFun","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-07":{"appointments":["รพ.สต.","ฟุ้ง"],"clinic":"CDC","holiday":null,"shift":"รพ.สต.","shiftNotes":[]},"2026-07-08":{"appointments":["Screen"],"clinic":"HugFun","holiday":null,"shift":"Screen","shiftNotes":[]},"2026-07-09":{"appointments":["ฟุ้ง","13:00 7172 แสงอรุณ insert splint","13:30 (095-2368071)"],"clinic":"HugFunFull","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-10":{"appointments":["ฟุ้ง","ฟุ้ง","13:30 14727 จิราวรรณ มังคลาด Try in framework RPD"],"clinic":"HugFun","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-11":{"appointments":["Screen"],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-12":{"appointments":["off","13:00 ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ","13:30 ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ","14:00 ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ"],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-13":{"appointments":["ปกส","off","13:00 ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ","13:30 ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ","14:00 ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ ไปเที่ยวกันเถอะ"],"clinic":"x","holiday":null,"shift":"ปกส","shiftNotes":[]},"2026-07-14":{"appointments":["ฟุ้ง","13:00 260270 เหมยออน แซ่เติ๋น TMD ตรวจฟัน tel: 064-0735721","13:30 14727 จิราวรรณ มังคลาด prep rest RPD","14:00 X-ray Pa tooth 24","off"],"clinic":"x","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-15":{"appointments":["ฟุ้ง","13:00 90705 บุญธรรม อุทธิยา final 24O + E 15 *เลื่อนนัด รอโทรแจ้งอีกที ต้นเดือน กค.","13:30 265078 ทศพล อุดสร้อย F/U 12-23A","14:00 7172 แสงอรุณ Recheck splint"],"clinic":"x","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-16":{"appointments":["ฟุ้ง","13:00 2149001 มานะ เขจร FRC on 45"],"clinic":null,"holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-17":{"appointments":["Screen","Screen"],"clinic":"CK","holiday":null,"shift":"Screen","shiftNotes":[]},"2026-07-18":{"appointments":["ฟุ้ง","13:00 7172 แสงอรุณ Recheck splint"],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-19":{"appointments":["ปกส"],"clinic":"ไม่ลง","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-20":{"appointments":["Screen","13:00 154386 ปิ่น แสงศรีจันทร์ f/u 16+ filling root caries","13:30 plan ย้ายมา 27","ฟุ้ง"],"clinic":"HugFun","holiday":null,"shift":"Screen","shiftNotes":[]},"2026-07-21":{"appointments":["ฟุ้ง","13:00 351640 ศิริกานต์ วิต๊ะกุล insert URPD","13:30 * OCCLUSION แน่นมาก ขอเต็มเวลา","Screen"],"clinic":"CDC","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-22":{"appointments":["ฟุ้ง","13:00 000272546 พิชชากร ศรีจันทร์ OC LT - 21","13:30 เปิดใหม่ ขอเต็มเวลา"],"clinic":"HugFun","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-23":{"appointments":["1/1","13:00 39977 จันทร์ ใจมูล f/u off splint 1 mo +/- sc upper arch","13:30 65424 ศศิประภา กาติ๊บ Insert UTP +/- Reline","14:00 งานแก้ อันเดิม palatal ไม่แนบ"],"clinic":null,"holiday":null,"shift":"1/1","shiftNotes":[]},"2026-07-24":{"appointments":["ฟุ้ง","ฟุ้ง"],"clinic":null,"holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-25":{"appointments":["รพ.สต."],"clinic":"Bantoom","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-26":{"appointments":["ฟุ้ง"],"clinic":"HugFunFull","holiday":null,"shift":null,"shiftNotes":[]},"2026-07-27":{"appointments":["ฟุ้ง","13:00 268967 ไหนกว้าง แซ่ลี f/u หลัง off splint","13:30 on tooth 11 21 12 +/- RP on lower arch","14:00 154386 ปิ่น แสงศรีจันทร์ f/u 16+ filling root caries","ฟุ้ง"],"clinic":"OT โรงบาล","holiday":null,"shift":"ฟุ้ง","shiftNotes":[]},"2026-07-28":{"appointments":["off","13:00 น่ากลับบ้านเนอะ","13:30 น่ากลับบ้านเนอะ","14:00 น่ากลับบ้านเนอะ","ฟุ้ง"],"clinic":"x","holiday":null,"shift":"off","shiftNotes":[]},"2026-07-29":{"appointments":["off","13:00 น่ากลับบ้านเนอะ","13:30 น่ากลับบ้านเนอะ","14:00 น่ากลับบ้านเนอะ"],"clinic":null,"holiday":null,"shift":"off","shiftNotes":[]},"2026-07-30":{"appointments":["off","13:00 น่ากลับบ้านเนอะ","13:30 น่ากลับบ้านเนอะ","14:00 น่ากลับบ้านเนอะ"],"clinic":"CDC","holiday":null,"shift":"off","shiftNotes":[]},"2026-07-31":{"appointments":["รพ.สต.","ฟุ้ง"],"clinic":"CK","holiday":null,"shift":"รพ.สต.","shiftNotes":[]},"2026-08-01":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-03":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-04":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-05":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-08":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-09":{"appointments":[],"clinic":"HugFunFull","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-10":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-11":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-13":{"appointments":[],"clinic":"x","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-14":{"appointments":[],"clinic":"x","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-15":{"appointments":[],"clinic":"x","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-16":{"appointments":[],"clinic":"x","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-17":{"appointments":[],"clinic":"OT โรงบาล","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-18":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-19":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-24":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-25":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-26":{"appointments":[],"clinic":"HugFun","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-30":{"appointments":[],"clinic":"HugFunFull","holiday":null,"shift":null,"shiftNotes":[]},"2026-08-31":{"appointments":[],"clinic":"OT โรงบาล","holiday":null,"shift":null,"shiftNotes":[]},"2026-09-01":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-09-08":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-09-15":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-09-22":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]},"2026-09-29":{"appointments":[],"clinic":"CDC","holiday":null,"shift":null,"shiftNotes":[]}};const THAI_MONTH_NAMES = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const WEEKDAYS_TH = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+const MONTH_THEMES = [
+  { bg: '#D3C2CD', text: '#1F5B54' }, { bg: '#849E15', text: '#EFCE7B' },
+  { bg: '#92A2A6', text: '#F8CABA' }, { bg: '#B28622', text: '#F8CABA' },
+  { bg: '#F8CABA', text: '#6777B6' }, { bg: '#D8560E', text: '#CBD183' },
+  { bg: '#EFCE7B', text: '#D8560E' }, { bg: '#E1903E', text: '#F8CABA' },
+  { bg: '#6777B6', text: '#CBD183' }, { bg: '#2B2B23', text: '#D3C2CD' },
+  { bg: '#D17089', text: '#EFCE7B' }, { bg: '#CBD183', text: '#7A3B42' },
+];
+
+const SHIFT_STYLE = {
+  'off':      { bar: '#D7D7D2', soft: '#2B2B23', date: '#FFFFFF', text: '#FFFFFF', count: '#2B2B23', label: 'off' },
+  'ปกส':      { bar: '#F7CED0', soft: '#E95F69', date: '#FFFFFF', text: '#FFFFFF', count: '#D34F5A', label: 'ปกส' },
+  'ฟุ้ง':     { bar: '#DDD3F6', soft: '#8B70E8', date: '#FFFFFF', text: '#FFFFFF', count: '#7659D1', label: 'ฟุ้ง' },
+  'Screen':   { bar: '#C8E9F4', soft: '#4DB9DF', date: '#163C45', text: '#163C45', count: '#2F8EAF', label: 'Screen' },
+  'DM':       { bar: '#F3E4BB', soft: '#E5B957', date: '#3A321B', text: '#3A321B', count: '#A47B19', label: 'DM' },
+  'รพ.สต.':   { bar: '#C9E9D8', soft: '#5AC38F', date: '#173F35', text: '#173F35', count: '#328263', label: 'รพ.สต.' },
+  '1/1':      { bar: '#F1CFBF', soft: '#DC805D', date: '#FFFFFF', text: '#FFFFFF', count: '#A95D40', label: '1/1' },
+};
+const TODAY_CONTRAST = {
+  'off':    { bg: '#FFFFFF', ink: '#2B2B23' },
+  'ปกส':    { bg: '#CBD183', ink: '#2B2B23' },
+  'ฟุ้ง':   { bg: '#EFCE7B', ink: '#2B2B23' },
+  'Screen': { bg: '#6777B6', ink: '#FFFFFF' },
+  'DM':     { bg: '#F8CABA', ink: '#2B2B23' },
+  'รพ.สต.': { bg: '#7A3B42', ink: '#FFFFFF' },
+  '1/1':    { bg: '#D8560E', ink: '#FFFFFF' },
+  default:  { bg: '#6777B6', ink: '#FFFFFF' },
+};
+
+const SHIFT_DEFAULTS = {
+  'off': 'วันหยุด ไม่มีเวร',
+  'ปกส': 'ออกตรวจ / เวรผู้ป่วยประกันสังคม (ปกส.)',
+  'ฟุ้ง': 'เวรหน่วยงาน "ฟุ้ง"',
+  'Screen': 'วันคัดกรอง / ตรวจคัดกรองผู้ป่วย',
+  'DM': 'เวรคลินิกเบาหวาน (DM)',
+  'รพ.สต.': 'ออกหน่วย รพ.สต. (โรงพยาบาลส่งเสริมสุขภาพตำบล)',
+  '1/1': 'เวร 1/1 (นัดพิเศษ / เข้าเวรครึ่งวัน)',
+};
+
+const CATEGORY_RENAMES = { 'ตรวจ': 'oral exam', 'อุดฟัน': 'CoF', 'ขูดหินปูน': 'ScFM' };
+const renameCategory = name => CATEGORY_RENAMES[name] || name;
+const migrateCategoryList = list => [...new Set((list || []).map(renameCategory))];
+const migrateCategoryStyles = styles => {
+  const next = {};
+  Object.entries(styles || {}).forEach(([name, style]) => { next[renameCategory(name)] = style; });
+  return next;
+};
+const migrateCaseCategories = input => Object.fromEntries(
+  Object.entries(input || {}).map(([id, c]) => [id, { ...c, category: renameCategory(c.category) }])
+);
+
+const DEFAULT_CATEGORIES = ['oral exam', 'CoF', 'ScFM', 'RPD', 'TP', 'CD', 'ENDO', 'SUR', 'Stitch off', 'F/U', 'อื่นๆ'];
+const CATEGORY_STYLE = {
+  'oral exam':  { bg: '#EDEAE0', text: '#5C6D68' },
+  'CoF':        { bg: '#E4EFEA', text: '#1F5B54' },
+  'ScFM':       { bg: '#E1EDE3', text: '#3F6349' },
+  'RPD':        { bg: '#EFE1EA', text: '#63405A' },
+  'TP':         { bg: '#EFE1EA', text: '#63405A' },
+  'CD':         { bg: '#EFE1EA', text: '#63405A' },
+  'ENDO':       { bg: '#F7E4DD', text: '#9C4530' },
+  'SUR':        { bg: '#FBDADA', text: '#A33636' },
+  'Stitch off': { bg: '#FBDADA', text: '#A33636' },
+  'F/U':        { bg: '#E3E7F3', text: '#3C4A75' },
+  'อื่นๆ':      { bg: '#F0EBDD', text: '#8A7F63' },
+};
+const CATEGORY_THEME_OPTIONS = {
+  lilac: { label: 'Lilac Grey', bg: '#E3D9E1', text: '#5B4E75' },
+  spring: { label: 'Spring Leaves', bg: '#DCE5B8', text: '#5F6E21' },
+  surf: { label: 'Good Surf', bg: '#D7E0E4', text: '#4F6476' },
+  pink: { label: 'Brink of Pink', bg: '#F4DED7', text: '#7B5B72' },
+  poppy: { label: 'Poppy', bg: '#F2D4C5', text: '#A45232' },
+  butter: { label: 'Butter Yellow', bg: '#F2E3B9', text: '#7C662C' },
+  pea: { label: 'Pea Flower', bg: '#D7DEF1', text: '#435AA3' },
+  forest: { label: 'Night Forest', bg: '#D9DDD7', text: '#404940' },
+  berry: { label: 'Dusty Berry', bg: '#EDD8DE', text: '#92566A' },
+  pistachio: { label: 'Pistachio', bg: '#E4E7C7', text: '#5D6A2B' },
+};
+const CATEGORY_KEYWORDS = [
+  ['RPD', 'RPD'], ['TP', 'TP'], ['CD', 'CD'], ['RCT', 'ENDO'], ['ENDO', 'ENDO'],
+  ['SUR', 'SUR'], ['stitch', 'Stitch off'], ['f/u', 'F/U'], ['recheck', 'F/U'],
+  ['ขูด', 'ScFM'], ['อุด', 'CoF'], ['ตรวจ', 'oral exam'],
+];
+
+const SKIP_WORDS = new Set(['ฟุ้ง', 'off', 'Screen', 'ปกส', 'รพ.สต.', '1/1', 'DM', 'เตียงเสริม']);
+const TIME_RE = /^(\d{1,2}:\d{2})\s*(.*)$/;
+
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+function dateKey(y, m, d) { return `${y}-${pad(m)}-${pad(d)}`; }
+function daysInMonth(y, m) { return new Date(y, m, 0).getDate(); }
+function firstWeekday(y, m) { return new Date(y, m - 1, 1).getDay(); }
+function timeToMin(t) { if (!t) return 0; const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+function minToTime(mins) { const h = Math.floor(mins / 60) % 24; const m = mins % 60; return `${pad(h)}:${pad(m)}`; }
+function uid() { return Math.random().toString(36).slice(2, 10); }
+
+function mergeCasesByHn(input) {
+  const source = Object.values(input || {});
+  const firstVisitKey = c => {
+    const first = [...(c.visits || [])].sort((a, b) => ((a.date || '') + (a.time || '')).localeCompare((b.date || '') + (b.time || '')))[0];
+    return first ? (first.date || '') + (first.time || '') : '9999-99-99';
+  };
+  source.sort((a, b) => firstVisitKey(a).localeCompare(firstVisitKey(b)));
+  const merged = {};
+  const hnOwner = {};
+  source.forEach(c => {
+    const hnKey = String(c.hn || '').replace(/\D/g, '');
+    if (!hnKey) {
+      merged[c.id] = { ...c, visits: [...(c.visits || [])] };
+      return;
+    }
+    const ownerId = hnOwner[hnKey];
+    if (!ownerId) {
+      hnOwner[hnKey] = c.id;
+      merged[c.id] = { ...c, hn: hnKey, visits: [...(c.visits || [])] };
+      return;
+    }
+    const owner = merged[ownerId];
+    const extraVisits = (c.visits || []).map(v => ({ ...v, step: v.step || (c.name !== owner.name ? c.name : '') }));
+    owner.visits = [...(owner.visits || []), ...extraVisits].sort((a, b) => ((a.date || '') + (a.time || '')).localeCompare((b.date || '') + (b.time || '')));
+    if (!owner.phone && c.phone) owner.phone = c.phone;
+  });
+  return merged;
+}
+
+function parseHnCategory(text) {
+  let rest = (text || '').trim();
+  let hn = '';
+  const hnMatch = rest.match(/^(\d{4,7})\s+/);
+  if (hnMatch) { hn = hnMatch[1]; rest = rest.slice(hnMatch[0].length).trim(); }
+  let category = 'อื่นๆ';
+  for (const [kw, cat] of CATEGORY_KEYWORDS) {
+    const re = new RegExp('(^|[^a-zA-Zก-๙])' + kw.replace('/', '\\/') + '([^a-zA-Zก-๙]|$)', 'i');
+    if (re.test(rest)) { category = cat; break; }
+  }
+  return { hn, name: rest || text.trim(), category };
+}
+
+function parseLegacyToCases(apps) {
+  const out = [];
+  if (!apps) return out;
+  for (const line of apps) {
+    const m = line.match(TIME_RE);
+    if (!m) continue;
+    const time = m[1];
+    const rest = m[2].trim();
+    if (!rest || SKIP_WORDS.has(rest)) continue;
+    const { hn, name, category } = parseHnCategory(rest);
+    out.push({ time, hn, name, category });
+  }
+  return out;
+}
+
+function normalizeClockValue(raw, fallback = '13:00') {
+  const text = String(raw || '').trim().toUpperCase();
+  const meridiem = text.match(/\b(AM|PM)\b/)?.[1];
+  const parts = text.replace(/[^0-9:]/g, '').split(':');
+  let h, m;
+  if (parts.length >= 2) { h = Number(parts[0]); m = Number(parts[1]); }
+  else { const digits = text.replace(/\D/g, ''); if (digits.length < 3) return fallback; const padded = digits.padStart(4, '0').slice(-4); h = Number(padded.slice(0, 2)); m = Number(padded.slice(2)); }
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return fallback;
+  if (meridiem) h = h % 12 + (meridiem === 'PM' ? 12 : 0);
+  h = Math.min(23, Math.max(0, h)); m = Math.min(59, Math.max(0, m));
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+function TimeField({ value, onChange, style = {} }) {
+  const [draft, setDraft] = useState(value || '13:00');
+  useEffect(() => setDraft(value || '13:00'), [value]);
+  const commit = () => { const next = normalizeClockValue(draft, value || '13:00'); setDraft(next); onChange(next); };
+  return <div className="custom-time-field" style={style}><input type="text" inputMode="numeric" value={draft} onChange={e => setDraft(e.target.value.replace(/[^0-9: APMapm]/g, '').slice(0, 8))} onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commit(); e.currentTarget.blur(); } }} aria-label="เวลา" placeholder="13:00" /><Icon name="stopwatchSolid" size={15} color="currentColor" /></div>;
+}
+
+function DateField({ value, onChange, style = {} }) {
+  const initial = /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? value : new Date().toISOString().slice(0, 10);
+  const [open, setOpen] = useState(false);
+  const [popupPos, setPopupPos] = useState({ left: 10, top: 48 });
+  const [cursor, setCursor] = useState(() => { const [y,m] = initial.split('-').map(Number); return { y, m }; });
+  const ref = useRef(null);
+  const popRef = useRef(null);
+  useEffect(() => { const close = e => { if (ref.current && !ref.current.contains(e.target) && (!popRef.current || !popRef.current.contains(e.target))) setOpen(false); }; document.addEventListener('pointerdown', close); return () => document.removeEventListener('pointerdown', close); }, []);
+  useEffect(() => { if (/^\d{4}-\d{2}-\d{2}$/.test(value || '')) { const [y,m] = value.split('-').map(Number); setCursor({ y, m }); } }, [value]);
+  const days = new Date(cursor.y, cursor.m, 0).getDate();
+  const offset = new Date(cursor.y, cursor.m - 1, 1).getDay();
+  const move = delta => setCursor(({ y, m }) => { const d = new Date(y, m - 1 + delta, 1); return { y: d.getFullYear(), m: d.getMonth() + 1 }; });
+  const choose = day => { onChange(`${cursor.y}-${String(cursor.m).padStart(2,'0')}-${String(day).padStart(2,'0')}`); setOpen(false); };
+  const selectedDay = value?.startsWith(`${cursor.y}-${String(cursor.m).padStart(2,'0')}-`) ? Number(value.slice(-2)) : -1;
+  const toggle = () => { if (!open && ref.current) { const r = ref.current.getBoundingClientRect(); setPopupPos({ left: Math.max(10, Math.min(r.left, window.innerWidth - 282)), top: r.bottom + 7 }); } setOpen(v => !v); };
+  return <div ref={ref} className="custom-date-field" style={{ ...style, position: 'relative' }}>
+    <button type="button" onClick={toggle} aria-label="เลือกวันที่"><span>{value || 'เลือกวันที่'}</span><Icon name="calendarSolid" size={15} /></button>
+    {open && ReactDOM.createPortal(<div ref={popRef} className="custom-date-popover" style={{ left: popupPos.left, top: popupPos.top }}>
+      <div className="custom-date-head"><button type="button" onClick={() => move(-1)}><Icon name="chevronLeft" size={17}/></button><strong>{new Date(cursor.y, cursor.m - 1).toLocaleDateString('en-US',{month:'long'})} {cursor.y}</strong><button type="button" onClick={() => move(1)}><Icon name="chevronRight" size={17}/></button></div>
+      <div className="custom-date-grid">{['SUN','MON','TUE','WED','THU','FRI','SAT'].map(x => <b key={x}>{x}</b>)}{Array.from({length: offset},(_,i)=><span key={`e${i}`} />)}{Array.from({length: days},(_,i)=>i+1).map(day => <button type="button" key={day} className={day === selectedDay ? 'selected' : ''} onClick={() => choose(day)}>{day}</button>)}</div>
+    </div>, document.body)}
+  </div>;
+}
+
+function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '', onSignOut = null }) {
+  const initials = (displayName || email.split('@')[0] || 'HOS').trim().slice(0, 2).toUpperCase();
+  const accountName = email.split('@')[0] || displayName || 'user';
+  return <div className="brand-bar">
+    <style>{`
+      .brand-bar { height:64px; padding:0 max(18px,calc((100vw - 950px)/2)); display:flex; align-items:center; justify-content:space-between; gap:18px; background:var(--theme-surface,#FFFFFF); color:var(--theme-primary,#35227F); border-bottom:1px solid var(--theme-line,rgba(49,89,201,.20)); box-sizing:border-box; font-family:'Nunito',sans-serif; }
+      .brand-id { display:flex; align-items:center; gap:12px; min-width:0; }
+      .brand-logo { width:42px; height:42px; flex:0 0 42px; display:grid; place-items:center; border-radius:13px; background:var(--theme-primary,#35227F); color:#fff; font-size:13px; font-weight:1000; letter-spacing:-.4px; }
+      .brand-title { font-size:17px; font-weight:1000; letter-spacing:.4px; line-height:1.05; white-space:nowrap; }
+      .brand-subtitle { margin-top:4px; color:var(--theme-muted,#6076B5); font-family:'Noto Sans Thai Looped',sans-serif; font-size:10px; white-space:nowrap; }
+      .brand-user { display:flex; align-items:center; gap:9px; }
+      .brand-online { width:8px; height:8px; border-radius:50%; background:var(--theme-online,#4ACB8A); box-shadow:0 0 0 3px rgba(74,203,138,.12); }
+      .brand-avatar { width:32px; height:32px; display:grid; place-items:center; border-radius:50%; background:var(--theme-soft,#E8ECF7); color:var(--theme-primary,#35227F); font-size:11px; font-weight:900; border:2px solid var(--theme-tint,#C8D0E6); box-shadow:0 2px 8px var(--theme-shadow,rgba(53,34,127,.16)); overflow:hidden; }
+      .brand-avatar img { width:100%; height:100%; object-fit:cover; }
+      .brand-email { max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--theme-text,#29236F); font-size:11px; font-weight:800; }
+      .brand-action { width:30px; height:30px; border:0; background:transparent; color:var(--theme-secondary,#3159C9); display:grid; place-items:center; cursor:pointer; padding:0; font-size:16px; }
+      .brand-signout { width:auto; padding:0 4px; color:#9D9D9D; font-size:10px; font-weight:700; }
+      @media(max-width:600px){ .brand-bar{height:54px;padding:0 14px}.brand-logo{width:34px;height:34px;flex-basis:34px;border-radius:10px;font-size:11px}.brand-title{font-size:14px}.brand-subtitle{display:none}.brand-user{gap:5px}.brand-avatar{width:27px;height:27px;font-size:9px}.brand-email{max-width:92px;font-size:9px}.brand-signout{display:none} }
+    `}</style>
+    <div className="brand-id"><div className="brand-logo">HOS</div><div><div className="brand-title">HOS SCHEDULE</div><div className="brand-subtitle">งานโรงพยาบาล &amp; นัดคนไข้</div></div></div>
+    <div className="brand-user"><span className="brand-online"/><span className="brand-avatar">{photoURL ? <img src={photoURL} alt={displayName || email} referrerPolicy="no-referrer"/> : initials}</span><span className="brand-email" title={email}>{accountName}</span><button className="brand-action" onClick={() => window.dispatchEvent(new CustomEvent('hos-open-settings'))} title="ตั้งค่า" aria-label="ตั้งค่า"><Icon name="settingsSolid" size={16}/></button>{onSignOut && <button className="brand-action brand-signout" onClick={onSignOut}>ออก</button>}</div>
+  </div>;
+}
+
+function ScheduleCalendar() {
+  const [view, setView] = useState('calendar');
+  useEffect(() => { const openSettings = () => setView('settings'); window.addEventListener('hos-open-settings', openSettings); return () => window.removeEventListener('hos-open-settings', openSettings); }, []);
+  const today0 = new Date();
+  const todayStr = dateKey(today0.getFullYear(), today0.getMonth() + 1, today0.getDate());
+  const [year, setYear] = useState(today0.getFullYear());
+  const [month, setMonth] = useState(today0.getMonth() + 1);
+  const [selected, setSelected] = useState(null);
+  const [shiftNotes, setShiftNotes] = useState(SHIFT_DEFAULTS);
+  const [editingLegend, setEditingLegend] = useState(false);
+  const [cases, setCases] = useState({});
+  const [shiftOverrides, setShiftOverrides] = useState({});
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [newCategory, setNewCategory] = useState('');
+  const [categoryStyles, setCategoryStyles] = useState(CATEGORY_STYLE);
+  const [newCategoryTheme, setNewCategoryTheme] = useState('pistachio');
+  const [holidays, setHolidays] = useState({});
+  const [newHolidayDate, setNewHolidayDate] = useState(todayStr);
+  const [newHolidayName, setNewHolidayName] = useState('');
+  const [loaded, setLoaded] = useState(false);
+
+  const [addMode, setAddMode] = useState('new');
+  const [addPanelOpen, setAddPanelOpen] = useState(false);
+  const [addChoiceOpen, setAddChoiceOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [pickedCaseId, setPickedCaseId] = useState(null);
+  const [historyCaseId, setHistoryCaseId] = useState(null);
+  const [patientListQuery, setPatientListQuery] = useState('');
+  const [patientSort, setPatientSort] = useState('date');
+  const [overviewPicker, setOverviewPicker] = useState(null);
+  const [overviewMonthIndex, setOverviewMonthIndex] = useState(today0.getMonth());
+  const overviewSwipeX = useRef(null);
+  useEffect(() => { setOverviewMonthIndex(year === today0.getFullYear() ? today0.getMonth() : 0); }, [year]);
+  const moveOverviewMonth = direction => setOverviewMonthIndex(current => Math.max(0, Math.min(11, current + direction)));
+  const overviewPressTimer = useRef(null);
+  const openOverviewPicker = (e, c, m) => setOverviewPicker({ date: c.dstr, year, month: m, x: e.clientX, y: e.clientY });
+  const startOverviewPress = (e, c, m) => {
+    if (!window.matchMedia('(max-width: 600px)').matches) return;
+    const point = { clientX: e.clientX, clientY: e.clientY };
+    overviewPressTimer.current = setTimeout(() => openOverviewPicker(point, c, m), 480);
+  };
+  const cancelOverviewPress = () => { if (overviewPressTimer.current) clearTimeout(overviewPressTimer.current); overviewPressTimer.current = null; };
+  const [editingCase, setEditingCase] = useState(false);
+  const [editCaseForm, setEditCaseForm] = useState({ hn: '', name: '', phone: '', category: 'oral exam' });
+  const [calendarEdit, setCalendarEdit] = useState(null);
+  const [calendarEditForm, setCalendarEditForm] = useState({ hn: '', name: '', phone: '', category: 'oral exam', time: '13:00', duration: 30, step: '' });
+  useEffect(() => { setEditingCase(false); }, [historyCaseId]);
+  useEffect(() => { if (view !== 'patients') { setHistoryCaseId(null); setEditingCase(false); } }, [view]);
+  useEffect(() => { setAddPanelOpen(false); setAddChoiceOpen(false); setCalendarEdit(null); if (selected) setFDate(selected); }, [selected]);
+  useEffect(() => {
+    if (!historyCaseId) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') {
+        setHistoryCaseId(null);
+        setEditingCase(false);
+      }
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [historyCaseId]);
+
+  const [fHn, setFHn] = useState('');
+  const [fName, setFName] = useState('');
+  const [fPhone, setFPhone] = useState('');
+  const [fCategory, setFCategory] = useState('ตรวจ');
+  const [fDate, setFDate] = useState(todayStr);
+  const [fTime, setFTime] = useState('13:00');
+  const [fDuration, setFDuration] = useState(30);
+  const [fStep, setFStep] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const legendRes = await window.storage.get('legend-notes', false);
+        if (legendRes?.value) {
+          const parsed = JSON.parse(legendRes.value);
+          if (parsed.shift) setShiftNotes({ ...SHIFT_DEFAULTS, ...parsed.shift });
+        }
+      } catch (e) {}
+
+      try {
+        const ovrRes = await window.storage.get('shift-overrides', false);
+        if (ovrRes?.value) setShiftOverrides(JSON.parse(ovrRes.value));
+      } catch (e) {}
+      try {
+        const holidayRes = await window.storage.get('holidays', false);
+        if (holidayRes?.value) setHolidays(JSON.parse(holidayRes.value));
+      } catch (e) {}
+
+      try {
+        const catRes = await window.storage.get('categories', false);
+        if (catRes?.value) {
+          const migratedCategories = migrateCategoryList(JSON.parse(catRes.value));
+          setCategories(migratedCategories);
+          try { await window.storage.set('categories', JSON.stringify(migratedCategories), false); } catch (e) {}
+        }
+      } catch (e) {}
+      try {
+        const styleRes = await window.storage.get('category-styles', false);
+        if (styleRes?.value) {
+          const migratedStyles = { ...CATEGORY_STYLE, ...migrateCategoryStyles(JSON.parse(styleRes.value)) };
+          setCategoryStyles(migratedStyles);
+          try { await window.storage.set('category-styles', JSON.stringify(migratedStyles), false); } catch (e) {}
+        }
+      } catch (e) {}
+
+      let caseData = null;
+      let caseReadFailed = false;
+      try {
+        const caseRes = await window.storage.get('cases', false);
+        if (caseRes?.value) caseData = JSON.parse(caseRes.value);
+      } catch (e) {
+        caseReadFailed = !String(e?.message || e).includes('key not found');
+        if (caseReadFailed) console.error('Could not read saved cases; refusing to overwrite them.', e);
+      }
+
+      if (caseData) {
+        const mergedCases = mergeCasesByHn(migrateCaseCategories(caseData));
+        setCases(mergedCases);
+        try { await window.storage.set('cases', JSON.stringify(mergedCases), false); } catch (e) {}
+      } else if (!caseReadFailed) {
+        let migrated = {};
+        let oldPatients = null;
+        try {
+          const oldRes = await window.storage.get('patient-entries', false);
+          if (oldRes?.value) oldPatients = JSON.parse(oldRes.value);
+        } catch (e) {}
+
+        if (oldPatients) {
+          Object.keys(oldPatients).forEach(dstr => {
+            (oldPatients[dstr] || []).forEach(entry => {
+              const { hn, name, category } = parseHnCategory(entry.name);
+              const id = uid();
+              migrated[id] = {
+                id, hn, name, phone: '', category,
+                visits: [{ id: uid(), date: dstr, time: entry.time, duration: entry.duration || 30, step: entry.note || '' }],
+              };
+            });
+          });
+        } else {
+          Object.keys(SCHEDULE_DATA).forEach(dstr => {
+            const parsed = parseLegacyToCases(SCHEDULE_DATA[dstr].appointments);
+            parsed.forEach(p => {
+              const id = uid();
+              migrated[id] = {
+                id, hn: p.hn, name: p.name, phone: '', category: p.category,
+                visits: [{ id: uid(), date: dstr, time: p.time, duration: 30, step: '' }],
+              };
+            });
+          });
+        }
+        const mergedCases = mergeCasesByHn(migrated);
+        setCases(mergedCases);
+        try { await window.storage.set('cases', JSON.stringify(mergedCases), false); } catch (e) {}
+      }
+      setLoaded(true);
+    })();
+  }, []);
+
+  const saveCases = async (next) => {
+    const mergedCases = mergeCasesByHn(migrateCaseCategories(next));
+    setCases(mergedCases);
+    try { await window.storage.set('cases', JSON.stringify(mergedCases), false); } catch (e) { console.error(e); }
+  };
+  const saveLegend = async (next) => {
+    setShiftNotes(next);
+    try { await window.storage.set('legend-notes', JSON.stringify({ shift: next }), false); } catch (e) {}
+  };
+  const saveOverrides = async (next) => {
+    setShiftOverrides(next);
+    try { await window.storage.set('shift-overrides', JSON.stringify(next), false); } catch (e) {}
+  };
+  const saveHolidays = async (next) => {
+    setHolidays(next);
+    try { await window.storage.set('holidays', JSON.stringify(next), false); } catch (e) {}
+  };
+  const addHoliday = () => {
+    if (!newHolidayDate) return;
+    saveHolidays({ ...holidays, [newHolidayDate]: newHolidayName.trim() || 'วันหยุด' });
+    saveOverrides({ ...shiftOverrides, [newHolidayDate]: 'off' });
+    setNewHolidayName('');
+  };
+  const removeHoliday = (dstr) => {
+    const nextHolidays = { ...holidays }; delete nextHolidays[dstr]; saveHolidays(nextHolidays);
+    const nextOverrides = { ...shiftOverrides }; delete nextOverrides[dstr]; saveOverrides(nextOverrides);
+  };
+  const saveCategories = async (next) => {
+    const migratedCategories = migrateCategoryList(next);
+    setCategories(migratedCategories);
+    try { await window.storage.set('categories', JSON.stringify(migratedCategories), false); } catch (e) {}
+  };
+  const saveCategoryStyles = async (next) => {
+    const migratedStyles = migrateCategoryStyles(next);
+    setCategoryStyles(migratedStyles);
+    try { await window.storage.set('category-styles', JSON.stringify(migratedStyles), false); } catch (e) {}
+  };
+  const addCategory = () => {
+    const name = newCategory.trim();
+    if (!name || categories.includes(name)) return;
+    saveCategories([...categories, name]);
+    const theme = CATEGORY_THEME_OPTIONS[newCategoryTheme] || CATEGORY_THEME_OPTIONS.pistachio;
+    saveCategoryStyles({ ...categoryStyles, [name]: { bg: theme.bg, text: theme.text } });
+    setNewCategory('');
+  };
+  const removeCategory = (name) => {
+    if (DEFAULT_CATEGORIES.includes(name)) return;
+    saveCategories(categories.filter(c => c !== name));
+    const next = { ...categoryStyles }; delete next[name]; saveCategoryStyles(next);
+  };
+
+  const getShift = (dstr) => shiftOverrides[dstr] !== undefined ? shiftOverrides[dstr] : (SCHEDULE_DATA[dstr]?.shift || null);
+  const setShift = (dstr, code) => saveOverrides({ ...shiftOverrides, [dstr]: code || null });
+
+  const buildCells = (y, m) => {
+    const fw = firstWeekday(y, m);
+    const nd = daysInMonth(y, m);
+    const arr = [];
+    for (let i = 0; i < fw; i++) arr.push(null);
+    for (let d = 1; d <= nd; d++) {
+      const dstr = dateKey(y, m, d);
+      arr.push({ day: d, dstr, info: SCHEDULE_DATA[dstr] || null, shift: getShift(dstr) });
+    }
+    while (arr.length % 7 !== 0) arr.push(null);
+    return arr;
+  };
+
+  const visitsForDate = (dstr) => {
+    const out = [];
+    Object.values(cases).forEach(c => {
+      (c.visits || []).forEach(v => { if (v.date === dstr) out.push({ case: c, visit: v }); });
+    });
+    return out.sort((a, b) => timeToMin(a.visit.time) - timeToMin(b.visit.time));
+  };
+  const countForDate = (dstr) => Object.values(cases).reduce((n, c) => n + (c.visits || []).filter(v => v.date === dstr && v.status !== 'cancelled').length, 0);
+
+  const cells = useMemo(() => buildCells(year, month), [year, month, shiftOverrides]);
+  const selInfo = selected ? SCHEDULE_DATA[selected] : null;
+  const selShift = selected ? getShift(selected) : null;
+  const dayVisits = selected ? visitsForDate(selected) : [];
+  const leftoverNotes = (selInfo?.appointments || []).filter(line => {
+    const m = line.match(TIME_RE);
+    return !m || SKIP_WORDS.has((m[2] || '').trim());
+  });
+
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.trim().toLowerCase();
+    return Object.values(cases).filter(c => c.hn.includes(q) || c.name.toLowerCase().includes(q)).slice(0, 8);
+  }, [searchQuery, cases]);
+
+  const patientListResults = useMemo(() => {
+    const q = patientListQuery.trim().toLowerCase();
+    let list = Object.values(cases);
+    if (q) list = list.filter(c => c.hn.includes(q) || c.name.toLowerCase().includes(q) || c.category.toLowerCase().includes(q));
+    return list.map(c => {
+      const active = c.visits.filter(v => v.status !== 'cancelled');
+      const cancelledCount = c.visits.length - active.length;
+      const future = active.filter(v => v.date >= todayStr).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+      const past = active.filter(v => v.date < todayStr).sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+      const nextVisit = future[0] || null;
+      const lastVisit = past[0] || null;
+      return { ...c, activeCount: active.length, cancelledCount, nextVisit, lastVisit };
+    }).sort((a, b) => {
+      if (patientSort === 'name') return a.name.localeCompare(b.name, 'th');
+      if (patientSort === 'hn') return (a.hn || '').localeCompare(b.hn || '', undefined, { numeric: true });
+      if (patientSort === 'category') return (a.category || '').localeCompare(b.category || '', 'th') || a.name.localeCompare(b.name, 'th');
+      const aDate = a.nextVisit?.date || a.lastVisit?.date || '9999-12-31';
+      const bDate = b.nextVisit?.date || b.lastVisit?.date || '9999-12-31';
+      return aDate.localeCompare(bDate);
+    });
+  }, [patientListQuery, patientSort, cases]);
+
+  const resetNewForm = () => { setFHn(''); setFName(''); setFPhone(''); setFCategory('oral exam'); setFDate(selected || todayStr); setFTime('13:00'); setFDuration(30); setFStep(''); };
+
+  const createCase = () => {
+    if (!fDate || !fName.trim()) return;
+    const id = uid();
+    const next = {
+      ...cases,
+      [id]: {
+        id, hn: fHn.trim(), name: fName.trim(), phone: fPhone.trim(), category: fCategory,
+        visits: [{ id: uid(), date: fDate, time: fTime, duration: fDuration, step: fStep.trim() }],
+      },
+    };
+    saveCases(next);
+    resetNewForm();
+    setAddPanelOpen(false);
+  };
+
+  const addVisitToCase = () => {
+    if (!fDate || !pickedCaseId || !cases[pickedCaseId]) return;
+    const c = cases[pickedCaseId];
+    const nextCase = { ...c, visits: [...c.visits, { id: uid(), date: fDate, time: fTime, duration: fDuration, step: fStep.trim() }] };
+    saveCases({ ...cases, [pickedCaseId]: nextCase });
+    setPickedCaseId(null); setSearchQuery(''); resetNewForm();
+    setAddPanelOpen(false);
+  };
+
+  const removeVisit = (caseId, visitId) => {
+    const c = cases[caseId]; if (!c) return;
+    const nextVisits = c.visits.filter(v => v.id !== visitId);
+    const next = { ...cases };
+    if (nextVisits.length === 0) delete next[caseId]; else next[caseId] = { ...c, visits: nextVisits };
+    saveCases(next);
+    if (nextVisits.length === 0 && historyCaseId === caseId) setHistoryCaseId(null);
+  };
+
+  const toggleCancelVisit = (caseId, visitId) => {
+    const c = cases[caseId]; if (!c) return;
+    const nextVisits = c.visits.map(v => v.id === visitId ? { ...v, status: v.status === 'cancelled' ? undefined : 'cancelled' } : v);
+    saveCases({ ...cases, [caseId]: { ...c, visits: nextVisits } });
+  };
+
+  const deleteCase = (caseId) => {
+    const next = { ...cases }; delete next[caseId]; saveCases(next);
+    if (historyCaseId === caseId) setHistoryCaseId(null);
+  };
+  const startEditCase = (c) => { setEditCaseForm({ hn: c.hn || '', name: c.name || '', phone: c.phone || '', category: c.category || 'อื่นๆ' }); setEditingCase(true); };
+  const saveCaseEdit = () => {
+    if (!historyCase || !editCaseForm.name.trim()) return;
+    saveCases({ ...cases, [historyCase.id]: { ...historyCase, ...editCaseForm, hn: editCaseForm.hn.trim(), name: editCaseForm.name.trim(), phone: editCaseForm.phone.trim() } });
+    setEditingCase(false);
+  };
+
+  const goMonth = (delta) => {
+    let m = month + delta, y = year;
+    if (m < 1) { m = 12; y -= 1; } else if (m > 12) { m = 1; y += 1; }
+    setMonth(m); setYear(y); setSelected(null);
+  };
+  const openDay = (dstr, y, m) => { setYear(y); setMonth(m); setSelected(dstr); setView('calendar'); };
+  const jumpToVisit = (dstr) => { const [y, m] = dstr.split('-').map(Number); setYear(y); setMonth(m); setSelected(dstr); setView('calendar'); setHistoryCaseId(null); };
+  const openPatientHistory = (caseId) => {
+    setHistoryCaseId(caseId); setEditingCase(false); setView('patients');
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+  };
+  const editPatientFromCalendar = (c, v) => {
+    setCalendarEdit({ caseId: c.id, visitId: v.id });
+    setCalendarEditForm({ hn: c.hn || '', name: c.name || '', phone: c.phone || '', category: c.category || 'อื่นๆ', time: v.time || '13:00', duration: v.duration || 30, step: v.step || '' });
+  };
+  const saveCalendarPatientEdit = () => {
+    if (!calendarEdit || !calendarEditForm.name.trim()) return;
+    const c = cases[calendarEdit.caseId]; if (!c) return;
+    const visits = c.visits.map(v => v.id === calendarEdit.visitId ? { ...v, time: calendarEditForm.time, duration: Math.max(5, Number(calendarEditForm.duration) || 30), step: calendarEditForm.step.trim() } : v);
+    saveCases({ ...cases, [c.id]: { ...c, hn: calendarEditForm.hn.trim(), name: calendarEditForm.name.trim(), phone: calendarEditForm.phone.trim(), category: calendarEditForm.category, visits } });
+    setCalendarEdit(null);
+  };
+
+  const historyCase = historyCaseId ? cases[historyCaseId] : null;
+  const historyVisitsSorted = historyCase ? [...historyCase.visits].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)) : [];
+
+  const VisitRow = ({ c, v, showJump }) => {
+    const cs = categoryStyles[c.category] || categoryStyles['อื่นๆ'] || CATEGORY_STYLE['อื่นๆ'];
+    const cancelled = v.status === 'cancelled';
+    return (
+      <div style={{ padding: '8px 10px', borderRadius: 8, background: cancelled ? 'var(--theme-soft-alpha)' : 'var(--theme-surface)', marginBottom: 6, opacity: cancelled ? 0.7 : 1 }}>
+        <div className="visit-row-inner" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <button type="button" onClick={() => editPatientFromCalendar(c, v)} title="แก้เวลา" style={{ fontFamily: "'Kanit', sans-serif", fontSize: 13, fontWeight: 600, color: cancelled ? '#B9AF9A' : '#000000', minWidth: 92, textDecoration: cancelled ? 'line-through' : 'none', border: 'none', background: 'transparent', padding: 0, textAlign: 'left', cursor: 'pointer' }}>
+            {v.time}–{minToTime(timeToMin(v.time) + v.duration)}
+          </button>
+          <div style={{ flex: '1 1 180px', minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              {c.hn && <span style={{ fontSize: 12, fontFamily: "'IBM Plex Sans Thai', sans-serif", fontWeight: 700, color: '#6777B6' }}>HN {c.hn}</span>}
+              <span style={{ fontSize: 13.5, fontWeight: 600, color: cancelled ? '#B9AF9A' : '#1F3A35', textDecoration: cancelled ? 'line-through' : 'none' }}>{c.name}</span>
+              {cancelled && <span style={{ fontSize: 10, fontWeight: 700, color: '#A33636' }}>ยกเลิกแล้ว</span>}
+            </div>
+            {v.step && <div style={{ fontSize: 12, color: '#5C6D68', marginTop: 2 }}>{v.step}</div>}
+            {showJump && <button onClick={() => jumpToVisit(v.date)} style={{ fontSize: 11, color: '#1F5B54', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0, marginTop: 2 }}>{v.date} — ไปที่วันนัด</button>}
+          </div>
+          <span style={{ fontSize: 10.5, fontWeight: 700, padding: '3px 7px', borderRadius: 4, background: cs.bg, color: cs.text, whiteSpace: 'nowrap' }}>{c.category}</span>
+          {!showJump && !cancelled && <button onClick={() => { const d = new Date((selected || v.date) + 'T00:00:00'); d.setDate(d.getDate() + 1); setFDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); setAddMode('existing'); setPickedCaseId(c.id); setSearchQuery(''); setFTime(v.time || '13:00'); setFDuration(v.duration || 30); setFStep(''); setAddChoiceOpen(false); setAddPanelOpen(true); }} title="นัดต่อวันถัดไป" aria-label="นัดต่อวันถัดไป" style={{ minWidth: 58, height: 30, border: 'none', borderRadius: 9, background: '#E5E9D0', color: '#1F5B54', cursor: 'pointer', padding: '2px 8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 11.5, fontWeight: 800 }}><Icon name="calendarClock" size={13}/><span>นัดต่อ</span></button>}
+          {!showJump && <button onClick={() => editPatientFromCalendar(c, v)} title="แก้ไขข้อมูลคนไข้และหมายเหตุ" style={{ width: 26, height: 26, border: 'none', background: 'transparent', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="pencilSolid" size={13} /></button>}
+          <button onClick={() => openPatientHistory(c.id)} title="ดูประวัติเคส" aria-label="ดูประวัติเคส" style={{ width: 26, height: 26, border: 'none', background: 'transparent', cursor: 'pointer', padding: 3, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="historySolid" size={14} /></button>
+          <button onClick={() => toggleCancelVisit(c.id, v.id)} title={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} aria-label={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} style={{ width: 26, height: 26, borderRadius: 7, border: 'none', background: 'transparent', cursor: 'pointer', padding: 3, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name={cancelled ? 'rotateSolid' : 'noEntrySolid'} size={14} />
+          </button>
+          <button onClick={() => removeVisit(c.id, v.id)} title="ลบนัดนี้" aria-label="ลบนัดนี้" style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 2 }}><Icon name="x" size={14} /></button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ fontFamily: "'Sarabun', sans-serif", background: 'var(--theme-canvas, #FFFFFF)', minHeight: '100vh', color: 'var(--theme-text, #29236F)', padding: '20px 14px 0', display: 'flex', flexDirection: 'column' }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Nunito:wght@400;500;600;700;800;900&family=Noto+Sans+Thai+Looped:wght@400;500;600;700&display=swap');
+        :root {
+          --font-thai-body: 'Noto Sans Thai Looped', sans-serif;
+          --font-heading: 'Kanit', sans-serif;
+          --font-latin: 'Nunito', sans-serif;
+        }
+        [style*="Sarabun"] { font-family: var(--font-thai-body) !important; }
+        [style*="IBM Plex Sans Thai"] { font-family: var(--font-thai-body) !important; }
+        [style*="IBM Plex Mono"] { font-family: var(--font-latin) !important; }
+        [style*="Manrope"] { font-family: var(--font-latin) !important; }
+        input, select, textarea { font-family: var(--font-thai-body); }
+        .page-head h1 { letter-spacing: -.25px; }
+        .patient-scroll, .history-panel { font-family: var(--font-thai-body); }
+        .patient-scroll [style*="letter-spacing"], .history-panel [style*="letter-spacing"] { font-family: var(--font-latin); }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        @keyframes viewIn { from { opacity: .35; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+        .view-panel { animation: viewIn .28s cubic-bezier(.22,.8,.3,1) both; }
+        .cell:hover { transform: translateY(-2px); filter: brightness(.93); box-shadow: 0 4px 10px rgba(43,43,35,0.14); }
+        .cell { border-radius: 12px !important; transition: transform .2s ease, filter .2s ease, box-shadow .2s ease; cursor: pointer; }
+        .cell .calendar-date-number { height: 25px; display: flex; align-items: flex-start; line-height: 1; }
+        .cell .today-date { width: 25px; height: 25px; margin: -6px 0 0 -3px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--today-bg, #6777B6); color: var(--today-ink, #FFFFFF) !important; font-size: 12px !important; font-weight: 800 !important; line-height: 1 !important; box-shadow: 0 3px 9px rgba(43,43,35,.18); }
+        .ov-cell { transition: filter .15s ease, transform .15s ease; }
+        .ov-cell:hover { filter: brightness(.93); transform: translateY(-1px); }
+        .overview-grid { position:relative; max-width:760px; margin-left:auto; margin-right:auto; padding:18px 22px 34px; touch-action:pan-y; }
+        .overview-grid::before,.overview-grid::after{content:'';position:absolute;left:50%;transform:translateX(-50%);height:100%;border-radius:22px;background:#fff;pointer-events:none;box-shadow:0 12px 28px rgba(65,54,73,.08)}
+        .overview-grid::before{width:calc(100% - 30px);top:8px;opacity:.58;z-index:0}.overview-grid::after{width:calc(100% - 58px);top:17px;opacity:.30;z-index:0}
+        .overview-grid .overview-month{position:relative;z-index:2;animation:overviewCardIn .32s cubic-bezier(.22,.8,.3,1)}
+        .overview-deck-controls{position:absolute;z-index:4;left:4px;right:4px;top:50%;transform:translateY(-50%);display:flex;justify-content:space-between;pointer-events:none}
+        .overview-deck-controls button{pointer-events:auto;width:36px;height:36px;border:0;border-radius:50%;background:rgba(243,234,227,.88);color:#6777B6;box-shadow:0 5px 16px rgba(65,54,73,.12);cursor:pointer;font-size:21px;font-weight:800}
+        .overview-deck-controls button:disabled{opacity:.2;cursor:default}
+        .overview-deck-dots{position:relative;z-index:3;display:flex;justify-content:center;gap:5px;margin-top:14px}.overview-deck-dots button{width:6px;height:6px;padding:0;border:0;border-radius:50%;background:#D3C2CD;cursor:pointer}.overview-deck-dots button.active{width:18px;border-radius:8px;background:#6777B6}
+        @keyframes overviewCardIn{from{opacity:.35;transform:translateX(16px) scale(.985)}to{opacity:1;transform:none}}
+        .overview-month { background: #FFFFFF; border-radius: 20px; overflow: hidden; display: grid; grid-template-columns: 190px 1fr; min-height: 310px; }
+        .overview-month-side { padding: 26px 22px; display: flex; flex-direction: column; }
+        .overview-month-calendar { padding: 24px 26px; }
+        .calendar-week-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); max-width: 760px; margin-left: auto; margin-right: auto; }
+        .calendar-week-grid .cell { aspect-ratio: 1.25 / 1; min-height: 0 !important; }
+        .overview-week-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+        .overview-shift-popover { position: fixed; width: 196px; box-sizing: border-box; background: rgba(250,246,239,.58); backdrop-filter: blur(18px) saturate(115%); -webkit-backdrop-filter: blur(18px) saturate(115%); border: 1px solid rgba(255,255,255,.58); border-radius: 15px; padding: 10px; box-shadow: 0 14px 36px rgba(43,43,35,.14); z-index: 81; }
+        .overview-shift-popover::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.60); }
+        .overview-shift-popover button { padding: 6px 7px !important; border-radius: 8px !important; font-size: 11.5px; min-height: 30px; }
+        .overview-shift-popover > div[style*="grid-template-columns"] { gap: 5px !important; }
+        .calendar-room-legend{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;margin:4px auto 20px;max-width:880px}.calendar-room-pill{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:999px;padding:7px 11px;background:#E9DDD2;color:#5C6D68;font-size:10.5px;font-weight:700;cursor:pointer}.calendar-room-pill .dot{width:7px;height:7px;border-radius:50%;flex:0 0 7px}.calendar-room-pill small{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;font-weight:500;opacity:.72}.calendar-modal-backdrop{position:fixed;inset:0;z-index:70;background:rgba(31,58,53,.28);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}.calendar-day-modal{position:fixed;z-index:71;left:50%;top:50%;transform:translate(-50%,-50%);width:min(880px,calc(100vw - 30px));max-height:calc(100vh - 34px);overflow-y:auto;background:#FAF6EF;border-radius:22px;padding:18px;box-sizing:border-box;box-shadow:0 24px 70px rgba(43,43,35,.24);animation:dayModalIn .24s ease-out}@keyframes dayModalIn{from{opacity:0;transform:translate(-50%,-47%) scale(.98)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+        .calendar-room-legend{justify-content:flex-start;margin-left:0;margin-right:0}
+        .tab-btn { transition: all 0.15s ease; }
+        .nav-icon { width: 31px; height: 31px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: transparent; color: #FFFFFF; cursor: pointer; transition: color .15s ease, transform .15s ease; }
+        .nav-icon:hover { color: #EFCE7B !important; transform: translateY(-1px); }
+        .nav-icon.active { color: #CBD183; }
+        .nav-group { position: relative; display: grid; grid-template-columns: repeat(3,1fr); align-items: center; padding: 3px; border-radius: 999px; background: #FFFFFF; overflow: hidden; }
+        .nav-group::before { content: ''; position: absolute; left: 3px; top: 3px; bottom: 3px; width: calc((100% - 6px) / 3); border-radius: 999px; background: #CBD183; opacity: 1; transform: translateX(0); transition: transform 280ms cubic-bezier(.22,.8,.3,1), opacity 160ms ease; }
+        .nav-group.nav-overview::before { transform: translateX(100%); }
+        .nav-group.nav-patients::before { transform: translateX(200%); }
+        .nav-group.nav-settings::before { opacity: 0; }
+        .nav-text { position: relative; z-index: 1; min-width: 64px; border: none; background: transparent; color: #2B2B23; padding: 6px 11px; border-radius: 999px; font-family: 'Kanit', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: color .2s ease, transform .2s ease; }
+        .nav-text:hover { color: #D8560E; transform: translateY(-1px); }
+        .nav-text.active { color: #1F5B54; background: transparent; }
+        @media (prefers-reduced-motion: reduce) { .nav-group::before { transition-duration: 1ms; } }
+        .stepbtn { transition: background 0.15s ease; }
+        .stepbtn:hover { background: #3159C9 !important; color: #FFFFFF !important; }
+        .search-item:hover { background: #F0EBDD !important; }
+        .patient-workspace { display: grid; grid-template-columns: 124px minmax(0,1fr); gap: 16px; min-height: 0; flex: 1; }
+        .patient-sidebar { background: #D3C2CD; border-radius: 14px; padding: 7px; align-self: start; display: grid; gap: 4px; }
+        .patient-sort-btn { border: 0; background: transparent; color: #4B4F62; border-radius: 9px; padding: 10px 11px; text-align: left; font-family: 'Nunito', monospace; font-size: 12px; font-weight: 800; cursor: pointer; transition: background .18s ease, color .18s ease, transform .18s ease; }
+        .patient-sort-btn:hover { background: rgba(255,255,255,.42); transform: translateX(2px); }
+        .patient-sort-btn.active { background: #345EAE; color: #FFFFFF; }
+        .patient-list-main { min-width: 0; display: flex; flex-direction: column; }
+        .patient-table-head, .plist-row { display: grid; grid-template-columns: 115px minmax(150px,1.6fr) 90px 58px 145px; gap: 10px; align-items: center; }
+        .patient-table-head { padding: 0 13px 7px; color: #A9AEC2; font-family: 'Nunito', monospace; font-size: 10px; font-weight: 900; letter-spacing: .7px; text-transform: uppercase; }
+        .plist-row { border: none !important; border-radius: 10px !important; padding: 11px 13px !important; margin: 0 !important; background: transparent !important; transition: background .18s ease, transform .18s ease; }
+        .plist-row:nth-child(odd) { background: #E2E3EA !important; }
+        .plist-row:hover { background: #CBD183 !important; transform: translateX(2px); }
+        .patient-hn { color: #345EAE; font-family: 'Nunito', monospace; font-weight: 900; font-size: 12px; }
+        .patient-name { color: #303447; font-family: var(--font-thai-body); font-size: 13px; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .patient-count, .patient-date { color: #5C6176; font-family: 'Nunito', monospace; font-size: 11px; }
+        .patient-date { text-align: right; }
+        .patient-search-minimal { border: none !important; border-bottom: 1px solid #D3C2CD !important; border-radius: 0 !important; background: transparent !important; padding: 8px 2px !important; }
+        .patient-search-minimal input { background: transparent !important; box-shadow: none !important; }
+        .patient-mobile-total { display: none; }
+        input, select { border: none !important; outline: none; }
+        .page-head { position: sticky; top: 0; z-index: 30; background: #6777B6; border-radius: 18px; padding: 18px 20px; box-shadow: 0 8px 22px rgba(103,119,182,.20); }
+        .history-panel { position: sticky; top: 112px; z-index: 20; }
+        .case-edit-grid { display: grid !important; grid-template-columns: 110px minmax(180px,2fr) 150px 120px; gap: 12px !important; }
+        .case-edit-grid input { width: 100% !important; min-width: 0 !important; height: 34px; box-sizing: border-box; padding: 0 4px !important; border: none !important; border-bottom: 1px solid #C8BEA6 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
+        .case-edit-grid input:focus { border-bottom-color: #1F5B54 !important; }
+        .case-edit-category, .case-edit-category > button { width: 100% !important; min-width: 0 !important; }
+        .case-edit-category > button { height: 34px !important; padding: 0 8px !important; border-radius: 6px !important; border: none !important; box-shadow: none !important; }
+        .patient-scroll { overflow-y: auto; padding-right: 4px; display: grid; grid-template-columns: 1fr; gap: 10px; align-content: start; }
+        .patient-scroll .plist-row { margin-bottom: 0 !important; }
+        .clean-select.patient-filter-select > button { width: 42px; height: 42px; padding: 4px !important; border-radius: 13px !important; background: transparent !important; box-shadow: none !important; justify-content: center !important; transition: transform .2s ease, filter .2s ease; }
+        .clean-select.patient-filter-select > button:hover { filter: brightness(.96); transform: translateY(-2px) rotate(-2deg); }
+        .clean-select-menu { position: absolute; top: calc(100% + 7px); left: 0; right: auto; width: 190px; min-width: 100%; max-width: min(240px, calc(100vw - 28px)); max-height: 250px; overflow-y: auto; box-sizing: border-box; padding: 7px; background: rgba(243,234,227,.48); backdrop-filter: blur(22px) saturate(120%); -webkit-backdrop-filter: blur(22px) saturate(120%); border: 0; border-radius: 16px; box-shadow: 0 16px 38px rgba(78,68,56,.16), inset 0 1px 0 rgba(255,255,255,.52); z-index: 120; }
+        .clean-select.align-right .clean-select-menu { left: auto; right: 0; }
+        .clean-select-menu button { width: 100%; border: none; background: transparent; color: #1F3A35; padding: 9px 12px; border-radius: 10px; text-align: left; font-family: var(--font-thai-body); font-size: 12px; font-weight: 500; cursor: pointer; transition: background .15s ease, color .15s ease; }
+        .clean-select-menu button:hover { background: rgba(183,165,143,.28); color: #50668F; }
+        .clean-select-menu button.selected { background: rgba(183,165,143,.68); color: #425D91; font-weight: 800; }
+        .clean-select-menu::-webkit-scrollbar { width: 5px; }
+        .clean-select-menu::-webkit-scrollbar-thumb { background: rgba(138,127,99,.30); border-radius: 99px; }
+        .clean-select-arrow { font-family: var(--font-latin); font-size: 15px; line-height: 1; transform: translateY(-2px); }
+        .legend-card { overflow: hidden; box-shadow: 0 8px 22px rgba(43,43,35,.10); }
+        .legend-head { background: #6777B6; color: #FFFFFF; margin: -16px -16px 14px; padding: 13px 16px; }
+        .legend-row { background: #FFFFFF; color: #2B2B23; border-radius: 8px; padding: 7px 9px; }
+        .settings-section { background: transparent !important; border-radius: 0 !important; padding: 18px 4px 22px !important; margin-bottom: 0 !important; border-bottom: 1px solid #D3C2CD; }
+        .settings-title { font-family: 'Nunito', var(--font-thai-body) !important; font-size: 14px !important; font-weight: 900 !important; letter-spacing: .2px; color: #6F7690 !important; margin-bottom: 12px !important; }
+        .settings-section input { background: #E2E3EA !important; color: #303447 !important; border-radius: 8px !important; }
+        .settings-section input::placeholder { color: #A9AEC2; }
+        .holiday-settings > div:last-child > div { background: transparent !important; border-radius: 0 !important; border-bottom: 1px solid rgba(211,194,205,.65); padding: 8px 4px !important; }
+        .category-settings .clean-select > button { box-shadow: none !important; }
+        .category-settings > div:last-child { padding-top: 2px; }
+        .settings-legend { background: transparent !important; box-shadow: none !important; border-radius: 0 !important; padding: 20px 4px !important; }
+        .settings-legend .legend-head { background: transparent !important; color: #6F7690 !important; margin: 0 0 10px !important; padding: 0 !important; }
+        .settings-legend .legend-head > div { color: #6F7690 !important; font-family: 'Nunito', var(--font-thai-body) !important; font-weight: 900 !important; }
+        .settings-legend .legend-row { background: transparent !important; border-radius: 0 !important; padding: 9px 4px !important; margin: 0 !important; border-bottom: 1px solid rgba(211,194,205,.65); align-items: center !important; }
+        .settings-legend .legend-row > span:last-child { color: #4B4F62 !important; }
+        @media (max-width: 600px) {
+          .patient-workspace { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+          .patient-mobile-total { display: block; flex: 0 0 auto; font-family: 'Nunito', monospace; font-size: 10.5px; font-weight: 900; color: #A9AEC2; margin: 0 2px 7px; }
+          .patient-sidebar { position: relative; z-index: 2; display: flex; flex: 0 0 auto; min-height: 42px; overflow-x: auto; overflow-y: hidden; border-radius: 12px; padding: 5px; gap: 4px; margin: 0; box-sizing: border-box; }
+          .patient-list-main { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+          .patient-scroll { padding-top: 2px; }
+          .patient-list-main > .patient-desktop-total { display: none; }
+          .patient-sort-btn { flex: 1 0 auto; text-align: center; padding: 7px 10px; font-size: 10px; }
+          .patient-table-head { display: none; }
+          .plist-row { grid-template-columns: auto minmax(0,1fr) auto; gap: 5px 9px; padding: 10px 11px !important; background: #FFFFFF !important; border-radius: 13px !important; }
+          .plist-row:nth-child(odd) { background: #E2E3EA !important; }
+          .patient-hn { grid-column: 1; }
+          .patient-name { grid-column: 2 / 4; }
+          .patient-category { grid-column: 1; grid-row: 2; justify-self: start; }
+          .patient-count { grid-column: 2; grid-row: 2; }
+          .patient-date { grid-column: 3; grid-row: 2; white-space: nowrap; }
+          .category-add-form { grid-template-columns: minmax(0,1fr) auto !important; }
+          .category-name-input { grid-column: 1 / -1; }
+          .category-theme-select, .category-theme-select > button { width: 100%; }
+          .category-add-button { min-width: 108px; }
+          .holiday-form { grid-template-columns: minmax(0,1fr) auto !important; }
+          .holiday-form .custom-date-field { grid-column: 1 / -1; }
+          .cell-shift-label { font-size: 8.5px !important; }
+          .overview-grid { max-width:none;padding:14px 10px 30px; }
+          .overview-month { grid-template-columns: 1fr; min-height: 0; }
+          .overview-month-side { min-height: 150px; padding: 20px; }
+          .overview-month-calendar { padding: 20px 14px; }
+          .calendar-week-grid { grid-template-columns: .52fr repeat(5, minmax(0, 1fr)) .52fr; gap: 5px !important; }
+          .calendar-week-grid .cell { aspect-ratio: auto; min-height: 62px !important; }
+          .custom-date-popover { left: 50% !important; top: 50% !important; right: auto !important; bottom: auto !important; width: min(300px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); overflow-y: auto; overscroll-behavior: contain; transform: translate(-50%, -50%); }
+          .case-add-panel .appointment-time-row { display: grid !important; grid-template-columns: 92px 108px minmax(112px,1fr); align-items: start !important; gap: 5px !important; width: 100%; }
+          .case-add-panel .appointment-time-row .custom-date-field, .case-add-panel .appointment-time-row .custom-date-field > button { width: 92px !important; min-width: 0 !important; }
+          .case-add-panel .appointment-time-row .custom-date-field > button { gap: 3px !important; padding: 0 5px !important; font-size: 10px !important; }
+          .case-add-panel .appointment-time-row .custom-date-field > button span { white-space: nowrap; }
+          .case-add-panel .appointment-time-row .custom-time-field { width: 108px; min-width: 0; padding: 0 6px; border-radius: 9px !important; }
+          .case-add-panel .appointment-time-row .custom-time-field input { width: 69px; }
+          .case-add-panel .appointment-time-row .duration-line { min-width: 0; display: grid !important; grid-template-columns: minmax(0,1fr); gap: 2px !important; }
+          .case-add-panel .appointment-time-row .duration-line > div { width: 100%; border-radius: 9px !important; }
+          .case-add-panel .appointment-time-row .duration-line > span:last-child { display: block; width: 100%; padding-right: 2px; text-align: right; font-size: 9.5px !important; white-space: nowrap; }
+          .overview-week-grid { grid-template-columns: .58fr repeat(5, minmax(0, 1fr)) .58fr; }
+          .overview-shift-popover { left: 50% !important; right: auto !important; bottom: 16px !important; top: auto !important; width: min(300px, calc(100vw - 28px)); transform: translateX(-50%); }
+          .calendar-room-legend{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding:0 4px 5px;margin-bottom:15px;scrollbar-width:none}.calendar-room-pill{flex:0 0 auto}.calendar-room-pill small{display:none}.calendar-day-modal{width:calc(100vw - 18px);max-height:calc(100vh - 18px);padding:12px;border-radius:18px}
+          .patient-scroll { grid-template-columns: 1fr; }
+          .page-head { position: relative; top: auto; border-radius: 18px; padding: 16px; }
+          .history-panel { position: relative; top: auto; }
+          .case-edit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .view-panel { animation-duration: .2s; }
+          .history-panel .history-actions { width: 100%; justify-content: flex-end !important; padding-right: 28px; box-sizing: border-box; }
+          .history-panel .history-close { position: absolute; top: 12px; right: 10px; }
+          .header-nav-wrap { margin-left: auto !important; margin-right: 0 !important; }
+          .visit-row-inner > span + button { margin-left: auto !important; }
+          .new-case-fields { grid-template-columns: minmax(92px,.8fr) minmax(0,1.35fr) !important; }
+          .appointment-time-row { align-items: center !important; }
+          .appointment-time-row { flex-wrap: nowrap !important; gap: 0 !important; }
+          .appointment-time-row > .custom-time-field { flex: 0 0 128px; min-width: 0; }
+          .duration-line { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap !important; gap: 6px !important; }
+          .duration-line .stepbtn { width: 25px !important; }
+          .duration-line > div > div { width: 62px !important; }
+          .duration-line > span:last-child { font-size: 10px !important; }
+        }
+        .new-case-category, .new-case-category > button { width: 100%; }
+        .settings-corner { position: absolute; right: 16px; top: 12px; z-index: 2; }
+        .case-add-panel input { height: 32px; padding-top: 0 !important; padding-bottom: 0 !important; background: transparent !important; border: none !important; border-radius: 8px !important; box-shadow: none !important; transition: background .18s ease; }
+        .case-add-panel input:focus { background: rgba(255,249,232,.42) !important; box-shadow: none !important; }
+        .case-add-panel .existing-case-search { height: 32px; padding-top: 3px !important; padding-bottom: 3px !important; background: transparent !important; border-radius: 8px !important; box-shadow: none !important; }
+        .case-add-panel .existing-case-search input { height: 26px; box-shadow: none !important; }
+        .case-add-panel .appointment-time-row { gap: 0 !important; }
+        .custom-time-field { height: 32px; display: inline-flex; align-items: center; gap: 7px; padding: 0 10px; box-sizing: border-box; border: none; border-radius: 9px; background: rgba(31,91,84,.88); color: #FFFFFF; box-shadow: none; }
+        .custom-time-field input { width: 76px; min-width: 0; height: 100%; padding: 0 !important; border: none !important; outline: none; background: transparent !important; color: inherit !important; font-family: 'Nunito', monospace !important; font-size: 14px !important; font-weight: 900 !important; letter-spacing: .3px; box-shadow: none !important; }
+        .custom-date-field > button { width: 100%; height: 34px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 11px; border: none; border-radius: 9px; background: rgba(226,227,234,.76); color: #303447; font: 800 12px 'Nunito', monospace; cursor: pointer; }
+        .holiday-settings { position: relative; z-index: 60; overflow: visible !important; }
+        .category-settings, .settings-legend { position: relative; z-index: 1; }
+        .custom-date-field { z-index: 200; }
+        .custom-date-popover { position: fixed; z-index: 9999; width: 272px; padding: 12px; box-sizing: border-box; border: none; border-radius: 18px; background: rgba(250,246,239,.86); backdrop-filter: blur(24px) saturate(118%); -webkit-backdrop-filter: blur(24px) saturate(118%); box-shadow: 0 20px 48px rgba(55,48,42,.24); isolation: isolate; overflow: hidden; }
+        .custom-date-popover::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: linear-gradient(145deg, rgba(255,255,255,.35), rgba(239,228,217,.16)); pointer-events: none; }
+        .custom-date-head { display: grid; grid-template-columns: 34px 1fr 34px; align-items: center; margin-bottom: 9px; color: #425D91; text-align: center; }
+        .custom-date-head button { width: 32px; height: 32px; display: grid; place-items: center; border: none; border-radius: 50%; background: transparent; color: #425D91; cursor: pointer; transition: background .16s ease, transform .16s ease; }
+        .custom-date-head button:hover { background: rgba(183,165,143,.26); transform: scale(1.06); }
+        .custom-date-head strong { font: 900 13px 'Nunito', monospace; }
+        .custom-date-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+        .custom-date-grid b { padding: 4px 0 6px; color: #8A7F63; font: 900 8px 'Nunito', monospace; text-align: center; }
+        .custom-date-grid button { aspect-ratio: 1; display: grid; place-items: center; padding: 0; border: none; border-radius: 50%; background: transparent; color: #303447; font: 800 11px 'Nunito', monospace; cursor: pointer; transition: background .15s ease, color .15s ease, transform .15s ease; }
+        .custom-date-grid button:hover { background: rgba(183,165,143,.36); color: #425D91; transform: scale(1.08); }
+        .custom-date-grid button.selected { background: #6777B6; color: #FFF7E8; }
+        .case-add-panel .appointment-time-row .custom-time-field { border-radius: 9px 0 0 9px; }
+        .case-add-panel .duration-line > div { height: 32px; background: #35227F; color: #FFFFFF; border-radius: 0 9px 9px 0 !important; }
+        .case-add-panel .duration-line .stepbtn { height: 32px !important; background: transparent !important; color: #FFFFFF !important; }
+        .case-add-panel .duration-line > div > div { width: 62px !important; height: 32px; display: flex; align-items: center; justify-content: center; color: #FFFFFF !important; font-family: 'Nunito', sans-serif !important; font-weight: 800 !important; white-space: nowrap; }
+        .case-add-panel .duration-line > span:last-child { color: #6076B5 !important; font-weight: 800; }
+        .motion-cta { position: relative !important; isolation: isolate; overflow: hidden; min-height: 34px; padding: 7px 13px 7px 38px !important; border: none !important; border-radius: 999px !important; background: #FFF9E8 !important; color: #1F5B54 !important; box-shadow: none !important; transition: color .42s cubic-bezier(.65,0,.076,1), transform .18s ease !important; }
+        .motion-cta::before { content: ''; position: absolute; z-index: -1; left: 3px; top: 50%; width: 28px; height: 28px; border-radius: 999px; background: #1F5B54; transform: translateY(-50%); transition: width .42s cubic-bezier(.65,0,.076,1), height .42s cubic-bezier(.65,0,.076,1), left .42s cubic-bezier(.65,0,.076,1); }
+        .motion-cta::after { content: '›'; position: absolute; left: 13px; top: 50%; color: #FFF9E8; font-size: 20px; font-weight: 500; line-height: 1; transform: translateY(-53%); transition: transform .42s cubic-bezier(.65,0,.076,1); }
+        @media (hover: hover) { .motion-cta:not(:disabled):hover { color: #FFF9E8 !important; transform: translateY(-1px); } .motion-cta:not(:disabled):hover::before { left: 0; width: 100%; height: 100%; } .motion-cta:not(:disabled):hover::after { transform: translate(6px,-53%); } }
+        .motion-cta:not(:disabled):active { color: #FFF9E8 !important; transform: scale(.98); }
+        .motion-cta:not(:disabled):active::before { left: 0; width: 100%; height: 100%; }
+        .motion-cta:disabled { opacity: .46; cursor: default !important; }
+        .overview-shift-popover button.motion-cta { padding-left: 35px !important; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #DCD4C4; border-radius: 4px; }
+      `}</style>
+
+      <div className="app-shell" style={{ width: '100%', maxWidth: 950, margin: '0 auto', boxSizing: 'border-box' }}>
+        <header className="page-head" style={{ marginBottom: 16 }}>
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: 2, color: '#CBD183', textTransform: 'uppercase', marginBottom: 4 }}>
+            งานโรงพยาบาล &amp; นัดคนไข้
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <h1 style={{ fontFamily: "'Kanit', sans-serif", fontSize: 24, fontWeight: 700, margin: 0, color: '#FFFFFF' }}>
+              {view === 'calendar' ? `${THAI_MONTH_NAMES[month - 1]} ${year}` : view === 'overview' ? `OVERVIEW ${year}` : view === 'patients' ? 'PATIENT LIST' : 'SETTINGS'}
+            </h1>
+            <div className="header-nav-wrap" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginLeft: 'auto', marginRight: 46 }}>
+              <div className={`nav-group nav-${view}`}>
+                <button onClick={() => setView('calendar')} className={`nav-text ${view === 'calendar' ? 'active' : ''}`}>ปฏิทิน</button>
+                <button onClick={() => setView('overview')} className={`nav-text ${view === 'overview' ? 'active' : ''}`}>ภาพรวม</button>
+                <button onClick={() => setView('patients')} className={`nav-text ${view === 'patients' ? 'active' : ''}`}>คนไข้</button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {view !== 'patients' && view !== 'settings' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, borderBottom: '2px solid #D3C2CD', paddingBottom: 10 }}>
+            <button onClick={() => setYear(year - 1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="chevronLeft" size={16} color="#6777B6" /></button>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, fontWeight: 600, color: '#6777B6' }}>ปี {year}</span>
+            <button onClick={() => setYear(year + 1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="chevronRight" size={16} color="#6777B6" /></button>
+            {view === 'calendar' && (
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <button onClick={() => goMonth(-1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="chevronLeft" size={20} color="#6777B6" /></button>
+                <span style={{ fontFamily: "'Kanit', sans-serif", fontSize: 14, fontWeight: 600, color: '#6777B6', minWidth: 90, textAlign: 'center' }}>{THAI_MONTH_NAMES[month - 1]}</span>
+                <button onClick={() => goMonth(1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}><Icon name="chevronRight" size={20} color="#6777B6" /></button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Case history opens as a focused modal, like DF Tracker */}
+        {historyCase && (
+          <>
+            <div className="case-history-backdrop" onClick={() => { setHistoryCaseId(null); setEditingCase(false); }} />
+            <section className={`history-panel case-history-modal ${editingCase ? 'is-editing' : ''}`} role="dialog" aria-modal="true" aria-label={`Case history ${historyCase.hn || historyCase.name}`}>
+              <header className="case-history-header">
+                <div className="case-history-heading">
+                  <span className="case-history-kicker">CASE HISTORY</span>
+                  {!editingCase && (
+                    <div className="case-history-patient">
+                      {historyCase.hn && <strong>HN {historyCase.hn}</strong>}
+                      <span>{historyCase.name}</span>
+                      <span className="case-history-category" style={{ background: (categoryStyles[historyCase.category] || CATEGORY_STYLE['อื่นๆ']).bg, color: (categoryStyles[historyCase.category] || CATEGORY_STYLE['อื่นๆ']).text }}>{historyCase.category}</span>
+                      {historyCase.phone && <span className="case-history-phone">{historyCase.phone}</span>}
+                    </div>
+                  )}
+                </div>
+                <div className="history-actions">
+                  <button className="history-action danger" onClick={() => deleteCase(historyCase.id)} title="ลบเคส" aria-label="ลบเคส"><Icon name="trashSolid" size={13} /></button>
+                  <button className="history-action" onClick={() => editingCase ? saveCaseEdit() : startEditCase(historyCase)} title={editingCase ? 'บันทึกข้อมูล' : 'แก้ไขข้อมูล'} aria-label={editingCase ? 'บันทึกข้อมูล' : 'แก้ไขข้อมูล'}>{editingCase ? <Icon name="saveSolid" size={13} /> : <Icon name="pencilSolid" size={13} />}</button>
+                  <button className="history-action history-close" onClick={() => { setHistoryCaseId(null); setEditingCase(false); }} title="ปิด" aria-label="ปิด"><Icon name="x" size={13} /></button>
+                </div>
+              </header>
+
+              {editingCase && (
+                <div className="case-edit-surface">
+                  <div className="case-edit-grid">
+                    <label className="case-edit-field"><span>HN</span><input value={editCaseForm.hn} onChange={e => setEditCaseForm({ ...editCaseForm, hn: e.target.value })} placeholder="HN" /></label>
+                    <label className="case-edit-field"><span>ชื่อคนไข้</span><input value={editCaseForm.name} onChange={e => setEditCaseForm({ ...editCaseForm, name: e.target.value })} placeholder="ชื่อคนไข้" /></label>
+                    <label className="case-edit-field"><span>เบอร์ติดต่อ</span><input value={editCaseForm.phone} onChange={e => setEditCaseForm({ ...editCaseForm, phone: e.target.value })} placeholder="เบอร์ติดต่อ" /></label>
+                    <label className="case-edit-field"><span>ประเภทงาน</span><CleanSelect className="case-edit-category" value={editCaseForm.category} onChange={category => setEditCaseForm({ ...editCaseForm, category })} options={categories.map(x => ({ value: x, label: x }))} style={{ background: (categoryStyles[editCaseForm.category] || CATEGORY_STYLE['อื่นๆ']).bg, color: (categoryStyles[editCaseForm.category] || CATEGORY_STYLE['อื่นๆ']).text }} ariaLabel="Category" /></label>
+                  </div>
+                  <div className="case-edit-footer">
+                    <button type="button" onClick={() => setEditingCase(false)}>ยกเลิก</button>
+                    <button type="button" className="primary" onClick={saveCaseEdit}><Icon name="saveSolid" size={12} />บันทึกข้อมูล</button>
+                  </div>
+                </div>
+              )}
+
+              <div className="case-history-visits">
+                <div className="case-history-visits-title">VISITS · {historyVisitsSorted.length}</div>
+                {historyVisitsSorted.map((v, idx) => {
+                  const cancelled = v.status === 'cancelled';
+                  return (
+                    <div className={`history-visit-row ${cancelled ? 'is-cancelled' : ''}`} key={v.id}>
+                      <span className="history-visit-index">Visit {idx + 1}</span>
+                      <span className="history-visit-date">{v.date} {v.time}</span>
+                      <span className="history-visit-step">{v.step || '—'}</span>
+                      {cancelled && <span className="history-visit-status">ยกเลิกแล้ว</span>}
+                      <div className="history-visit-actions">
+                        <button onClick={() => editPatientFromCalendar(historyCase, v)} title="เลื่อนนัด / แก้เวลา" aria-label="เลื่อนนัด / แก้เวลา"><Icon name="calendarSolid" size={13} /></button>
+                        <button onClick={() => jumpToVisit(v.date)} title="เปิดวันที่นัด" aria-label="เปิดวันที่นัด"><Icon name="folderOpenSolid" size={14} /></button>
+                        <button onClick={() => toggleCancelVisit(historyCase.id, v.id)} title={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'} aria-label={cancelled ? 'เอากลับมา' : 'ยกเลิกนัด'}><Icon name={cancelled ? 'rotateSolid' : 'noEntrySolid'} size={14} /></button>
+                        <button onClick={() => removeVisit(historyCase.id, v.id)} title="ลบนัด" aria-label="ลบนัด"><Icon name="x" size={12} /></button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          </>
+        )}
+
+        {view === 'calendar' && (
+          <>
+            <div className="view-panel calendar-table">
+            <div className="calendar-week-grid calendar-weekdays" style={{ display: 'grid' }}>
+              {WEEKDAYS_TH.map(w => <div key={w}>{w}</div>)}
+            </div>
+            <div className="calendar-week-grid calendar-days" style={{ display: 'grid' }}>
+              {cells.map((c, i) => {
+                if (!c) return <div key={'e' + i} className="cell empty-cell" aria-hidden="true" />;
+                const s = c.shift ? SHIFT_STYLE[c.shift] : null;
+                const isToday = c.dstr === todayStr;
+                const isSel = c.dstr === selected;
+                const vc = countForDate(c.dstr);
+                return (
+                  <div key={c.dstr} className={`cell ${isToday ? 'is-today' : ''} ${isSel ? 'is-selected' : ''}`} data-shift={c.shift || ''} onClick={() => setSelected(c.dstr)}
+                    style={{ minHeight: 62, borderRadius: 8, background: s ? s.soft : '#FFFFFF', border: isSel ? '2px solid #FFFFFF' : '2px solid transparent', padding: '6px 6px 4px', position: 'relative', overflow: 'hidden', '--room-bg': s ? s.soft : '#FFFFFF', '--room-date': s ? s.date : '#8F8A7D', '--room-text': s ? s.text : '#8F8A7D' }}>
+                    <div className="calendar-date-line">
+                      <span className="calendar-date-number">{c.day}</span>
+                      {s && <span className="calendar-room-dot" style={{ background: s.soft }} aria-hidden="true" />}
+                    </div>
+                    {(holidays[c.dstr] || c.info?.holiday) && <div style={{ fontSize: 9, color: '#FFFFFF', fontWeight: 700, lineHeight: 1.2, marginTop: 1 }}>{holidays[c.dstr] || c.info.holiday}</div>}
+                    {s && <div className="cell-shift-label" style={{ fontSize: 9.5, color: s.text, fontWeight: 600, marginTop: 2 }}>{s.label}</div>}
+                    {vc > 0 && <div className="calendar-visit-count">{vc}</div>}
+                  </div>
+                );
+              })}
+            </div>
+            </div>
+
+            <div className="calendar-room-legend">
+              {Object.entries(SHIFT_STYLE).map(([key, style]) => <button key={key} className="calendar-room-pill" data-shift={key} onClick={() => { const first = cells.find(c => c && c.shift === key); if (first) setSelected(first.dstr); }} title={shiftNotes[key] || key}><span className="dot" style={{ background: style.soft }} /><span>{style.label || key}</span></button>)}
+            </div>
+
+            {selected && (
+              <><div className="calendar-modal-backdrop" onClick={() => { setSelected(null); setHistoryCaseId(null); setAddPanelOpen(false); setAddChoiceOpen(false); }} />
+              <div className="calendar-day-modal" data-shift={selShift || ''} style={{ '--day-head-bg': selShift ? SHIFT_STYLE[selShift]?.soft : '#E5D8CD', '--day-head-ink': selShift === 'off' ? '#FFFFFF' : '#161B1A' }}>
+                <div className="day-modal-head" style={{ background: selShift ? SHIFT_STYLE[selShift]?.soft : '#FFFFFF', borderRadius: 14, padding: '12px 14px', marginBottom: 12, transition: 'background-color .25s ease' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                  <div>
+                    <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 18, fontWeight: 600, color: selShift ? SHIFT_STYLE[selShift]?.date : '#1F5B54' }}>
+                      {new Date(selected).toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                    </div>
+                    {selInfo?.holiday && <div style={{ fontSize: 12.5, color: '#9C4530', marginTop: 2 }}>วันหยุด: {selInfo.holiday}</div>}
+                  </div>
+                  <button onClick={() => { setSelected(null); setHistoryCaseId(null); }} style={{ width: 26, height: 26, border: 'none', background: 'none', color: selShift ? SHIFT_STYLE[selShift]?.date : '#1F5B54', cursor: 'pointer', padding: 5, display: 'grid', placeItems: 'center' }}><Icon name="x" size={14} color="currentColor" /></button>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: selShift ? SHIFT_STYLE[selShift]?.date : '#1F5B54' }}>เลือกห้อง</span>
+                  <CleanSelect value={selShift || ''} onChange={v => setShift(selected, v || null)}
+                    options={[{ value: '', label: '— ไม่ระบุ —' }, ...Object.keys(SHIFT_STYLE).map(k => ({ value: k, label: k }))]}
+                    className="day-room-select"
+                    style={{ minWidth: 126, fontSize: 12.5, fontWeight: 700, borderRadius: 0, padding: '7px 0', background: 'transparent', color: selShift === 'off' ? '#2B2B23' : (selShift ? SHIFT_STYLE[selShift]?.soft : '#5C6D68'), boxShadow: 'none' }} ariaLabel="เลือกห้อง" />
+                </div>
+                </div>
+
+                {selInfo?.shiftNotes?.length > 0 && <div style={{ fontSize: 13, color: '#5C6D68', marginBottom: 10 }}>หมายเหตุเวร: {selInfo.shiftNotes.join(' · ')}</div>}
+
+                <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 13, fontWeight: 700, color: '#000000', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, marginTop: 4 }}>Patient list</div>
+                {dayVisits.length > 0 ? (
+                  <div style={{ marginBottom: 12 }}>
+                    {dayVisits.map(({ case: c, visit: v }) => <VisitRow key={v.id} c={c} v={v} showJump={false} />)}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 13, color: '#B9AF9A', fontStyle: 'italic', marginBottom: 12 }}>ยังไม่มีคนไข้ในวันนี้</div>
+                )}
+
+                <div className="day-add-control" style={{ position: 'relative', display: 'flex', justifyContent: 'flex-end', margin: '2px 2px 12px' }}>
+                  {addChoiceOpen && !addPanelOpen && <div className="add-choice-popover" style={{ position: 'absolute', right: 0, bottom: 52, zIndex: 12, width: 205, padding: 8, borderRadius: 18, background: '#FFFFFF', boxShadow: '0 14px 36px rgba(43,43,35,.18)', display: 'grid', gap: 4 }}>
+                    <button onClick={() => { setAddMode('new'); setPickedCaseId(null); setAddPanelOpen(true); setAddChoiceOpen(false); }} style={{ border: 'none', borderRadius: 12, padding: '11px 13px', background: 'transparent', color: '#1F3A35', textAlign: 'left', cursor: 'pointer', fontWeight: 700 }}>เคสใหม่</button>
+                    <button onClick={() => { setAddMode('existing'); setAddPanelOpen(true); setAddChoiceOpen(false); }} style={{ border: 'none', borderRadius: 12, padding: '11px 13px', background: 'transparent', color: '#1F3A35', textAlign: 'left', cursor: 'pointer', fontWeight: 700 }}>เคสเดิม · นัดต่อเนื่อง</button>
+                  </div>}
+                  <button className="day-add-button" onClick={() => { if (addPanelOpen) { setAddPanelOpen(false); setAddChoiceOpen(false); } else setAddChoiceOpen(v => !v); }} aria-label="เพิ่มเคส" title="เพิ่มเคส" style={{ '--add-color': selShift ? SHIFT_STYLE[selShift]?.soft : '#6777B6', '--add-ink': selShift ? SHIFT_STYLE[selShift]?.date : '#6777B6', width: 34, height: 34, borderRadius: 11, border: '2px solid #E45C32', background: '#FFF7E8', color: '#E45C32', cursor: 'pointer', display: 'grid', placeItems: 'center', boxShadow: 'none', fontSize: 21, fontWeight: 800, lineHeight: 1, transform: addPanelOpen ? 'rotate(45deg)' : 'none', transition: 'transform .22s ease, filter .22s ease' }}><Icon name="plus" size={14}/></button>
+                </div>
+
+                {addPanelOpen && <div className="case-add-panel" style={{ background: '#EFCE7B', border: 'none', borderRadius: 10, padding: 14 }}>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                    <button onClick={() => { setAddMode('new'); setPickedCaseId(null); }} style={{ fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', background: addMode === 'new' ? '#35227F' : '#E8ECF7', color: addMode === 'new' ? '#FFFFFF' : '#6076B5' }}>เคสใหม่</button>
+                    <button onClick={() => setAddMode('existing')} style={{ fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', background: addMode === 'existing' ? '#35227F' : '#E8ECF7', color: addMode === 'existing' ? '#FFFFFF' : '#6076B5' }}>เคสเดิม (นัดต่อเนื่อง)</button>
+                  </div>
+
+                  {addMode === 'new' && (
+                    <>
+                      <div className="new-case-fields" style={{ display: 'grid', gridTemplateColumns: '90px minmax(140px,1fr) 130px minmax(120px,.65fr)', gap: 8, marginBottom: 8 }}>
+                        <input placeholder="HN" value={fHn} onChange={e => setFHn(e.target.value)} style={{ minWidth: 0, fontSize: 13, border: '1px solid #DCD4C4', borderRadius: 6, padding: '7px 9px', fontFamily: "'IBM Plex Mono', monospace" }} />
+                        <input placeholder="ชื่อคนไข้" value={fName} onChange={e => setFName(e.target.value)} style={{ minWidth: 0, fontSize: 13, border: '1px solid #DCD4C4', borderRadius: 6, padding: '7px 9px', fontFamily: "'Sarabun', sans-serif" }} />
+                        <input placeholder="เบอร์ติดต่อ" value={fPhone} onChange={e => setFPhone(e.target.value)} style={{ minWidth: 0, fontSize: 13, border: '1px solid #DCD4C4', borderRadius: 6, padding: '7px 9px', fontFamily: "'Sarabun', sans-serif" }} />
+                        <CleanSelect className="new-case-category" value={fCategory} onChange={setFCategory} options={categories.map(cat => ({ value: cat, label: cat }))}
+                          style={{ minWidth: 120, fontSize: 12.5, fontWeight: 600, borderRadius: 6, padding: '7px 10px', background: (categoryStyles[fCategory] || CATEGORY_STYLE['อื่นๆ']).bg, color: (categoryStyles[fCategory] || CATEGORY_STYLE['อื่นๆ']).text }} ariaLabel="ประเภทงาน" />
+                      </div>
+                    </>
+                  )}
+
+                  {addMode === 'existing' && !pickedCaseId && (
+                    <div style={{ marginBottom: 8, position: 'relative' }}>
+                      <div className="existing-case-search" style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', borderRadius: 6, padding: '6px 9px', background: '#FFFFFF' }}>
+                        <Icon name="search" size={13} color="#8A7F63" />
+                        <input placeholder="ค้นหาด้วย HN หรือชื่อ" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                          style={{ border: 'none', outline: 'none', fontSize: 13, flex: 1, fontFamily: "'Sarabun', sans-serif" }} />
+                      </div>
+                      {searchResults.length > 0 && (
+                        <div style={{ border: 'none', borderRadius: 6, marginTop: 4, overflow: 'hidden', background: '#FFFFFF' }}>
+                          {searchResults.map(c => (
+                            <div key={c.id} className="search-item" onClick={() => { setPickedCaseId(c.id); setSearchQuery(''); }}
+                              style={{ padding: '7px 10px', fontSize: 12.5, cursor: 'pointer', borderBottom: '1px solid #EAE3D3' }}>
+                              {c.hn && <span style={{ fontFamily: "'IBM Plex Mono', monospace", color: '#8A7F63', marginRight: 6 }}>HN {c.hn}</span>}
+                              <span style={{ fontWeight: 600 }}>{c.name}</span>
+                              <span style={{ color: '#8A7F63', marginLeft: 6 }}>({c.category} · {c.visits.length} ครั้ง)</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {addMode === 'existing' && pickedCaseId && cases[pickedCaseId] && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, background: '#F0EBDD', borderRadius: 6, padding: '6px 10px' }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 600 }}>{cases[pickedCaseId].hn ? `HN ${cases[pickedCaseId].hn} · ` : ''}{cases[pickedCaseId].name} ({cases[pickedCaseId].category})</span>
+                      <button onClick={() => setPickedCaseId(null)} style={{ marginLeft: 'auto', fontSize: 11.5, border: 'none', background: 'none', color: '#3159C9', cursor: 'pointer', textDecoration: 'underline' }}>เปลี่ยน</button>
+                    </div>
+                  )}
+
+                  <div className="appointment-time-row" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                    <DateField value={fDate} onChange={setFDate} ariaLabel="วันที่นัด" />
+                    <TimeField value={fTime} onChange={setFTime} />
+                    <div className="duration-line" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', border: 'none', borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
+                        <button className="stepbtn" onClick={() => setFDuration(Math.max(15, fDuration - 15))} style={{ border: 'none', background: '#F0EBDD', color: '#1F5B54', width: 28, height: 28, cursor: 'pointer', fontWeight: 700 }}><Icon name="minus" size={10}/></button>
+                        <div style={{ width: 56, textAlign: 'center', fontFamily: "'Nunito', sans-serif", fontSize: 13, fontWeight: 800 }}>{fDuration} min</div>
+                        <button className="stepbtn" onClick={() => setFDuration(fDuration + 15)} style={{ border: 'none', background: '#F0EBDD', color: '#1F5B54', width: 28, height: 28, cursor: 'pointer', fontWeight: 700 }}><Icon name="plus" size={10}/></button>
+                      </div>
+                      <span style={{ fontSize: 11.5, color: '#B9AF9A', whiteSpace: 'nowrap' }}>ถึง {minToTime(timeToMin(fTime) + fDuration)}</span>
+                    </div>
+                  </div>
+                  <input placeholder={addMode === 'new' ? 'หมายเหตุ / งานที่ทำ (ไม่บังคับ)' : 'ขั้นตอนครั้งนี้ เช่น "Insert RPD ครั้งที่ 2/3"'} value={fStep} onChange={e => setFStep(e.target.value)}
+                    style={{ width: '100%', fontSize: 13, border: '1px solid #DCD4C4', borderRadius: 6, padding: '7px 9px', marginBottom: 8, fontFamily: "'Sarabun', sans-serif" }} />
+
+                  {addMode === 'new' ? (
+                    <button className="motion-cta" onClick={createCase} disabled={!fName.trim()} style={{ fontSize: 12.5, fontWeight: 700, cursor: fName.trim() ? 'pointer' : 'default' }}>สร้างเคสใหม่</button>
+                  ) : (
+                    <button className="motion-cta" onClick={addVisitToCase} disabled={!pickedCaseId} style={{ fontSize: 12.5, fontWeight: 700, cursor: pickedCaseId ? 'pointer' : 'default' }}>เพิ่มนัดนี้ในเคส</button>
+                  )}
+                </div>}
+
+                {leftoverNotes.length > 0 && (
+                  <details style={{ marginTop: 14 }}>
+                    <summary style={{ fontSize: 11.5, fontWeight: 600, color: '#8A7F63', cursor: 'pointer' }}>หมายเหตุอื่นๆจากไฟล์เดิม ({leftoverNotes.length})</summary>
+                    <ul style={{ margin: '8px 0 0', paddingLeft: 18, fontSize: 12.5, lineHeight: 1.7, color: '#5C6D68' }}>
+                      {leftoverNotes.map((a, i) => <li key={i}>{a}</li>)}
+                    </ul>
+                  </details>
+                )}
+              </div></>
+            )}
+          </>
+        )}
+
+        {view === 'overview' && (
+          <div className="view-panel overview-grid" style={{ marginBottom: 22 }}
+            onPointerDown={e => { overviewSwipeX.current = e.clientX; }}
+            onPointerUp={e => { if (overviewSwipeX.current === null) return; const dx = e.clientX - overviewSwipeX.current; overviewSwipeX.current = null; if (Math.abs(dx) > 45) moveOverviewMonth(dx < 0 ? 1 : -1); }}
+            onPointerCancel={() => { overviewSwipeX.current = null; }}>
+            <div className="overview-deck-controls"><button disabled={overviewMonthIndex === 0} onClick={() => moveOverviewMonth(-1)} aria-label="เดือนก่อนหน้า"><Icon name="chevronLeft" size={13}/></button><button disabled={overviewMonthIndex === 11} onClick={() => moveOverviewMonth(1)} aria-label="เดือนถัดไป"><Icon name="chevronRight" size={13}/></button></div>
+            {[overviewMonthIndex].map(idx => {
+              const mname = THAI_MONTH_NAMES[idx];
+              const m = idx + 1;
+              const mc = buildCells(year, m);
+              const weeks = [];
+              for (let i = 0; i < mc.length; i += 7) weeks.push(mc.slice(i, i + 7));
+              const shiftCounts = mc.filter(Boolean).reduce((acc, c) => { if (c.shift) acc[c.shift] = (acc[c.shift] || 0) + 1; return acc; }, {});
+              const shiftTotal = Object.values(shiftCounts).reduce((a, b) => a + b, 0);
+              return (
+                <div key={m} className="overview-month">
+                  <div className="overview-month-side" style={{ background: MONTH_THEMES[idx].bg, color: MONTH_THEMES[idx].text }}>
+                    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", fontSize: 58, lineHeight: 1, fontWeight: 800 }}>{String(m).padStart(2, '0')}</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, marginTop: 8 }}>MONTH / {year}</div>
+                    <div style={{ marginTop: 'auto', paddingTop: 28 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8 }}>{shiftTotal} SHIFT DAYS</div>
+                      {Object.entries(shiftCounts).slice(0, 4).map(([key, total]) => <div key={key} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 10.5, marginTop: 5 }}><span>{key}</span><b>{total}</b></div>)}
+                    </div>
+                  </div>
+                  <div className="overview-month-calendar">
+                  <div style={{ textAlign: 'center', fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", fontWeight: 800, fontSize: 22, color: MONTH_THEMES[idx].bg, marginBottom: 18 }}>{new Date(year, idx, 1).toLocaleString('en-US', { month: 'long' }).toUpperCase()} {year}</div>
+                  <div className="overview-week-grid" style={{ display: 'grid', gap: 6, marginBottom: 7 }}>
+                    {WEEKDAYS_TH.map(w => <div key={w} style={{ textAlign: 'center', fontSize: 9.5, fontWeight: 700, color: '#000000', fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif", letterSpacing: .1 }}>{w}</div>)}
+                  </div>
+                  {weeks.map((wk, wi) => (
+                    <div key={wi} className="overview-week-grid" style={{ display: 'grid', gap: 6, marginBottom: 8 }}>
+                      {wk.map((c, ci) => {
+                        if (!c) return <div key={ci} style={{ minHeight: 38 }} />;
+                        const s = c.shift ? SHIFT_STYLE[c.shift] : null;
+                        return (
+                          <div key={c.dstr} style={{ minHeight: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div className="ov-cell" data-shift={c.shift || ''} onClick={e => { e.stopPropagation(); cancelOverviewPress(); openOverviewPicker(e, c, m); }} onPointerDown={e => startOverviewPress(e, c, m)} onPointerUp={cancelOverviewPress} onPointerCancel={cancelOverviewPress} onPointerLeave={cancelOverviewPress} onContextMenu={e => e.preventDefault()} title={c.shift || 'เลือกห้อง'}
+                            style={{ cursor: 'pointer', touchAction: 'manipulation', userSelect: 'none' }}>
+                            <span className="ov-day-number">{c.day}</span>
+                            {s && <span className="ov-room-dot" style={{ background: s.soft }} aria-hidden="true" />}
+                          </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                  </div>
+                </div>
+              );
+            })}
+            <div className="overview-deck-dots">{THAI_MONTH_NAMES.map((_, idx) => <button key={idx} className={idx === overviewMonthIndex ? 'active' : ''} onClick={() => setOverviewMonthIndex(idx)} aria-label={`เดือน ${idx + 1}`} />)}</div>
+          </div>
+        )}
+
+        {false && (
+          <div className="view-panel">
+            <div className="deck-hint">SWIPE UP / DOWN · {deckItems[deckIndex]?.dstr}</div>
+            <div className={`deck-stage ${deckDragging ? 'dragging' : ''}`}
+              onTouchStart={e => { if (deckGlideTimer.current) clearTimeout(deckGlideTimer.current); deckGlideTimer.current = null; deckTouchY.current = e.touches[0].clientY; deckTouchTime.current = Date.now(); deckMoved.current = false; setDeckDragging(true); setDeckDragY(0); }}
+              onTouchMove={e => { if (deckTouchY.current === null) return; const drag = e.touches[0].clientY - deckTouchY.current; if (Math.abs(drag) > 5) deckMoved.current = true; setDeckDragY(Math.max(-150, Math.min(150, drag))); }}
+              onTouchCancel={() => { deckTouchY.current = null; setDeckDragging(false); setDeckDragY(0); }}
+              onTouchEnd={e => { const drag = e.changedTouches[0].clientY - (deckTouchY.current ?? e.changedTouches[0].clientY); const velocity = drag / Math.max(1, Date.now() - deckTouchTime.current); if (Math.abs(drag) > 32 || Math.abs(velocity) > .3) glideDeck(drag < 0 ? 1 : -1, 1); deckTouchY.current = null; setDeckDragging(false); setDeckDragY(0); }}
+              onWheel={e => { if (Math.abs(e.deltaY) < 1 || deckWheelCooldown.current) return; if (deckGlideTimer.current) { clearTimeout(deckGlideTimer.current); deckGlideTimer.current = null; } deckWheelAccum.current += e.deltaY; setDeckDragging(true); setDeckDragY(Math.max(-110, Math.min(110, -deckWheelAccum.current))); if (deckWheelTimer.current) clearTimeout(deckWheelTimer.current); deckWheelTimer.current = setTimeout(() => { const delta = deckWheelAccum.current; deckWheelAccum.current = 0; setDeckDragging(false); setDeckDragY(0); deckWheelCooldown.current = true; glideDeck(delta > 0 ? 1 : -1, 1); setTimeout(() => { deckWheelCooldown.current = false; }, 420); }, 85); }}>
+              {deckItems.map((c, i) => {
+                const offset = i - deckIndex;
+                const s = c.shift ? SHIFT_STYLE[c.shift] : null;
+                const visits = visitsForDate(c.dstr).filter(x => x.visit.status !== 'cancelled');
+                const hidden = Math.abs(offset) > 4;
+                const dragShift = deckDragY * (offset === 0 ? 1 : .34);
+                return <div key={c.dstr} className="deck-card" onClick={() => { if (!deckMoved.current) openDay(c.dstr, c.year, c.month); }}
+                  style={{ background: s ? s.soft : '#FFFFFF', color: s ? s.text : '#1F3A35', zIndex: 20 - Math.abs(offset), opacity: hidden ? 0 : offset < -1 ? .15 : 1, pointerEvents: Math.abs(offset) > 1 ? 'none' : 'auto', transform: `translateY(${(offset < 0 ? offset * 58 : offset * 34) + dragShift}px) scale(${Math.max(.8, 1 - Math.abs(offset) * .045)})`, filter: offset === 0 ? 'none' : 'saturate(.82)' }}>
+                  <div style={{ position: 'relative', zIndex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div><div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 12, fontWeight: 800, letterSpacing: 1.1, color: s ? s.date : '#6777B6' }}>{c.dstr}</div><div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 25, fontWeight: 700, marginTop: 4, color: s ? s.text : '#1F3A35' }}>{new Date(c.dstr).toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div>
+                      <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 52, fontWeight: 800, lineHeight: 1, color: s ? s.date : '#6777B6' }}>{String(c.day).padStart(2, '0')}</div>
+                    </div>
+                    <div style={{ marginTop: 24, fontSize: 12, fontWeight: 700, color: s ? s.text : '#1F3A35' }}>{c.shift || 'Appointments'} · {visits.length}</div>
+                    <div style={{ marginTop: 10, display: 'grid', gap: 7 }}>
+                      {visits.slice(0, 3).map(({ case: item, visit }) => <div key={visit.id} style={{ display: 'flex', gap: 10, padding: '4px 0', background: 'transparent', color: s ? s.text : '#1F3A35', fontSize: 11.5 }}><b style={{ minWidth: 38 }}>{visit.time}</b><span>{item.name}</span></div>)}
+                      {!visits.length && <div style={{ opacity: .72, fontSize: 12 }}>ไม่มีรายการคนไข้</div>}
+                    </div>
+                  </div>
+                </div>;
+              })}
+            </div>
+          </div>
+        )}
+
+        {calendarEdit && (
+          <>
+            <div className="patient-edit-backdrop" onClick={() => setCalendarEdit(null)} style={{ position: 'fixed', inset: 0, background: 'var(--theme-overlay)', zIndex: 90, backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)' }} />
+            <div className="patient-edit-modal" role="dialog" aria-label="แก้ไขข้อมูลคนไข้" style={{ position: 'fixed', zIndex: 91, left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: 'min(520px, calc(100vw - 28px))', maxHeight: 'calc(100vh - 32px)', overflowY: 'auto', background: 'var(--theme-panel-alpha)', backdropFilter: 'blur(16px) saturate(115%)', WebkitBackdropFilter: 'blur(16px) saturate(115%)', border: '1px solid var(--theme-line)', borderRadius: 22, padding: 18, boxShadow: '0 18px 55px var(--theme-shadow)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 13 }}>
+                <div><div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 18, fontWeight: 700, color: 'var(--theme-text)' }}>แก้ไขข้อมูลคนไข้</div><div style={{ fontSize: 11.5, color: 'var(--theme-muted)' }}>แก้ข้อมูลและหมายเหตุของนัดนี้</div></div>
+                <button onClick={() => setCalendarEdit(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 5 }}><Icon name="x" size={16} color="var(--theme-danger)" /></button>
+              </div>
+              <div style={{ background: 'var(--theme-soft)', borderRadius: 16, padding: 14, display: 'grid', gap: 9, boxShadow: 'none' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(90px, .7fr) minmax(150px, 1.5fr)', gap: 9 }}>
+                  <input value={calendarEditForm.hn} onChange={e => setCalendarEditForm({ ...calendarEditForm, hn: e.target.value })} placeholder="HN" style={{ minWidth: 0, border: 'none', borderRadius: 9, padding: '10px 11px', background: 'rgba(255,255,255,.30)', boxShadow: 'none', fontWeight: 700 }} />
+                  <input value={calendarEditForm.name} onChange={e => setCalendarEditForm({ ...calendarEditForm, name: e.target.value })} placeholder="ชื่อคนไข้" style={{ minWidth: 0, border: 'none', borderRadius: 9, padding: '10px 11px', background: 'rgba(255,255,255,.30)', boxShadow: 'none' }} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(150px, 1fr) minmax(120px, .75fr)', gap: 9 }}>
+                  <input value={calendarEditForm.phone} onChange={e => setCalendarEditForm({ ...calendarEditForm, phone: e.target.value })} placeholder="เบอร์ติดต่อ" style={{ minWidth: 0, border: 'none', borderRadius: 9, padding: '10px 11px', background: 'rgba(255,255,255,.30)', boxShadow: 'none' }} />
+                  <CleanSelect value={calendarEditForm.category} onChange={category => setCalendarEditForm({ ...calendarEditForm, category })} options={categories.map(x => ({ value: x, label: x }))} style={{ width: '100%', padding: '10px 11px', borderRadius: 9, background: 'rgba(255,255,255,.30)', boxShadow: 'none', fontWeight: 600 }} ariaLabel="ประเภทงาน" />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <TimeField value={calendarEditForm.time} onChange={time => setCalendarEditForm({ ...calendarEditForm, time })} style={{ height: 36, background: 'var(--theme-primary)', color: '#FFFFFF' }} />
+                  <div style={{ height: 36, display: 'inline-flex', alignItems: 'center', borderRadius: 9, overflow: 'hidden', background: 'var(--theme-primary)', boxShadow: 'none', color: '#FFFFFF' }}>
+                    <button type="button" onClick={() => setCalendarEditForm({ ...calendarEditForm, duration: Math.max(5, Number(calendarEditForm.duration) - 5) })} style={{ width: 34, height: 36, border: 'none', background: 'transparent', color: '#FFFFFF', cursor: 'pointer', fontSize: 17 }}><Icon name="minus" size={10}/></button>
+                    <span style={{ minWidth: 58, textAlign: 'center', fontFamily: "'Nunito', monospace", fontWeight: 900 }}>{calendarEditForm.duration} min</span>
+                    <button type="button" onClick={() => setCalendarEditForm({ ...calendarEditForm, duration: Number(calendarEditForm.duration) + 5 })} style={{ width: 34, height: 36, border: 'none', background: 'transparent', color: '#FFFFFF', cursor: 'pointer', fontSize: 17 }}><Icon name="plus" size={10}/></button>
+                  </div>
+                  <span style={{ fontFamily: "'Nunito', monospace", fontSize: 11, fontWeight: 800, color: 'var(--theme-muted)' }}>ถึง {minToTime(timeToMin(calendarEditForm.time) + Number(calendarEditForm.duration))}</span>
+                </div>
+                <textarea value={calendarEditForm.step} onChange={e => setCalendarEditForm({ ...calendarEditForm, step: e.target.value })} placeholder="หมายเหตุ / งานที่ทำของนัดนี้" rows="3" style={{ width: '100%', resize: 'vertical', border: 'none', borderRadius: 9, padding: '10px 11px', boxSizing: 'border-box', background: 'rgba(255,255,255,.30)', boxShadow: 'none', fontFamily: "'Noto Sans Thai Looped', sans-serif" }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 13 }}>
+                <button onClick={() => setCalendarEdit(null)} style={{ border: 'none', borderRadius: 10, padding: '9px 14px', background: 'var(--theme-soft)', color: 'var(--theme-muted)', cursor: 'pointer', fontWeight: 700 }}>ยกเลิก</button>
+                <button onClick={saveCalendarPatientEdit} disabled={!calendarEditForm.name.trim()} style={{ border: 'none', borderRadius: 10, padding: '9px 16px', background: calendarEditForm.name.trim() ? 'var(--theme-primary)' : 'var(--theme-tint)', color: '#FFFFFF', cursor: calendarEditForm.name.trim() ? 'pointer' : 'default', fontWeight: 700 }}>บันทึก</button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {overviewPicker && (
+          <>
+            <div onClick={() => setOverviewPicker(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(43,43,35,.08)', zIndex: 80 }} />
+            <div className="overview-shift-popover" style={{ left: Math.min(overviewPicker.x + 8, window.innerWidth - 212), top: Math.min(overviewPicker.y + 8, window.innerHeight - 250) }}>
+              <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 14, fontWeight: 700, color: '#1F3A35', marginBottom: 2 }}>เลือกห้อง</div>
+              <div className="overview-picker-date" style={{ fontSize: 11.5, color: '#8A7F63', marginBottom: 11 }}>{overviewPicker.date}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 7 }}>
+                {Object.keys(SHIFT_STYLE).map(k => <button key={k} className={`overview-room-option overview-room-${k === 'off' ? 'off' : 'shift'}`} onClick={() => { setShift(overviewPicker.date, k); setOverviewPicker(null); }} style={{ border: 'none', borderRadius: 11, padding: '9px 8px', background: SHIFT_STYLE[k].soft, color: k === 'off' ? '#FFFFFF' : SHIFT_STYLE[k].text, fontWeight: 700, cursor: 'pointer' }}>{k}</button>)}
+              </div>
+              <div style={{ display: 'flex', gap: 7, marginTop: 9 }}>
+                <button onClick={() => { setShift(overviewPicker.date, null); setOverviewPicker(null); }} style={{ flex: 1, border: 'none', borderRadius: 10, padding: '8px', background: 'var(--theme-soft)', color: 'var(--theme-muted)', cursor: 'pointer', fontWeight: 600 }}>ไม่ระบุ</button>
+                <button className="motion-cta" onClick={() => { const p = overviewPicker; setOverviewPicker(null); openDay(p.date, p.year, p.month); }} style={{ flex: 1, cursor: 'pointer', fontWeight: 700 }}>เปิดวัน</button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {view === 'patients' && (
+          <div className="view-panel" style={{ marginBottom: 22, height: 'calc(100vh - 225px)', minHeight: 280, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: "'IBM Plex Sans Thai', sans-serif" }}>
+            <div className="search-box patient-search-minimal" style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 10, padding: '9px 12px', marginBottom: 14, background: '#E2E3EA' }}>
+              <Icon name="search" size={14} color="#8A7F63" />
+              <input placeholder="Search by HN, name, or category" value={patientListQuery} onChange={e => setPatientListQuery(e.target.value)}
+                style={{ border: 'none', outline: 'none', fontSize: 13, flex: 1, background: 'transparent', fontFamily: "'Nunito', 'IBM Plex Sans Thai', monospace" }} />
+            </div>
+            <div className="patient-mobile-total">total / {patientListResults.length} cases</div>
+            <div className="patient-workspace">
+              <aside className="patient-sidebar">
+                {[['date','Recent'],['name','A–Z'],['hn','HN'],['category','Work Type']].map(([value,label]) => <button key={value} onClick={() => setPatientSort(value)} className={`patient-sort-btn ${patientSort === value ? 'active' : ''}`}>{label}</button>)}
+              </aside>
+              <div className="patient-list-main">
+                <div className="patient-desktop-total" style={{ fontFamily: "'Nunito', monospace", fontSize: 11, fontWeight: 800, color: '#A9AEC2', margin: '0 0 9px 2px' }}>total / {patientListResults.length} cases</div>
+                <div className="patient-table-head"><span>hn</span><span>patient</span><span>work type</span><span>visits</span><span style={{ textAlign: 'right' }}>last date</span></div>
+                <div className="patient-scroll" style={{ flex: 1 }}>
+            {patientListResults.map(c => {
+              const cs = categoryStyles[c.category] || categoryStyles['อื่นๆ'] || CATEGORY_STYLE['อื่นๆ'];
+              return (
+                <div key={c.id} className="plist-row" onClick={() => setHistoryCaseId(historyCaseId === c.id ? null : c.id)}
+                  style={{ cursor: 'pointer' }}>
+                  <span className="patient-hn">{c.hn ? `HN ${c.hn}` : '—'}</span>
+                  <span className="patient-name">{c.name || '—'}{c.phone && <small style={{ color: '#A9AEC2', marginLeft: 7 }}>· {c.phone}</small>}</span>
+                  <span className="patient-category" style={{ fontSize: 9.5, fontWeight: 800, padding: '3px 6px', borderRadius: 5, background: cs.bg, color: cs.text, justifySelf: 'start' }}>{c.category}</span>
+                  <span className="patient-count">{c.activeCount}{c.cancelledCount > 0 ? ` / -${c.cancelledCount}` : ''}</span>
+                  <span className="patient-date">{c.nextVisit ? `${c.nextVisit.date} ${c.nextVisit.time}` : c.lastVisit?.date || '—'}</span>
+                </div>
+              );
+            })}
+            {patientListResults.length === 0 && <div style={{ fontSize: 13, color: '#B9AF9A', fontStyle: 'italic', textAlign: 'center', padding: 20 }}>ไม่พบคนไข้</div>}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {view === 'settings' && <div className="settings-workspace">
+        <div className="view-panel settings-section holiday-settings" style={{ background: '#CBD183', borderRadius: 18, padding: 16, marginBottom: 14 }}>
+          <div className="settings-title" style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: 15, color: '#1F5B54', marginBottom: 10 }}>วันหยุด</div>
+          <form className="holiday-form" onSubmit={e => { e.preventDefault(); addHoliday(); }} style={{ display: 'grid', gridTemplateColumns: '150px minmax(160px,1fr) auto', gap: 8, marginBottom: 11 }}>
+            <DateField value={newHolidayDate} onChange={setNewHolidayDate} style={{ minWidth: 0, height: 34, fontFamily: "'Nunito', sans-serif", fontWeight: 700 }} />
+            <input value={newHolidayName} onChange={e => setNewHolidayName(e.target.value)} placeholder="ชื่อวันหยุด เช่น วันหยุดพิเศษ" style={{ minWidth: 0, height: 34, border: 'none', borderRadius: 9, padding: '0 11px', background: '#FFF9E8', fontFamily: "'Noto Sans Thai Looped', sans-serif" }} />
+            <button type="submit" aria-label="เพิ่มวันหยุด" title="เพิ่มวันหยุด" style={{ height: 34, border: 'none', borderRadius: 9, padding: 0, background: '#1F5B54', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>+</button>
+          </form>
+          <div style={{ display: 'grid', gap: 6 }}>
+            {Object.entries(holidays).sort(([a],[b]) => a.localeCompare(b)).map(([dstr, name]) => <div key={dstr} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 9px', borderRadius: 9, background: 'rgba(255,255,255,.45)' }}><span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 800, color: '#1F5B54', minWidth: 82 }}>{dstr}</span><span style={{ flex: 1, fontSize: 12.5 }}>{name}</span><button onClick={() => removeHoliday(dstr)} type="button" style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 3 }}><Icon name="x" size={14} color="#D8560E" /></button></div>)}
+            {!Object.keys(holidays).length && <div style={{ fontSize: 12, color: '#5C6D68' }}>ยังไม่มีวันหยุดที่เพิ่มเอง</div>}
+          </div>
+        </div>
+        <div className="view-panel settings-section category-settings" style={{ background: '#EFCE7B', borderRadius: 18, padding: 16, marginBottom: 14 }}>
+          <div className="settings-title" style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: 15, color: '#2B2B23', marginBottom: 10 }}>ประเภทงาน</div>
+          <form className="category-add-form" onSubmit={e => { e.preventDefault(); addCategory(); }} style={{ display: 'grid', gridTemplateColumns: 'minmax(140px,1fr) minmax(130px,.65fr) auto', gap: 8, marginBottom: 12 }}>
+            <input className="category-name-input" value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="เพิ่มประเภทงานใหม่" style={{ flex: 1, background: '#FFFFFF', borderRadius: 8, padding: '9px 11px', fontFamily: "'Sarabun', sans-serif", fontSize: 13 }} />
+            <CleanSelect className="category-theme-select" value={newCategoryTheme} onChange={setNewCategoryTheme} options={Object.entries(CATEGORY_THEME_OPTIONS).map(([value, t]) => ({ value, label: t.label }))} style={{ width: '100%', height: '100%', borderRadius: 8, padding: '8px 10px', background: CATEGORY_THEME_OPTIONS[newCategoryTheme].bg, color: CATEGORY_THEME_OPTIONS[newCategoryTheme].text, fontWeight: 700 }} ariaLabel="เลือกสีประเภทงาน" />
+            <button className="category-add-button" type="submit" aria-label="เพิ่มประเภทงาน" title="เพิ่มประเภทงาน" disabled={!newCategory.trim()} style={{ border: 'none', borderRadius: 8, padding: 0, background: newCategory.trim() ? '#6777B6' : '#B9AF9A', color: '#FFFFFF', fontWeight: 700, cursor: newCategory.trim() ? 'pointer' : 'default' }}>+</button>
+          </form>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+            {categories.map(cat => { const s = categoryStyles[cat] || CATEGORY_STYLE['อื่นๆ']; return <span key={cat} style={{ display: 'flex', alignItems: 'center', gap: 6, background: s.bg, color: s.text, borderRadius: 4, padding: '5px 7px', fontSize: 12, fontWeight: 700 }}><span>{cat}</span>{!DEFAULT_CATEGORIES.includes(cat) && <button onClick={() => removeCategory(cat)} style={{ border: 'none', background: 'rgba(255,255,255,.35)', borderRadius: 2, padding: 1, cursor: 'pointer', color: s.text, lineHeight: 0 }}><Icon name="x" size={11} /></button>}</span>; })}
+          </div>
+        </div>
+
+        <div className="legend-card settings-legend" style={{ background: '#D3C2CD', border: 'none', borderRadius: 14, padding: 16 }}>
+          <div className="legend-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 600, fontSize: 15, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="info" size={16} /> หมายเหตุ</div>
+            <button className="legend-edit-button" onClick={() => setEditingLegend(!editingLegend)} title={editingLegend ? 'เสร็จสิ้น' : 'แก้ไขหมายเหตุ'} aria-label={editingLegend ? 'เสร็จสิ้น' : 'แก้ไขหมายเหตุ'}>
+              <Icon name={editingLegend ? 'check' : 'pencilSolid'} size={13} />
+            </button>
+          </div>
+          {Object.keys(SHIFT_STYLE).map(k => (
+            <div key={k} className="legend-row" style={{ display: 'flex', gap: 8, marginBottom: 7, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: SHIFT_STYLE[k].soft, color: SHIFT_STYLE[k].text, whiteSpace: 'nowrap', flexShrink: 0 }}>{k}</span>
+              {editingLegend ? (
+                <input value={shiftNotes[k] || ''} onChange={e => setShiftNotes({ ...shiftNotes, [k]: e.target.value })} style={{ fontSize: 12, border: '1px solid #DCD4C4', borderRadius: 4, padding: '2px 6px', flex: 1, fontFamily: "'Sarabun', sans-serif" }} />
+              ) : (
+                <span style={{ fontSize: 12, color: '#2B2B23' }}>{shiftNotes[k]}</span>
+              )}
+            </div>
+          ))}
+          {editingLegend && (
+            <button onClick={() => { saveLegend(shiftNotes); setEditingLegend(false); }} style={{ marginTop: 6, fontSize: 12.5, fontWeight: 600, background: '#2B2B23', color: '#FFFFFF', border: 'none', borderRadius: 6, padding: '7px 14px', cursor: 'pointer' }}>บันทึกหมายเหตุ</button>
+          )}
+        </div>
+        </div>}
+
+      </div>
+      <footer style={{ width: '100%', maxWidth: 950, boxSizing: 'border-box', textAlign: 'center', fontSize: 10.5, lineHeight: 1.6, color: '#B9AF9A', margin: 'auto auto 0', padding: '22px 18px 12px' }}>
+        ข้อมูลเวร/นัดของ เม.ย.–ก.ย. 2569 ดึงจากไฟล์ที่อัปโหลด (แปลงเป็นเคสอัตโนมัติ) · กดยกเลิกนัดแทนการลบเพื่อเก็บประวัติไว้ · บันทึกไว้ในเครื่องนี้อัตโนมัติ
+      </footer>
+    </div>
+  );
+}
+
+function App() {
+  const [user, setUser] = useState(undefined); // undefined = loading, null = signed out
+
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged(u => {
+      currentUid = u ? u.uid : null;
+      setUser(u);
+    });
+    return unsub;
+  }, []);
+
+  if (user === undefined) return <LoadingScreen />;
+  if (!user) return <SignInScreen />;
+
+  return <><BrandBar email={user.email || ''} photoURL={user.photoURL || ''} displayName={user.displayName || ''} onSignOut={() => auth.signOut()} /><ScheduleCalendar key={user.uid} /></>;
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
