@@ -136,7 +136,13 @@ button:focus-visible,[role="button"]:focus-visible,input:focus-visible,textarea:
   background:transparent!important;border:0!important;border-radius:0!important;
   overflow:hidden!important;box-shadow:none!important;
 }
-.calendar-week-grid{grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:0!important;width:100%!important;margin:0!important}
+.calendar-week-grid{
+  grid-template-columns:repeat(7,minmax(0,1fr))!important;
+  gap:0!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+}
 .calendar-weekdays{border:0!important}
 .calendar-weekdays>div{
   min-height:38px!important;display:grid!important;place-items:center!important;
