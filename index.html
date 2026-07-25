@@ -1444,13 +1444,13 @@ function ScheduleCalendar() {
 
         {calendarEdit && (
           <>
-            <div className="patient-edit-backdrop" onClick={() => setCalendarEdit(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(243,234,227,.18)', zIndex: 90, backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)' }} />
-            <div className="patient-edit-modal" role="dialog" aria-label="แก้ไขข้อมูลคนไข้" style={{ position: 'fixed', zIndex: 91, left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: 'min(520px, calc(100vw - 28px))', maxHeight: 'calc(100vh - 32px)', overflowY: 'auto', background: 'rgba(250,246,239,.78)', backdropFilter: 'blur(16px) saturate(115%)', WebkitBackdropFilter: 'blur(16px) saturate(115%)', border: '1px solid rgba(255,255,255,.55)', borderRadius: 22, padding: 18, boxShadow: '0 18px 55px rgba(43,43,35,.16)' }}>
+            <div className="patient-edit-backdrop" onClick={() => setCalendarEdit(null)} style={{ position: 'fixed', inset: 0, background: 'var(--theme-overlay)', zIndex: 90, backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)' }} />
+            <div className="patient-edit-modal" role="dialog" aria-label="แก้ไขข้อมูลคนไข้" style={{ position: 'fixed', zIndex: 91, left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: 'min(520px, calc(100vw - 28px))', maxHeight: 'calc(100vh - 32px)', overflowY: 'auto', background: 'var(--theme-panel-alpha)', backdropFilter: 'blur(16px) saturate(115%)', WebkitBackdropFilter: 'blur(16px) saturate(115%)', border: '1px solid var(--theme-line)', borderRadius: 22, padding: 18, boxShadow: '0 18px 55px var(--theme-shadow)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 13 }}>
-                <div><div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 18, fontWeight: 700, color: '#1F5B54' }}>แก้ไขข้อมูลคนไข้</div><div style={{ fontSize: 11.5, color: '#8A7F63' }}>แก้ข้อมูลและหมายเหตุของนัดนี้</div></div>
-                <button onClick={() => setCalendarEdit(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 5 }}><Icon name="x" size={18} color="#8A7F63" /></button>
+                <div><div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 18, fontWeight: 700, color: 'var(--theme-text)' }}>แก้ไขข้อมูลคนไข้</div><div style={{ fontSize: 11.5, color: 'var(--theme-muted)' }}>แก้ข้อมูลและหมายเหตุของนัดนี้</div></div>
+                <button onClick={() => setCalendarEdit(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 5 }}><Icon name="x" size={16} color="var(--theme-danger)" /></button>
               </div>
-              <div style={{ background: 'rgba(239,206,123,.28)', borderRadius: 16, padding: 14, display: 'grid', gap: 9, boxShadow: 'inset 0 1px 0 rgba(255,255,255,.42)' }}>
+              <div style={{ background: 'var(--theme-soft)', borderRadius: 16, padding: 14, display: 'grid', gap: 9, boxShadow: 'none' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'minmax(90px, .7fr) minmax(150px, 1.5fr)', gap: 9 }}>
                   <input value={calendarEditForm.hn} onChange={e => setCalendarEditForm({ ...calendarEditForm, hn: e.target.value })} placeholder="HN" style={{ minWidth: 0, border: 'none', borderRadius: 9, padding: '10px 11px', background: 'rgba(255,255,255,.30)', boxShadow: 'none', fontWeight: 700 }} />
                   <input value={calendarEditForm.name} onChange={e => setCalendarEditForm({ ...calendarEditForm, name: e.target.value })} placeholder="ชื่อคนไข้" style={{ minWidth: 0, border: 'none', borderRadius: 9, padding: '10px 11px', background: 'rgba(255,255,255,.30)', boxShadow: 'none' }} />
@@ -1460,19 +1460,19 @@ function ScheduleCalendar() {
                   <CleanSelect value={calendarEditForm.category} onChange={category => setCalendarEditForm({ ...calendarEditForm, category })} options={categories.map(x => ({ value: x, label: x }))} style={{ width: '100%', padding: '10px 11px', borderRadius: 9, background: 'rgba(255,255,255,.30)', boxShadow: 'none', fontWeight: 600 }} ariaLabel="ประเภทงาน" />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <TimeField value={calendarEditForm.time} onChange={time => setCalendarEditForm({ ...calendarEditForm, time })} style={{ height: 36, background: 'rgba(255,255,255,.20)', color: '#1F5B54' }} />
-                  <div style={{ height: 36, display: 'inline-flex', alignItems: 'center', borderRadius: 9, overflow: 'hidden', background: 'rgba(31,91,84,.82)', boxShadow: '0 5px 14px rgba(31,91,84,.12)', color: '#FFFFFF' }}>
+                  <TimeField value={calendarEditForm.time} onChange={time => setCalendarEditForm({ ...calendarEditForm, time })} style={{ height: 36, background: 'var(--theme-primary)', color: '#FFFFFF' }} />
+                  <div style={{ height: 36, display: 'inline-flex', alignItems: 'center', borderRadius: 9, overflow: 'hidden', background: 'var(--theme-primary)', boxShadow: 'none', color: '#FFFFFF' }}>
                     <button type="button" onClick={() => setCalendarEditForm({ ...calendarEditForm, duration: Math.max(5, Number(calendarEditForm.duration) - 5) })} style={{ width: 34, height: 36, border: 'none', background: 'transparent', color: '#FFFFFF', cursor: 'pointer', fontSize: 17 }}><Icon name="minus" size={10}/></button>
                     <span style={{ minWidth: 58, textAlign: 'center', fontFamily: "'Nunito', monospace", fontWeight: 900 }}>{calendarEditForm.duration} min</span>
                     <button type="button" onClick={() => setCalendarEditForm({ ...calendarEditForm, duration: Number(calendarEditForm.duration) + 5 })} style={{ width: 34, height: 36, border: 'none', background: 'transparent', color: '#FFFFFF', cursor: 'pointer', fontSize: 17 }}><Icon name="plus" size={10}/></button>
                   </div>
-                  <span style={{ fontFamily: "'Nunito', monospace", fontSize: 11, fontWeight: 800, color: '#1F5B54' }}>ถึง {minToTime(timeToMin(calendarEditForm.time) + Number(calendarEditForm.duration))}</span>
+                  <span style={{ fontFamily: "'Nunito', monospace", fontSize: 11, fontWeight: 800, color: 'var(--theme-muted)' }}>ถึง {minToTime(timeToMin(calendarEditForm.time) + Number(calendarEditForm.duration))}</span>
                 </div>
                 <textarea value={calendarEditForm.step} onChange={e => setCalendarEditForm({ ...calendarEditForm, step: e.target.value })} placeholder="หมายเหตุ / งานที่ทำของนัดนี้" rows="3" style={{ width: '100%', resize: 'vertical', border: 'none', borderRadius: 9, padding: '10px 11px', boxSizing: 'border-box', background: 'rgba(255,255,255,.30)', boxShadow: 'none', fontFamily: "'Noto Sans Thai Looped', sans-serif" }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 13 }}>
-                <button onClick={() => setCalendarEdit(null)} style={{ border: 'none', borderRadius: 10, padding: '9px 14px', background: '#F0EBDD', color: '#5C6D68', cursor: 'pointer', fontWeight: 700 }}>ยกเลิก</button>
-                <button onClick={saveCalendarPatientEdit} disabled={!calendarEditForm.name.trim()} style={{ border: 'none', borderRadius: 10, padding: '9px 16px', background: calendarEditForm.name.trim() ? '#1F5B54' : '#DCD4C4', color: '#FFFFFF', cursor: calendarEditForm.name.trim() ? 'pointer' : 'default', fontWeight: 700 }}>บันทึก</button>
+                <button onClick={() => setCalendarEdit(null)} style={{ border: 'none', borderRadius: 10, padding: '9px 14px', background: 'var(--theme-soft)', color: 'var(--theme-muted)', cursor: 'pointer', fontWeight: 700 }}>ยกเลิก</button>
+                <button onClick={saveCalendarPatientEdit} disabled={!calendarEditForm.name.trim()} style={{ border: 'none', borderRadius: 10, padding: '9px 16px', background: calendarEditForm.name.trim() ? 'var(--theme-primary)' : 'var(--theme-tint)', color: '#FFFFFF', cursor: calendarEditForm.name.trim() ? 'pointer' : 'default', fontWeight: 700 }}>บันทึก</button>
               </div>
             </div>
           </>
@@ -1609,4 +1609,3 @@ root.render(<App />);
 </script>
 </body>
 </html>
-
