@@ -244,7 +244,7 @@ function CleanSelect({ value, onChange, options, style = {}, className = '', ari
 
 function LoadingScreen() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAF6EF', fontFamily: 'sans-serif', color: '#8A7F63' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--theme-canvas)', fontFamily: 'sans-serif', color: 'var(--theme-muted)' }}>
       กำลังโหลด...
     </div>
   );
@@ -264,9 +264,9 @@ function SignInScreen() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--theme-canvas, #FFFFFF)', fontFamily: "'Sarabun', sans-serif", padding: 20 }}>
       <div style={{ background: 'var(--theme-primary)', border: 'none', borderRadius: 26, padding: '38px 34px 34px', maxWidth: 380, width: '100%', textAlign: 'center', boxShadow: '0 22px 55px var(--theme-shadow)' }}>
         <div style={{ width: 52, height: 52, borderRadius: '50%', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--theme-soft)', color: 'var(--theme-primary)' }}><Icon name="crownSolid" size={24} /></div>
-        <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 21, fontWeight: 700, color: '#FFFFFF', marginBottom: 7 }}>งานโรงพยาบาล &amp; นัดคนไข้</div>
+        <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 21, fontWeight: 700, color: 'var(--theme-on-primary)', marginBottom: 7 }}>งานโรงพยาบาล &amp; นัดคนไข้</div>
         <div style={{ fontSize: 13, color: 'var(--theme-tint)', marginBottom: 25 }}>เข้าสู่ระบบเพื่อซิงก์ข้อมูลข้ามอุปกรณ์</div>
-        <button onClick={signIn} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', padding: '12px 16px', borderRadius: 14, border: 'none', background: '#CBD183', fontSize: 14, fontWeight: 700, color: '#2B2B23', cursor: 'pointer', boxShadow: '0 7px 18px rgba(43,43,35,.12)' }}>
+        <button onClick={signIn} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', padding: '12px 16px', borderRadius: 14, border: 'none', background: 'var(--theme-soft)', fontSize: 14, fontWeight: 700, color: 'var(--theme-text)', cursor: 'pointer', boxShadow: '0 7px 18px var(--theme-shadow)' }}>
           <Icon name="google" size={18} /> เข้าสู่ระบบด้วย Google
         </button>
         {error && <div style={{ fontSize: 11.5, color: '#A33636', marginTop: 12 }}>{error}</div>}
@@ -364,26 +364,65 @@ const ROOM_PALETTES = {
   iceberg: {
     label: 'Iceberg',
     colors: ['#2B2B23', '#E95F69', '#8B70E8', '#4DB9DF', '#E5B957', '#5AC38F', '#DC805D'],
+    theme: {
+      canvas: '#FFFFFF', surface: '#FFFFFF', soft: '#E8ECF7', tint: '#C8D0E6',
+      primary: '#35227F', secondary: '#3159C9', text: '#29236F', muted: '#6076B5',
+      line: 'rgba(49,89,201,.20)', hover: 'rgba(49,89,201,.09)', panel: 'rgba(255,255,255,.94)',
+      softAlpha: 'rgba(200,208,230,.38)', overlay: 'rgba(53,34,127,.24)', focus: 'rgba(49,89,201,.28)',
+      shadow: 'rgba(53,34,127,.16)', online: '#4ACB8A', danger: '#B45B66', onPrimary: '#FFFFFF',
+    },
   },
   dots: {
     label: 'Dots',
     colors: ['#11131E', '#FF4057', '#8B5CF6', '#4BBCE8', '#F4C95D', '#49CE91', '#E6845E'],
+    theme: {
+      canvas: '#11131E', surface: '#151825', soft: '#1D2130', tint: '#30364C',
+      primary: '#8B5CF6', secondary: '#4BBCE8', text: '#F3F4F8', muted: '#858DA8',
+      line: 'rgba(133,141,168,.22)', hover: 'rgba(75,188,232,.10)', panel: 'rgba(21,24,37,.96)',
+      softAlpha: 'rgba(48,54,76,.52)', overlay: 'rgba(4,6,14,.68)', focus: 'rgba(75,188,232,.34)',
+      shadow: 'rgba(0,0,0,.42)', online: '#49CE91', danger: '#FF4057', onPrimary: '#FFFFFF',
+    },
   },
   cheesecake: {
     label: 'Cheesecake',
     colors: ['#403336', '#E11D74', '#9A2A4F', '#E58C4B', '#E5B957', '#78A65A', '#C75D7F'],
+    theme: {
+      canvas: '#FFF2D5', surface: '#FFF2D5', soft: '#F6E3B9', tint: '#EBCF9D',
+      primary: '#9A2A4F', secondary: '#E11D74', text: '#403336', muted: '#9A6471',
+      line: 'rgba(154,42,79,.22)', hover: 'rgba(225,29,116,.09)', panel: 'rgba(255,242,213,.96)',
+      softAlpha: 'rgba(246,227,185,.70)', overlay: 'rgba(64,51,54,.28)', focus: 'rgba(225,29,116,.30)',
+      shadow: 'rgba(90,38,54,.18)', online: '#78A65A', danger: '#B6384F', onPrimary: '#FFF8E9',
+    },
   },
   oblivion: {
     label: 'Oblivion',
     colors: ['#2F312F', '#E4492F', '#BBA2D9', '#2F8CAF', '#F39B1F', '#91BD3A', '#B6B1A8'],
+    theme: {
+      canvas: '#30322F', surface: '#363835', soft: '#414440', tint: '#585C56',
+      primary: '#B6B1A8', secondary: '#91BD3A', text: '#F4F1EA', muted: '#A7AAA4',
+      line: 'rgba(182,177,168,.23)', hover: 'rgba(145,189,58,.10)', panel: 'rgba(54,56,53,.96)',
+      softAlpha: 'rgba(88,92,86,.46)', overlay: 'rgba(20,21,20,.70)', focus: 'rgba(145,189,58,.34)',
+      shadow: 'rgba(0,0,0,.40)', online: '#91BD3A', danger: '#E4492F', onPrimary: '#30322F',
+    },
   },
 };
 
 function applyRoomPalette(key) {
   const palette = ROOM_PALETTES[key] || ROOM_PALETTES.iceberg;
+  document.documentElement.dataset.appTheme = key;
   const names = ['--room-off', '--df-dot-red', '--df-dot-purple', '--df-dot-cyan', '--df-dot-yellow', '--df-dot-green', '--df-dot-orange'];
   names.forEach((name, index) => document.documentElement.style.setProperty(name, palette.colors[index]));
+  const themeNames = {
+    canvas: '--theme-canvas', surface: '--theme-surface', soft: '--theme-soft', tint: '--theme-tint',
+    primary: '--theme-primary', secondary: '--theme-secondary', text: '--theme-text', muted: '--theme-muted',
+    line: '--theme-line', hover: '--theme-hover', panel: '--theme-panel-alpha', softAlpha: '--theme-soft-alpha',
+    overlay: '--theme-overlay', focus: '--theme-focus', shadow: '--theme-shadow', online: '--theme-online',
+    danger: '--theme-danger', onPrimary: '--theme-on-primary',
+  };
+  Object.entries(themeNames).forEach(([token, cssName]) => document.documentElement.style.setProperty(cssName, palette.theme[token]));
 }
+
+applyRoomPalette(localStorage.getItem('hos-room-palette') || 'iceberg');
 
 const SKIP_WORDS = new Set(['ฟุ้ง', 'off', 'Screen', 'ปกส', 'รพ.สต.', '1/1', 'DM', 'เตียงเสริม']);
 const TIME_RE = /^(\d{1,2}:\d{2})\s*(.*)$/;
@@ -530,7 +569,7 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
     <style>{`
       .brand-bar { height:64px; padding:0 max(18px,calc((100vw - 950px)/2)); display:flex; align-items:center; justify-content:space-between; gap:18px; background:var(--theme-surface,#FFFFFF); color:var(--theme-primary,#35227F); border-bottom:1px solid var(--theme-line,rgba(49,89,201,.20)); box-sizing:border-box; font-family:'Nunito',sans-serif; }
       .brand-id { display:flex; align-items:center; gap:12px; min-width:0; }
-      .brand-logo { width:42px; height:42px; flex:0 0 42px; display:grid; place-items:center; border-radius:13px; background:var(--theme-primary,#35227F); color:#fff; font-size:13px; font-weight:1000; letter-spacing:-.4px; }
+      .brand-logo { width:42px; height:42px; flex:0 0 42px; display:grid; place-items:center; border-radius:13px; background:var(--theme-primary,#35227F); color:var(--theme-on-primary,#fff); font-size:13px; font-weight:1000; letter-spacing:-.4px; }
       .brand-title { font-size:17px; font-weight:1000; letter-spacing:.4px; line-height:1.05; white-space:nowrap; }
       .brand-subtitle { margin-top:4px; color:var(--theme-muted,#6076B5); font-family:'Noto Sans Thai Looped',sans-serif; font-size:10px; white-space:nowrap; }
       .brand-user { display:flex; align-items:center; gap:9px; }
@@ -562,7 +601,7 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
       <div className="brand-menu-wrap" ref={menuRef}>
         <button className="brand-action" onClick={() => setMenuOpen(open => !open)} title="เมนู" aria-label="เมนู" aria-expanded={menuOpen}><Icon name="settingsSolid" size={16}/></button>
         {menuOpen && <div className="brand-menu">
-          <div className="brand-menu-label">Room palette</div>
+          <div className="brand-menu-label">Website theme</div>
           <div className="room-palette-list">
             {Object.entries(ROOM_PALETTES).map(([key, palette]) => <button type="button" key={key} className={`room-palette-option ${roomPalette === key ? 'active' : ''}`} onClick={() => chooseRoomPalette(key)}>
               <span className="room-palette-name">{palette.label}</span>

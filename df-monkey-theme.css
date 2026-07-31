@@ -20,6 +20,7 @@
   --theme-category-bg:rgba(200,208,230,.50);
   --theme-category-text:#5269AA;
   --theme-danger:#B45B66;
+  --theme-on-primary:#FFFFFF;
 
   /* Compatibility aliases: every component now follows the theme tokens. */
   --df-bg:var(--theme-canvas);
@@ -53,6 +54,73 @@ body,#root{min-height:100%;margin:0;background:var(--df-bg)!important;color:var(
 #root>div{background:var(--theme-canvas)!important;color:var(--theme-text)!important}
 body,button,input,textarea,select{font-family:var(--df-body)!important}
 button{color:inherit}
+
+/* Full website theme transitions. Room colors remain semantic, while every
+   surface, rule, control and state follows the selected website theme. */
+html,body,#root,#root>div,.brand-bar,.app-shell,.page-head,.view-panel,.calendar-table,
+.calendar-days>.cell,.calendar-day-modal,.patient-edit-modal,.case-history-modal,
+.brand-menu,.clean-select-menu,.custom-date-popover,.settings-workspace,.patient-workspace{
+  transition:background-color .22s ease,color .22s ease,border-color .22s ease,box-shadow .22s ease!important;
+}
+[data-app-theme="dots"],[data-app-theme="oblivion"]{color-scheme:dark}
+[data-app-theme="iceberg"],[data-app-theme="cheesecake"]{color-scheme:light}
+[data-app-theme] body #root .calendar-days>.cell:not(.is-today),
+[data-app-theme] body #root .calendar-weekdays>div,
+[data-app-theme] body #root .calendar-table,
+[data-app-theme] body #root .overview-month,
+[data-app-theme] body #root .patient-list-main{
+  background:var(--theme-canvas)!important;
+  color:var(--theme-text)!important;
+}
+[data-app-theme] body #root .settings-section,
+[data-app-theme] body #root .settings-legend{
+  background:transparent!important;
+  color:var(--theme-text)!important;
+}
+[data-app-theme] body #root input,
+[data-app-theme] body #root textarea{
+  caret-color:var(--theme-secondary)!important;
+}
+[data-app-theme] body #root .nav-text.active,
+[data-app-theme] body #root .brand-logo,
+[data-app-theme] body #root .holiday-form>button,
+[data-app-theme] body #root .category-add-button{
+  color:var(--theme-on-primary)!important;
+}
+[data-app-theme="dots"] body #root .calendar-date-number,
+[data-app-theme="oblivion"] body #root .calendar-date-number,
+[data-app-theme="dots"] body #root .calendar-visit-count,
+[data-app-theme="oblivion"] body #root .calendar-visit-count{
+  color:var(--theme-text)!important;
+}
+[data-app-theme] body #root footer,
+[data-app-theme] body #root .settings-title,
+[data-app-theme] body #root .settings-legend .legend-head,
+[data-app-theme] body #root .settings-legend .legend-row>span:last-child,
+[data-app-theme] body #root .patient-name,
+[data-app-theme] body #root .patient-count,
+[data-app-theme] body #root .patient-date{
+  color:var(--theme-text)!important;
+}
+[data-app-theme] body #root .patient-hn,
+[data-app-theme] body #root .page-head>div:first-child,
+[data-app-theme] body #root .case-history-kicker,
+[data-app-theme] body #root .case-history-visits-title{
+  color:var(--theme-secondary)!important;
+}
+[data-app-theme] body #root .app-shell>.page-head+div[style*="border-bottom"] span,
+[data-app-theme] body #root .app-shell>.page-head+div[style*="border-bottom"] svg{
+  color:var(--theme-muted)!important;
+  stroke:var(--theme-muted)!important;
+}
+[data-app-theme] body #root .custom-date-popover,
+[data-app-theme] body #root .clean-select-menu,
+[data-app-theme] body #root .existing-case-search,
+[data-app-theme] body #root .new-case-suggestions{
+  background:var(--theme-surface)!important;
+  color:var(--theme-text)!important;
+  border-color:var(--theme-line)!important;
+}
 h1,h2,h3,.settings-title{font-family:var(--df-heading)!important}
 button:focus-visible,[role="button"]:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{
   outline:2px solid var(--theme-secondary)!important;
