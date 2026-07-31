@@ -1398,7 +1398,7 @@ function ScheduleCalendar() {
 
                 {selInfo?.shiftNotes?.length > 0 && <div style={{ fontSize: 13, color: '#5C6D68', marginBottom: 10 }}>หมายเหตุเวร: {selInfo.shiftNotes.join(' · ')}</div>}
 
-                <div style={{ fontFamily: "'Kanit', sans-serif", fontSize: 13, fontWeight: 700, color: '#000000', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, marginTop: 4 }}>Patient list</div>
+                <div className="patient-list-title" style={{ fontFamily: "'Kanit', sans-serif", fontSize: 13, fontWeight: 700, color: '#000000', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, marginTop: 4 }}>Patient list</div>
                 {dayVisits.length > 0 ? (
                   <div style={{ marginBottom: 12 }}>
                     {dayVisits.map(({ case: c, visit: v }) => <VisitRow key={v.id} c={c} v={v} showJump={false} />)}
@@ -1532,7 +1532,7 @@ function ScheduleCalendar() {
                   <div className="overview-month-calendar">
                   <div style={{ textAlign: 'center', fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", fontWeight: 800, fontSize: 22, color: MONTH_THEMES[idx].bg, marginBottom: 18 }}>{new Date(year, idx, 1).toLocaleString('en-US', { month: 'long' }).toUpperCase()} {year}</div>
                   <div className="overview-week-grid" style={{ display: 'grid', gap: 6, marginBottom: 7 }}>
-                    {WEEKDAYS_TH.map(w => <div key={w} style={{ textAlign: 'center', fontSize: 9.5, fontWeight: 700, color: '#000000', fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif", letterSpacing: .1 }}>{w}</div>)}
+                    {WEEKDAYS_TH.map(w => <div className="overview-weekday" key={w} style={{ textAlign: 'center', fontSize: 9.5, fontWeight: 700, color: '#000000', fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif", letterSpacing: .1 }}>{w}</div>)}
                   </div>
                   {weeks.map((wk, wi) => (
                     <div key={wi} className="overview-week-grid" style={{ display: 'grid', gap: 6, marginBottom: 8 }}>

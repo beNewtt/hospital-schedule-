@@ -1024,3 +1024,96 @@ body #root .case-add-panel .appointment-time-row .duration-line>span:last-child{
     grid-column:1/-1!important;
   }
 }
+
+/* Dark themes: neutralize the remaining legacy light-mode declarations in
+   the embedded component stylesheet. These selectors intentionally carry
+   extra specificity because those legacy rules also use !important. */
+html[data-app-theme="dots"] body #root .patient-scroll .plist-row,
+html[data-app-theme="oblivion"] body #root .patient-scroll .plist-row{
+  background:transparent!important;
+  color:var(--theme-text)!important;
+  border-color:var(--theme-line)!important;
+}
+html[data-app-theme="dots"] body #root .patient-scroll .plist-row:nth-child(odd),
+html[data-app-theme="oblivion"] body #root .patient-scroll .plist-row:nth-child(odd){
+  background:var(--theme-soft-alpha)!important;
+}
+html[data-app-theme="dots"] body #root .patient-scroll .plist-row:hover,
+html[data-app-theme="oblivion"] body #root .patient-scroll .plist-row:hover,
+html[data-app-theme="dots"] body #root .patient-scroll .plist-row:nth-child(odd):hover,
+html[data-app-theme="oblivion"] body #root .patient-scroll .plist-row:nth-child(odd):hover{
+  background:var(--theme-primary)!important;
+}
+html[data-app-theme="dots"] body #root .patient-scroll .patient-name,
+html[data-app-theme="dots"] body #root .patient-scroll .patient-count,
+html[data-app-theme="dots"] body #root .patient-scroll .patient-date,
+html[data-app-theme="oblivion"] body #root .patient-scroll .patient-name,
+html[data-app-theme="oblivion"] body #root .patient-scroll .patient-count,
+html[data-app-theme="oblivion"] body #root .patient-scroll .patient-date{
+  color:var(--theme-text)!important;
+}
+html[data-app-theme="dots"] body #root .patient-scroll .patient-name small,
+html[data-app-theme="oblivion"] body #root .patient-scroll .patient-name small{
+  color:var(--theme-muted)!important;
+}
+
+html[data-app-theme="dots"] body #root .overview-weekday,
+html[data-app-theme="oblivion"] body #root .overview-weekday{
+  color:var(--theme-muted)!important;
+}
+html[data-app-theme="dots"] body #root .overview-week-grid .ov-cell,
+html[data-app-theme="dots"] body #root .overview-week-grid .ov-day-number,
+html[data-app-theme="oblivion"] body #root .overview-week-grid .ov-cell,
+html[data-app-theme="oblivion"] body #root .overview-week-grid .ov-day-number{
+  color:var(--theme-text)!important;
+}
+html[data-app-theme="dots"] body #root .overview-month-side,
+html[data-app-theme="oblivion"] body #root .overview-month-side{
+  background:var(--theme-soft)!important;
+}
+html[data-app-theme="dots"] body #root .overview-month-side *,
+html[data-app-theme="oblivion"] body #root .overview-month-side *{
+  color:var(--theme-text)!important;
+}
+html[data-app-theme="dots"] body #root .overview-month-side>div:first-child,
+html[data-app-theme="dots"] body #root .overview-month-calendar>div:first-child{
+  color:var(--theme-primary)!important;
+}
+html[data-app-theme="oblivion"] body #root .overview-month-side>div:first-child,
+html[data-app-theme="oblivion"] body #root .overview-month-calendar>div:first-child{
+  color:var(--theme-secondary)!important;
+}
+
+html[data-app-theme="dots"] body #root .settings-section input,
+html[data-app-theme="dots"] body #root .settings-section textarea,
+html[data-app-theme="oblivion"] body #root .settings-section input,
+html[data-app-theme="oblivion"] body #root .settings-section textarea{
+  background:var(--theme-soft)!important;
+  color:var(--theme-text)!important;
+  border-color:var(--theme-line)!important;
+}
+html[data-app-theme="dots"] body #root .settings-section input::placeholder,
+html[data-app-theme="oblivion"] body #root .settings-section input::placeholder{
+  color:var(--theme-muted)!important;
+  opacity:.82!important;
+}
+html[data-app-theme="dots"] body #root .add-choice-popover,
+html[data-app-theme="dots"] body #root .existing-case-search,
+html[data-app-theme="dots"] body #root .existing-case-search+div,
+html[data-app-theme="oblivion"] body #root .add-choice-popover,
+html[data-app-theme="oblivion"] body #root .existing-case-search,
+html[data-app-theme="oblivion"] body #root .existing-case-search+div{
+  background:var(--theme-surface)!important;
+  color:var(--theme-text)!important;
+  border-color:var(--theme-line)!important;
+}
+html[data-app-theme="dots"] body #root .calendar-day-modal .patient-list-title,
+html[data-app-theme="oblivion"] body #root .calendar-day-modal .patient-list-title{
+  color:var(--theme-text)!important;
+}
+html[data-app-theme="dots"] body>.clean-select-menu,
+html[data-app-theme="oblivion"] body>.clean-select-menu{
+  background:var(--theme-panel-alpha)!important;
+  color:var(--theme-text)!important;
+  border:1px solid var(--theme-line)!important;
+}
