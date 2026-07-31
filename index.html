@@ -316,7 +316,7 @@ const SHIFT_DEFAULTS = {
   '1/1': 'เวร 1/1 (นัดพิเศษ / เข้าเวรครึ่งวัน)',
 };
 
-const CATEGORY_RENAMES = { 'ตรวจ': 'oral exam', 'อุดฟัน': 'CoF', 'ขูดหินปูน': 'ScFM' };
+const CATEGORY_RENAMES = { 'ตรวจ': 'Oral exam', 'oral exam': 'Oral exam', 'อุดฟัน': 'CoF', 'ขูดหินปูน': 'ScFM' };
 const renameCategory = name => CATEGORY_RENAMES[name] || name;
 const migrateCategoryList = list => [...new Set((list || []).map(renameCategory))];
 const migrateCategoryStyles = styles => {
@@ -328,9 +328,9 @@ const migrateCaseCategories = input => Object.fromEntries(
   Object.entries(input || {}).map(([id, c]) => [id, { ...c, category: renameCategory(c.category) }])
 );
 
-const DEFAULT_CATEGORIES = ['oral exam', 'CoF', 'ScFM', 'RPD', 'TP', 'CD', 'ENDO', 'SUR', 'Stitch off', 'F/U', 'อื่นๆ'];
+const DEFAULT_CATEGORIES = ['Oral exam', 'CoF', 'ScFM', 'RPD', 'TP', 'CD', 'ENDO', 'SUR', 'Stitch off', 'F/U', 'อื่นๆ'];
 const CATEGORY_STYLE = {
-  'oral exam':  { bg: '#EDEAE0', text: '#5C6D68' },
+  'Oral exam':  { bg: '#EDEAE0', text: '#5C6D68' },
   'CoF':        { bg: '#E4EFEA', text: '#1F5B54' },
   'ScFM':       { bg: '#E1EDE3', text: '#3F6349' },
   'RPD':        { bg: '#EFE1EA', text: '#63405A' },
@@ -357,8 +357,33 @@ const CATEGORY_THEME_OPTIONS = {
 const CATEGORY_KEYWORDS = [
   ['RPD', 'RPD'], ['TP', 'TP'], ['CD', 'CD'], ['RCT', 'ENDO'], ['ENDO', 'ENDO'],
   ['SUR', 'SUR'], ['stitch', 'Stitch off'], ['f/u', 'F/U'], ['recheck', 'F/U'],
-  ['ขูด', 'ScFM'], ['อุด', 'CoF'], ['ตรวจ', 'oral exam'],
+  ['ขูด', 'ScFM'], ['อุด', 'CoF'], ['ตรวจ', 'Oral exam'],
 ];
+
+const ROOM_PALETTES = {
+  iceberg: {
+    label: 'Iceberg',
+    colors: ['#2B2B23', '#E95F69', '#8B70E8', '#4DB9DF', '#E5B957', '#5AC38F', '#DC805D'],
+  },
+  dots: {
+    label: 'Dots',
+    colors: ['#11131E', '#FF4057', '#8B5CF6', '#4BBCE8', '#F4C95D', '#49CE91', '#E6845E'],
+  },
+  cheesecake: {
+    label: 'Cheesecake',
+    colors: ['#403336', '#E11D74', '#9A2A4F', '#E58C4B', '#E5B957', '#78A65A', '#C75D7F'],
+  },
+  oblivion: {
+    label: 'Oblivion',
+    colors: ['#2F312F', '#E4492F', '#BBA2D9', '#2F8CAF', '#F39B1F', '#91BD3A', '#B6B1A8'],
+  },
+};
+
+function applyRoomPalette(key) {
+  const palette = ROOM_PALETTES[key] || ROOM_PALETTES.iceberg;
+  const names = ['--room-off', '--df-dot-red', '--df-dot-purple', '--df-dot-cyan', '--df-dot-yellow', '--df-dot-green', '--df-dot-orange'];
+  names.forEach((name, index) => document.documentElement.style.setProperty(name, palette.colors[index]));
+}
 
 const SKIP_WORDS = new Set(['ฟุ้ง', 'off', 'Screen', 'ปกส', 'รพ.สต.', '1/1', 'DM', 'เตียงเสริม']);
 const TIME_RE = /^(\d{1,2}:\d{2})\s*(.*)$/;
@@ -475,6 +500,32 @@ function DateField({ value, onChange, style = {} }) {
 function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '', onSignOut = null }) {
   const initials = (displayName || email.split('@')[0] || 'HOS').trim().slice(0, 2).toUpperCase();
   const accountName = email.split('@')[0] || displayName || 'user';
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [roomPalette, setRoomPalette] = useState('iceberg');
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    (async () => {
+      let next = localStorage.getItem('hos-room-palette') || 'iceberg';
+      try {
+        const saved = await window.storage.get('room-palette', false);
+        if (saved?.value && ROOM_PALETTES[saved.value]) next = saved.value;
+      } catch (e) {}
+      setRoomPalette(next);
+      applyRoomPalette(next);
+    })();
+  }, []);
+  useEffect(() => {
+    const close = event => { if (menuRef.current && !menuRef.current.contains(event.target)) setMenuOpen(false); };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, []);
+  const chooseRoomPalette = async key => {
+    setRoomPalette(key);
+    applyRoomPalette(key);
+    localStorage.setItem('hos-room-palette', key);
+    try { await window.storage.set('room-palette', key, false); } catch (e) {}
+  };
   return <div className="brand-bar">
     <style>{`
       .brand-bar { height:64px; padding:0 max(18px,calc((100vw - 950px)/2)); display:flex; align-items:center; justify-content:space-between; gap:18px; background:var(--theme-surface,#FFFFFF); color:var(--theme-primary,#35227F); border-bottom:1px solid var(--theme-line,rgba(49,89,201,.20)); box-sizing:border-box; font-family:'Nunito',sans-serif; }
@@ -488,11 +539,40 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
       .brand-avatar img { width:100%; height:100%; object-fit:cover; }
       .brand-email { max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--theme-text,#29236F); font-size:11px; font-weight:800; }
       .brand-action { width:30px; height:30px; border:0; background:transparent; color:var(--theme-secondary,#3159C9); display:grid; place-items:center; cursor:pointer; padding:0; font-size:16px; }
+      .brand-settings-link { font:1000 18px/1 var(--df-mono); letter-spacing:2px; padding-bottom:7px; }
       .brand-signout { width:auto; padding:0 4px; color:#9D9D9D; font-size:10px; font-weight:700; }
+      .brand-menu-wrap { position:relative; }
+      .brand-menu { position:absolute; z-index:100; top:38px; right:0; width:230px; padding:8px; border:1px solid var(--theme-line); border-radius:12px; background:var(--theme-surface); box-shadow:0 14px 38px var(--theme-shadow); }
+      .brand-menu-command { width:100%; min-height:38px; display:flex; align-items:center; gap:10px; padding:8px 10px; border:0; border-radius:8px; background:transparent; color:var(--theme-text); cursor:pointer; text-align:left; font-size:12px; font-weight:800; }
+      .brand-menu-command:hover { background:var(--theme-hover); }
+      .brand-menu-label { margin:7px 10px 5px; color:var(--theme-muted); font-size:9px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+      .room-palette-list { display:grid; grid-template-columns:1fr 1fr; gap:5px; padding:0 4px 5px; }
+      .room-palette-option { min-width:0; padding:7px; border:1px solid transparent; border-radius:8px; background:var(--theme-soft); color:var(--theme-text); cursor:pointer; }
+      .room-palette-option.active { border-color:var(--theme-secondary); }
+      .room-palette-name { display:block; margin-bottom:5px; overflow:hidden; text-overflow:ellipsis; font-size:9px; font-weight:800; }
+      .room-palette-dots { display:flex; gap:3px; }
+      .room-palette-dots i { width:7px; height:7px; border-radius:50%; }
+      .brand-menu-signout { color:var(--theme-danger); }
       @media(max-width:600px){ .brand-bar{height:54px;padding:0 14px}.brand-logo{width:34px;height:34px;flex-basis:34px;border-radius:10px;font-size:11px}.brand-title{font-size:14px}.brand-subtitle{display:none}.brand-user{gap:5px}.brand-avatar{width:27px;height:27px;font-size:9px}.brand-email{max-width:92px;font-size:9px}.brand-signout{display:none} }
     `}</style>
     <div className="brand-id"><div className="brand-logo">HOS</div><div><div className="brand-title">HOS SCHEDULE</div><div className="brand-subtitle">งานโรงพยาบาล &amp; นัดคนไข้</div></div></div>
-    <div className="brand-user"><span className="brand-online"/><span className="brand-avatar">{photoURL ? <img src={photoURL} alt={displayName || email} referrerPolicy="no-referrer"/> : initials}</span><span className="brand-email" title={email}>{accountName}</span><button className="brand-action" onClick={() => window.dispatchEvent(new CustomEvent('hos-open-settings'))} title="ตั้งค่า" aria-label="ตั้งค่า"><Icon name="settingsSolid" size={16}/></button>{onSignOut && <button className="brand-action brand-signout" onClick={onSignOut}>ออก</button>}</div>
+    <div className="brand-user">
+      <span className="brand-online"/><span className="brand-avatar">{photoURL ? <img src={photoURL} alt={displayName || email} referrerPolicy="no-referrer"/> : initials}</span><span className="brand-email" title={email}>{accountName}</span>
+      <button className="brand-action brand-settings-link" onClick={() => window.dispatchEvent(new CustomEvent('hos-open-settings'))} title="ตั้งค่าข้อมูล" aria-label="ตั้งค่าข้อมูล">...</button>
+      <div className="brand-menu-wrap" ref={menuRef}>
+        <button className="brand-action" onClick={() => setMenuOpen(open => !open)} title="เมนู" aria-label="เมนู" aria-expanded={menuOpen}><Icon name="settingsSolid" size={16}/></button>
+        {menuOpen && <div className="brand-menu">
+          <div className="brand-menu-label">Room palette</div>
+          <div className="room-palette-list">
+            {Object.entries(ROOM_PALETTES).map(([key, palette]) => <button type="button" key={key} className={`room-palette-option ${roomPalette === key ? 'active' : ''}`} onClick={() => chooseRoomPalette(key)}>
+              <span className="room-palette-name">{palette.label}</span>
+              <span className="room-palette-dots">{palette.colors.slice(1, 5).map((color, index) => <i key={index} style={{ background: color }} />)}</span>
+            </button>)}
+          </div>
+          {onSignOut && <button className="brand-menu-command brand-menu-signout" onClick={onSignOut}><Icon name="x" size={14}/><span>ออกจากระบบ</span></button>}
+        </div>}
+      </div>
+    </div>
   </div>;
 }
 
@@ -539,9 +619,9 @@ function ScheduleCalendar() {
   };
   const cancelOverviewPress = () => { if (overviewPressTimer.current) clearTimeout(overviewPressTimer.current); overviewPressTimer.current = null; };
   const [editingCase, setEditingCase] = useState(false);
-  const [editCaseForm, setEditCaseForm] = useState({ hn: '', name: '', phone: '', category: 'oral exam' });
+  const [editCaseForm, setEditCaseForm] = useState({ hn: '', name: '', phone: '', category: 'Oral exam' });
   const [calendarEdit, setCalendarEdit] = useState(null);
-  const [calendarEditForm, setCalendarEditForm] = useState({ hn: '', name: '', phone: '', category: 'oral exam', time: '13:00', duration: 30, step: '' });
+  const [calendarEditForm, setCalendarEditForm] = useState({ hn: '', name: '', phone: '', category: 'Oral exam', time: '13:00', duration: 30, step: '' });
   useEffect(() => { setEditingCase(false); }, [historyCaseId]);
   useEffect(() => { if (view !== 'patients') { setHistoryCaseId(null); setEditingCase(false); } }, [view]);
   useEffect(() => { setAddPanelOpen(false); setAddChoiceOpen(false); setCalendarEdit(null); if (selected) setFDate(selected); }, [selected]);
@@ -565,7 +645,7 @@ function ScheduleCalendar() {
   const [fHn, setFHn] = useState('');
   const [fName, setFName] = useState('');
   const [fPhone, setFPhone] = useState('');
-  const [fCategory, setFCategory] = useState('ตรวจ');
+  const [fCategory, setFCategory] = useState('Oral exam');
   const [fDate, setFDate] = useState(todayStr);
   const [fTime, setFTime] = useState('13:00');
   const [fDuration, setFDuration] = useState(30);
@@ -752,6 +832,29 @@ function ScheduleCalendar() {
     return Object.values(cases).filter(c => c.hn.includes(q) || c.name.toLowerCase().includes(q)).slice(0, 8);
   }, [searchQuery, cases]);
 
+  const newCaseSuggestions = useMemo(() => {
+    const hnQuery = fHn.trim().toLowerCase();
+    const nameQuery = fName.trim().toLowerCase();
+    if (hnQuery.length < 2 && nameQuery.length < 2) return [];
+    return Object.values(cases).filter(c =>
+      (hnQuery.length >= 2 && String(c.hn || '').toLowerCase().includes(hnQuery)) ||
+      (nameQuery.length >= 2 && String(c.name || '').toLowerCase().includes(nameQuery))
+    ).slice(0, 5);
+  }, [fHn, fName, cases]);
+  const pickExistingFromSuggestion = c => {
+    setPickedCaseId(c.id);
+    setSearchQuery('');
+    setAddMode('existing');
+    setFHn(c.hn || '');
+    setFName(c.name || '');
+    setFPhone(c.phone || '');
+    setFCategory(c.category || 'Oral exam');
+  };
+  const latestVisitLabel = c => {
+    const latest = [...(c.visits || [])].sort((a, b) => ((b.date || '') + (b.time || '')).localeCompare((a.date || '') + (a.time || '')))[0];
+    return latest ? `${latest.date} ${latest.time}${latest.step ? ` · ${latest.step}` : ''}` : 'ยังไม่มีประวัตินัด';
+  };
+
   const patientListResults = useMemo(() => {
     const q = patientListQuery.trim().toLowerCase();
     let list = Object.values(cases);
@@ -774,7 +877,7 @@ function ScheduleCalendar() {
     });
   }, [patientListQuery, patientSort, cases]);
 
-  const resetNewForm = () => { setFHn(''); setFName(''); setFPhone(''); setFCategory('oral exam'); setFDate(selected || todayStr); setFTime('13:00'); setFDuration(30); setFStep(''); };
+  const resetNewForm = () => { setFHn(''); setFName(''); setFPhone(''); setFCategory('Oral exam'); setFDate(selected || todayStr); setFTime('13:00'); setFDuration(30); setFStep(''); };
 
   const createCase = () => {
     if (!fDate || !fName.trim()) return;
@@ -1183,7 +1286,7 @@ function ScheduleCalendar() {
                       <span className="history-visit-index">Visit {idx + 1}</span>
                       <span className="history-visit-date">{v.date} {v.time}</span>
                       <span className="history-visit-step">{v.step || '—'}</span>
-                      {cancelled && <span className="history-visit-status">ยกเลิกแล้ว</span>}
+                      <span className="history-visit-status">{cancelled ? 'ยกเลิกแล้ว' : ''}</span>
                       <div className="history-visit-actions">
                         <button onClick={() => editPatientFromCalendar(historyCase, v)} title="เลื่อนนัด / แก้เวลา" aria-label="เลื่อนนัด / แก้เวลา"><Icon name="calendarSolid" size={13} /></button>
                         <button onClick={() => jumpToVisit(v.date)} title="เปิดวันที่นัด" aria-label="เปิดวันที่นัด"><Icon name="folderOpenSolid" size={14} /></button>
@@ -1228,7 +1331,7 @@ function ScheduleCalendar() {
             </div>
 
             <div className="calendar-room-legend">
-              {Object.entries(SHIFT_STYLE).map(([key, style]) => <button key={key} className="calendar-room-pill" data-shift={key} onClick={() => { const first = cells.find(c => c && c.shift === key); if (first) setSelected(first.dstr); }} title={shiftNotes[key] || key}><span className="dot" style={{ background: style.soft }} /><span>{style.label || key}</span></button>)}
+              {Object.entries(SHIFT_STYLE).map(([key, style]) => <span key={key} className="calendar-room-pill" data-shift={key} title={shiftNotes[key] || key}><span className="dot" style={{ background: style.soft }} /><span>{style.label || key}</span></span>)}
             </div>
 
             {selected && (
@@ -1288,6 +1391,15 @@ function ScheduleCalendar() {
                         <CleanSelect className="new-case-category" value={fCategory} onChange={setFCategory} options={categories.map(cat => ({ value: cat, label: cat }))}
                           style={{ minWidth: 120, fontSize: 12.5, fontWeight: 600, borderRadius: 6, padding: '7px 10px', background: (categoryStyles[fCategory] || CATEGORY_STYLE['อื่นๆ']).bg, color: (categoryStyles[fCategory] || CATEGORY_STYLE['อื่นๆ']).text }} ariaLabel="ประเภทงาน" />
                       </div>
+                      {newCaseSuggestions.length > 0 && (
+                        <div className="new-case-suggestions" role="listbox" aria-label="คนไข้เดิมที่ตรงกัน">
+                          <div className="new-case-suggestions-label">พบคนไข้เดิม</div>
+                          {newCaseSuggestions.map(c => <button type="button" key={c.id} onClick={() => pickExistingFromSuggestion(c)}>
+                            <span><strong>{c.hn ? `HN ${c.hn}` : 'ไม่มี HN'}</strong><b>{c.name}</b></span>
+                            <small>{c.category} · นัดล่าสุด {latestVisitLabel(c)}</small>
+                          </button>)}
+                        </div>
+                      )}
                     </>
                   )}
 
