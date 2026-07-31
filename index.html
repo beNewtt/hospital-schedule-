@@ -1246,11 +1246,11 @@ function ScheduleCalendar() {
       <div className="app-shell" style={{ width: '100%', maxWidth: 950, margin: '0 auto', boxSizing: 'border-box' }}>
         <header className="page-head" style={{ marginBottom: 16 }}>
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: 2, color: '#CBD183', textTransform: 'uppercase', marginBottom: 4 }}>
-            งานโรงพยาบาล &amp; นัดคนไข้
+            {view === 'patients' ? 'PATIENT ARCHIVE' : 'งานโรงพยาบาล & นัดคนไข้'}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
             <h1 style={{ fontFamily: "'Kanit', sans-serif", fontSize: 24, fontWeight: 700, margin: 0, color: '#FFFFFF' }}>
-              {view === 'calendar' ? `${THAI_MONTH_NAMES[month - 1]} ${year}` : view === 'overview' ? `OVERVIEW ${year}` : view === 'patients' ? 'PATIENT LIST' : 'SETTINGS'}
+              {view === 'calendar' ? `${THAI_MONTH_NAMES[month - 1]} ${year}` : view === 'overview' ? `OVERVIEW ${year}` : view === 'patients' ? 'Find patients' : 'SETTINGS'}
             </h1>
             <div className="header-nav-wrap" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginLeft: 'auto', marginRight: 46 }}>
               <div className={`nav-group nav-${view}`}>
@@ -1647,19 +1647,20 @@ function ScheduleCalendar() {
         )}
 
         {view === 'patients' && (
-          <div className="view-panel" style={{ marginBottom: 22, height: 'calc(100vh - 225px)', minHeight: 280, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: "'IBM Plex Sans Thai', sans-serif" }}>
+          <div className="view-panel patient-list-page" style={{ marginBottom: 22, height: 'calc(100vh - 225px)', minHeight: 280, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: "'IBM Plex Sans Thai', sans-serif" }}>
             <div className="search-box patient-search-minimal" style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 10, padding: '9px 12px', marginBottom: 14, background: '#E2E3EA' }}>
               <Icon name="search" size={14} color="#8A7F63" />
-              <input placeholder="Search by HN, name, or category" value={patientListQuery} onChange={e => setPatientListQuery(e.target.value)}
+              <input aria-label="Search patients" placeholder="Search by HN, name, or work type..." value={patientListQuery} onChange={e => setPatientListQuery(e.target.value)}
                 style={{ border: 'none', outline: 'none', fontSize: 13, flex: 1, background: 'transparent', fontFamily: "'Nunito', 'IBM Plex Sans Thai', monospace" }} />
             </div>
-            <div className="patient-mobile-total">total / {patientListResults.length} cases</div>
             <div className="patient-workspace">
-              <aside className="patient-sidebar">
+              <div className="patient-list-toolbar">
+                <div className="patient-sidebar" role="group" aria-label="Sort patients">
                 {[['date','Recent'],['name','A–Z'],['hn','HN'],['category','Work Type']].map(([value,label]) => <button key={value} onClick={() => setPatientSort(value)} className={`patient-sort-btn ${patientSort === value ? 'active' : ''}`}>{label}</button>)}
-              </aside>
+                </div>
+                <div className="patient-result-summary">{patientListResults.length} results</div>
+              </div>
               <div className="patient-list-main">
-                <div className="patient-desktop-total" style={{ fontFamily: "'Nunito', monospace", fontSize: 11, fontWeight: 800, color: '#A9AEC2', margin: '0 0 9px 2px' }}>total / {patientListResults.length} cases</div>
                 <div className="patient-table-head"><span>hn</span><span>patient</span><span>work type</span><span>visits</span><span style={{ textAlign: 'right' }}>last date</span></div>
                 <div className="patient-scroll" style={{ flex: 1 }}>
             {patientListResults.map(c => {
