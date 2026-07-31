@@ -14,7 +14,7 @@
 <style>
   html, body { margin: 0; padding: 0; background: var(--theme-canvas, #FFFFFF); overflow-x: hidden; }
 </style>
-<link rel="stylesheet" href="./df-monkey-theme.css?v=20260725-46" />
+<link rel="stylesheet" href="./df-monkey-theme.css?v=20260731-47" />
 </head>
 <body>
 <div id="root"></div>
@@ -407,11 +407,16 @@ const ROOM_PALETTES = {
   },
 };
 
+const ROOM_COLOR_LABELS = ['off', 'ปกส', 'ฟุ้ง', 'Screen', 'DM', 'รพ.สต.', '1/1'];
+const ROOM_COLOR_TOKENS = ['--room-off', '--df-dot-red', '--df-dot-purple', '--df-dot-cyan', '--df-dot-yellow', '--df-dot-green', '--df-dot-orange'];
+
+function applyRoomColors(colors) {
+  ROOM_COLOR_TOKENS.forEach((name, index) => document.documentElement.style.setProperty(name, colors[index]));
+}
+
 function applyRoomPalette(key) {
   const palette = ROOM_PALETTES[key] || ROOM_PALETTES.iceberg;
   document.documentElement.dataset.appTheme = key;
-  const names = ['--room-off', '--df-dot-red', '--df-dot-purple', '--df-dot-cyan', '--df-dot-yellow', '--df-dot-green', '--df-dot-orange'];
-  names.forEach((name, index) => document.documentElement.style.setProperty(name, palette.colors[index]));
   const themeNames = {
     canvas: '--theme-canvas', surface: '--theme-surface', soft: '--theme-soft', tint: '--theme-tint',
     primary: '--theme-primary', secondary: '--theme-secondary', text: '--theme-text', muted: '--theme-muted',
@@ -423,6 +428,12 @@ function applyRoomPalette(key) {
 }
 
 applyRoomPalette(localStorage.getItem('hos-room-palette') || 'iceberg');
+try {
+  const savedRoomColors = JSON.parse(localStorage.getItem('hos-room-colors') || 'null');
+  applyRoomColors(Array.isArray(savedRoomColors) && savedRoomColors.length === ROOM_COLOR_TOKENS.length ? savedRoomColors : ROOM_PALETTES.iceberg.colors);
+} catch (e) {
+  applyRoomColors(ROOM_PALETTES.iceberg.colors);
+}
 
 const SKIP_WORDS = new Set(['ฟุ้ง', 'off', 'Screen', 'ปกส', 'รพ.สต.', '1/1', 'DM', 'เตียงเสริม']);
 const TIME_RE = /^(\d{1,2}:\d{2})\s*(.*)$/;
@@ -541,6 +552,12 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
   const accountName = email.split('@')[0] || displayName || 'user';
   const [menuOpen, setMenuOpen] = useState(false);
   const [roomPalette, setRoomPalette] = useState('iceberg');
+  const [roomColors, setRoomColors] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('hos-room-colors') || 'null');
+      return Array.isArray(saved) && saved.length === ROOM_COLOR_TOKENS.length ? saved : [...ROOM_PALETTES.iceberg.colors];
+    } catch (e) { return [...ROOM_PALETTES.iceberg.colors]; }
+  });
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -552,6 +569,14 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
       } catch (e) {}
       setRoomPalette(next);
       applyRoomPalette(next);
+      let nextRoomColors = roomColors;
+      try {
+        const savedColors = await window.storage.get('room-colors', false);
+        const parsed = savedColors?.value ? JSON.parse(savedColors.value) : null;
+        if (Array.isArray(parsed) && parsed.length === ROOM_COLOR_TOKENS.length) nextRoomColors = parsed;
+      } catch (e) {}
+      setRoomColors(nextRoomColors);
+      applyRoomColors(nextRoomColors);
     })();
   }, []);
   useEffect(() => {
@@ -562,8 +587,16 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
   const chooseRoomPalette = async key => {
     setRoomPalette(key);
     applyRoomPalette(key);
+    applyRoomColors(roomColors);
     localStorage.setItem('hos-room-palette', key);
     try { await window.storage.set('room-palette', key, false); } catch (e) {}
+  };
+  const updateRoomColor = async (index, color) => {
+    const next = roomColors.map((value, i) => i === index ? color : value);
+    setRoomColors(next);
+    applyRoomColors(next);
+    localStorage.setItem('hos-room-colors', JSON.stringify(next));
+    try { await window.storage.set('room-colors', JSON.stringify(next), false); } catch (e) {}
   };
   return <div className="brand-bar">
     <style>{`
@@ -591,6 +624,9 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
       .room-palette-name { display:block; margin-bottom:5px; overflow:hidden; text-overflow:ellipsis; font-size:9px; font-weight:800; }
       .room-palette-dots { display:flex; gap:3px; }
       .room-palette-dots i { width:7px; height:7px; border-radius:50%; }
+      .room-color-list { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:0 4px 7px; }
+      .room-color-option { min-width:0; min-height:32px; display:flex; align-items:center; gap:7px; padding:5px 7px; background:var(--theme-soft); color:var(--theme-text); font-size:9px; font-weight:800; }
+      .room-color-option input { width:16px; height:16px; flex:0 0 16px; padding:0; border:0; background:transparent; }
       .brand-menu-signout { color:var(--theme-danger); }
       @media(max-width:600px){ .brand-bar{height:54px;padding:0 14px}.brand-logo{width:34px;height:34px;flex-basis:34px;border-radius:10px;font-size:11px}.brand-title{font-size:14px}.brand-subtitle{display:none}.brand-user{gap:5px}.brand-avatar{width:27px;height:27px;font-size:9px}.brand-email{max-width:92px;font-size:9px}.brand-signout{display:none} }
     `}</style>
@@ -603,10 +639,14 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
         {menuOpen && <div className="brand-menu">
           <div className="brand-menu-label">Website theme</div>
           <div className="room-palette-list">
-            {Object.entries(ROOM_PALETTES).map(([key, palette]) => <button type="button" key={key} className={`room-palette-option ${roomPalette === key ? 'active' : ''}`} onClick={() => chooseRoomPalette(key)}>
+            {Object.entries(ROOM_PALETTES).map(([key, palette]) => <button type="button" key={key} className={`room-palette-option ${roomPalette === key ? 'active' : ''}`} style={{ background: palette.theme.canvas, color: palette.theme.text }} onClick={() => chooseRoomPalette(key)}>
               <span className="room-palette-name">{palette.label}</span>
               <span className="room-palette-dots">{palette.colors.slice(1, 5).map((color, index) => <i key={index} style={{ background: color }} />)}</span>
             </button>)}
+          </div>
+          <div className="brand-menu-label">Room colors</div>
+          <div className="room-color-list">
+            {ROOM_COLOR_LABELS.map((label, index) => <label className="room-color-option" key={label}><input type="color" value={roomColors[index]} onChange={e => updateRoomColor(index, e.target.value)} /><span>{label}</span></label>)}
           </div>
           {onSignOut && <button className="brand-menu-command brand-menu-signout" onClick={onSignOut}><Icon name="x" size={14}/><span>ออกจากระบบ</span></button>}
         </div>}
@@ -1511,7 +1551,7 @@ function ScheduleCalendar() {
             onPointerUp={e => { if (overviewSwipeX.current === null) return; const dx = e.clientX - overviewSwipeX.current; overviewSwipeX.current = null; if (Math.abs(dx) > 45) moveOverviewMonth(dx < 0 ? 1 : -1); }}
             onPointerCancel={() => { overviewSwipeX.current = null; }}>
             <div className="overview-deck-controls"><button disabled={overviewMonthIndex === 0} onClick={() => moveOverviewMonth(-1)} aria-label="เดือนก่อนหน้า"><Icon name="chevronLeft" size={13}/></button><button disabled={overviewMonthIndex === 11} onClick={() => moveOverviewMonth(1)} aria-label="เดือนถัดไป"><Icon name="chevronRight" size={13}/></button></div>
-            {[overviewMonthIndex].map(idx => {
+            {Array.from({ length: 12 }, (_, idx) => idx).map(idx => {
               const mname = THAI_MONTH_NAMES[idx];
               const m = idx + 1;
               const mc = buildCells(year, m);
@@ -1530,7 +1570,7 @@ function ScheduleCalendar() {
                     </div>
                   </div>
                   <div className="overview-month-calendar">
-                  <div style={{ textAlign: 'center', fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", fontWeight: 800, fontSize: 22, color: MONTH_THEMES[idx].bg, marginBottom: 18 }}>{new Date(year, idx, 1).toLocaleString('en-US', { month: 'long' }).toUpperCase()} {year}</div>
+                  <div className="overview-mini-head"><span>{new Date(year, idx, 1).toLocaleString('en-US', { month: 'long' })}</span><small>{shiftTotal} shifts</small></div>
                   <div className="overview-week-grid" style={{ display: 'grid', gap: 6, marginBottom: 7 }}>
                     {WEEKDAYS_TH.map(w => <div className="overview-weekday" key={w} style={{ textAlign: 'center', fontSize: 9.5, fontWeight: 700, color: '#000000', fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif", letterSpacing: .1 }}>{w}</div>)}
                   </div>

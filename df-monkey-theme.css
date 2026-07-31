@@ -1126,3 +1126,132 @@ html[data-app-theme="oblivion"] body>.clean-select-menu{
   color:var(--theme-text)!important;
   border:1px solid var(--theme-line)!important;
 }
+
+/* Patient archive stays flat: rectangular data rows separated by rules. */
+body #root .patient-list-page .patient-search-minimal{
+  border-radius:0!important;
+}
+body #root .patient-list-page .patient-sort-btn{
+  border-radius:4px!important;
+}
+body #root .patient-list-page .patient-table-head{
+  border-bottom:1px solid var(--theme-line)!important;
+}
+body #root .patient-list-page .patient-scroll .plist-row,
+body #root .patient-list-page .patient-scroll .plist-row:nth-child(odd){
+  border-bottom:1px solid var(--theme-line)!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+body #root .patient-list-page .patient-scroll .plist-row:hover,
+body #root .patient-list-page .patient-scroll .plist-row:nth-child(odd):hover{
+  border-radius:0!important;
+  box-shadow:inset 3px 0 0 var(--theme-secondary)!important;
+}
+
+/* Year overview: twelve compact, flat calendars. */
+body #root .overview-grid{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:0 24px!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0 0 22px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  touch-action:auto!important;
+}
+body #root .overview-grid::before,
+body #root .overview-grid::after,
+body #root .overview-deck-controls,
+body #root .overview-deck-dots{
+  display:none!important;
+  content:none!important;
+}
+body #root .overview-grid .overview-month{
+  display:block!important;
+  min-width:0!important;
+  min-height:0!important;
+  padding:20px 0 18px!important;
+  border:0!important;
+  border-bottom:1px solid var(--theme-line)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  animation:none!important;
+}
+body #root .overview-grid .overview-month-side{
+  display:none!important;
+}
+body #root .overview-grid .overview-month-calendar{
+  width:100%!important;
+  max-width:238px!important;
+  margin:0!important;
+  padding:0!important;
+  background:transparent!important;
+}
+body #root .overview-grid .overview-mini-head{
+  display:flex!important;
+  align-items:baseline!important;
+  justify-content:space-between!important;
+  min-height:22px!important;
+  margin:0 0 8px!important;
+  color:var(--theme-text)!important;
+  font:900 11px var(--df-mono)!important;
+  letter-spacing:.06em!important;
+  text-transform:uppercase!important;
+}
+body #root .overview-grid .overview-mini-head small{
+  color:var(--theme-muted)!important;
+  font:650 8px var(--df-mono)!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+}
+body #root .overview-grid .overview-week-grid{
+  display:grid!important;
+  grid-template-columns:repeat(7,minmax(0,1fr))!important;
+  gap:1px 2px!important;
+  width:100%!important;
+  max-width:238px!important;
+  margin:0!important;
+}
+body #root .overview-grid .overview-week-grid>div{
+  min-height:23px!important;
+  height:23px!important;
+}
+body #root .overview-grid .overview-weekday{
+  display:grid!important;
+  place-items:center!important;
+  color:var(--theme-muted)!important;
+  font:750 8px var(--df-mono)!important;
+}
+body #root .overview-grid .ov-cell{
+  width:100%!important;
+  height:23px!important;
+  min-height:23px!important;
+  gap:1px!important;
+  border:0!important;
+  border-radius:0!important;
+  color:var(--theme-text)!important;
+  font:700 9px var(--df-mono)!important;
+}
+body #root .overview-grid .ov-cell:hover{
+  background:var(--theme-hover)!important;
+  box-shadow:inset 0 -2px 0 var(--theme-secondary)!important;
+}
+body #root .overview-grid .ov-room-dot{
+  width:3px!important;
+  height:3px!important;
+}
+@media(max-width:800px){
+  body #root .overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:0 18px!important}
+}
+@media(max-width:520px){
+  body #root .overview-grid{grid-template-columns:1fr!important}
+  body #root .overview-grid .overview-month-calendar{max-width:238px!important}
+}
