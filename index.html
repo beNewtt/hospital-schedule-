@@ -14,7 +14,7 @@
 <style>
   html, body { margin: 0; padding: 0; background: var(--theme-canvas, #FFFFFF); overflow-x: hidden; }
 </style>
-<link rel="stylesheet" href="./df-monkey-theme.css?v=20260731-47" />
+<link rel="stylesheet" href="./df-monkey-theme.css?v=20260801-48" />
 </head>
 <body>
 <div id="root"></div>
@@ -641,7 +641,7 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
           <div className="room-palette-list">
             {Object.entries(ROOM_PALETTES).map(([key, palette]) => <button type="button" key={key} className={`room-palette-option ${roomPalette === key ? 'active' : ''}`} style={{ background: palette.theme.canvas, color: palette.theme.text }} onClick={() => chooseRoomPalette(key)}>
               <span className="room-palette-name">{palette.label}</span>
-              <span className="room-palette-dots">{palette.colors.slice(1, 5).map((color, index) => <i key={index} style={{ background: color }} />)}</span>
+              <span className="room-palette-dots">{[palette.theme.primary, palette.theme.secondary, palette.theme.text, palette.theme.surface].map((color, index) => <i key={index} style={{ background: color }} />)}</span>
             </button>)}
           </div>
           <div className="brand-menu-label">Room colors</div>
@@ -1066,7 +1066,7 @@ function ScheduleCalendar() {
   };
 
   return (
-    <div style={{ fontFamily: "'Sarabun', sans-serif", background: 'var(--theme-canvas, #FFFFFF)', minHeight: '100vh', color: 'var(--theme-text, #29236F)', padding: '20px 14px 0', display: 'flex', flexDirection: 'column' }}>
+    <div className="schedule-root" style={{ fontFamily: "'Sarabun', sans-serif", background: 'var(--theme-canvas, #FFFFFF)', minHeight: '100vh', color: 'var(--theme-text, #29236F)', padding: '20px 14px 0', display: 'flex', flexDirection: 'column' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Nunito:wght@400;500;600;700;800;900&family=Noto+Sans+Thai+Looped:wght@400;500;600;700&display=swap');
         :root {

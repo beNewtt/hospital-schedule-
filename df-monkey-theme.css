@@ -1252,6 +1252,79 @@ body #root .overview-grid .ov-room-dot{
   body #root .overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:0 18px!important}
 }
 @media(max-width:520px){
-  body #root .overview-grid{grid-template-columns:1fr!important}
-  body #root .overview-grid .overview-month-calendar{max-width:238px!important}
+  body #root .overview-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:0 10px!important;
+  }
+  body #root .overview-grid .overview-month{
+    padding:15px 0 14px!important;
+  }
+  body #root .overview-grid .overview-month-calendar,
+  body #root .overview-grid .overview-week-grid{
+    width:100%!important;
+    max-width:none!important;
+  }
+  body #root .overview-grid .overview-mini-head{
+    min-height:19px!important;
+    margin-bottom:5px!important;
+    font-size:9px!important;
+  }
+  body #root .overview-grid .overview-mini-head small{
+    font-size:7px!important;
+  }
+  body #root .overview-grid .overview-week-grid{
+    gap:0 1px!important;
+  }
+  body #root .overview-grid .overview-week-grid>div,
+  body #root .overview-grid .ov-cell{
+    min-height:19px!important;
+    height:19px!important;
+  }
+  body #root .overview-grid .overview-weekday{
+    font-size:6.5px!important;
+  }
+  body #root .overview-grid .ov-cell{
+    font-size:7.5px!important;
+  }
+  body #root .overview-grid .ov-room-dot{
+    width:4px!important;
+    height:4px!important;
+  }
+}
+
+/* Mobile shell: remove the stacked outer margins that made the calendar narrow. */
+@media(max-width:600px){
+  body #root .schedule-root{
+    padding:0 6px 24px!important;
+  }
+  body #root .schedule-root .app-shell{
+    width:100%!important;
+    padding:0!important;
+  }
+  body #root .schedule-root .app-shell>.page-head{
+    min-height:0!important;
+    margin:0 0 10px!important;
+    padding:14px 8px 12px!important;
+  }
+  body #root .schedule-root .page-head h1,
+  body #root .schedule-root .page-head h2{
+    font-size:24px!important;
+  }
+  body #root .schedule-root .app-shell>.page-head+div[style*="border-bottom"]{
+    min-height:48px!important;
+    margin:0 0 12px!important;
+    padding:0 6px 8px!important;
+  }
+  body #root .schedule-root .calendar-table{
+    width:100%!important;
+    margin:0!important;
+  }
+  body #root .schedule-root .calendar-days>.cell{
+    min-height:72px!important;
+    padding:6px!important;
+  }
+  body #root .schedule-root .calendar-room-dot{
+    width:8px!important;
+    height:8px!important;
+  }
 }
