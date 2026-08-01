@@ -43,6 +43,7 @@
   --df-dot-yellow:#E5B957;
   --df-dot-orange:#DC805D;
   --room-off:#2B2B23;
+  --room-fill-opacity:78%;
   --df-body:"Noto Sans Thai Looped","Tahoma",sans-serif;
   --df-heading:"Kanit","Noto Sans Thai Looped",sans-serif;
   --df-mono:"Nunito","IBM Plex Mono","SFMono-Regular",Consolas,monospace;
@@ -1215,7 +1216,8 @@ body #root .overview-grid .overview-mini-head small{
 body #root .overview-grid .overview-week-grid{
   display:grid!important;
   grid-template-columns:repeat(7,minmax(0,1fr))!important;
-  gap:1px 2px!important;
+  row-gap:1px!important;
+  column-gap:0!important;
   width:100%!important;
   max-width:238px!important;
   margin:0!important;
@@ -1231,6 +1233,8 @@ body #root .overview-grid .overview-weekday{
   font:750 8px var(--df-mono)!important;
 }
 body #root .overview-grid .ov-cell{
+  position:relative!important;
+  z-index:0!important;
   width:100%!important;
   height:23px!important;
   min-height:23px!important;
@@ -1239,6 +1243,42 @@ body #root .overview-grid .ov-cell{
   border-radius:0!important;
   color:var(--theme-text)!important;
   font:700 9px var(--df-mono)!important;
+}
+body #root .overview-grid .ov-cell[class*="ov-range-"]{
+  isolation:isolate!important;
+}
+body #root .overview-grid .ov-cell[class*="ov-range-"]::before{
+  content:""!important;
+  position:absolute!important;
+  z-index:-1!important;
+  top:2px!important;
+  bottom:2px!important;
+  left:0!important;
+  right:0!important;
+  background:var(--ov-range-color)!important;
+}
+body #root .overview-grid .ov-cell.ov-range-single::before{
+  width:19px!important;
+  height:19px!important;
+  inset:2px auto auto 50%!important;
+  border-radius:50%!important;
+  transform:translateX(-50%)!important;
+}
+body #root .overview-grid .ov-cell.ov-range-start::before{
+  right:0!important;
+  border-radius:999px 0 0 999px!important;
+}
+body #root .overview-grid .ov-cell.ov-range-middle::before{
+  left:0!important;
+  right:0!important;
+  border-radius:0!important;
+}
+body #root .overview-grid .ov-cell.ov-range-end::before{
+  left:0!important;
+  border-radius:0 999px 999px 0!important;
+}
+body #root .overview-grid .ov-cell[class*="ov-range-"] .ov-room-dot{
+  display:none!important;
 }
 body #root .overview-grid .ov-cell:hover{
   background:var(--theme-hover)!important;
@@ -1275,7 +1315,8 @@ body #root .overview-grid .ov-room-dot{
     font-size:7px!important;
   }
   body #root .overview-grid .overview-week-grid{
-    gap:0 1px!important;
+    row-gap:0!important;
+    column-gap:0!important;
   }
   body #root .overview-grid .overview-week-grid>div,
   body #root .overview-grid .ov-cell{

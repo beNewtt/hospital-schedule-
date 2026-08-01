@@ -287,13 +287,13 @@ const MONTH_THEMES = [
 ];
 
 const SHIFT_STYLE = {
-  'off':      { bar: '#D7D7D2', soft: '#2B2B23', date: '#FFFFFF', text: '#FFFFFF', count: '#2B2B23', label: 'off' },
-  'ปกส':      { bar: '#F7CED0', soft: '#E95F69', date: '#FFFFFF', text: '#FFFFFF', count: '#D34F5A', label: 'ปกส' },
-  'ฟุ้ง':     { bar: '#DDD3F6', soft: '#8B70E8', date: '#FFFFFF', text: '#FFFFFF', count: '#7659D1', label: 'ฟุ้ง' },
-  'Screen':   { bar: '#C8E9F4', soft: '#4DB9DF', date: '#163C45', text: '#163C45', count: '#2F8EAF', label: 'Screen' },
-  'DM':       { bar: '#F3E4BB', soft: '#E5B957', date: '#3A321B', text: '#3A321B', count: '#A47B19', label: 'DM' },
-  'รพ.สต.':   { bar: '#C9E9D8', soft: '#5AC38F', date: '#173F35', text: '#173F35', count: '#328263', label: 'รพ.สต.' },
-  '1/1':      { bar: '#F1CFBF', soft: '#DC805D', date: '#FFFFFF', text: '#FFFFFF', count: '#A95D40', label: '1/1' },
+  'off':      { bar: '#D7D7D2', solid: 'var(--room-off)', soft: 'color-mix(in srgb, var(--room-off) var(--room-fill-opacity), transparent)', date: '#FFFFFF', text: '#FFFFFF', count: '#2B2B23', label: 'off' },
+  'ปกส':      { bar: '#F7CED0', solid: 'var(--df-dot-red)', soft: 'color-mix(in srgb, var(--df-dot-red) var(--room-fill-opacity), transparent)', date: '#FFFFFF', text: '#FFFFFF', count: '#D34F5A', label: 'ปกส' },
+  'ฟุ้ง':     { bar: '#DDD3F6', solid: 'var(--df-dot-purple)', soft: 'color-mix(in srgb, var(--df-dot-purple) var(--room-fill-opacity), transparent)', date: '#FFFFFF', text: '#FFFFFF', count: '#7659D1', label: 'ฟุ้ง' },
+  'Screen':   { bar: '#C8E9F4', solid: 'var(--df-dot-cyan)', soft: 'color-mix(in srgb, var(--df-dot-cyan) var(--room-fill-opacity), transparent)', date: '#163C45', text: '#163C45', count: '#2F8EAF', label: 'Screen' },
+  'DM':       { bar: '#F3E4BB', solid: 'var(--df-dot-yellow)', soft: 'color-mix(in srgb, var(--df-dot-yellow) var(--room-fill-opacity), transparent)', date: '#3A321B', text: '#3A321B', count: '#A47B19', label: 'DM' },
+  'รพ.สต.':   { bar: '#C9E9D8', solid: 'var(--df-dot-green)', soft: 'color-mix(in srgb, var(--df-dot-green) var(--room-fill-opacity), transparent)', date: '#173F35', text: '#173F35', count: '#328263', label: 'รพ.สต.' },
+  '1/1':      { bar: '#F1CFBF', solid: 'var(--df-dot-orange)', soft: 'color-mix(in srgb, var(--df-dot-orange) var(--room-fill-opacity), transparent)', date: '#FFFFFF', text: '#FFFFFF', count: '#A95D40', label: '1/1' },
 };
 const TODAY_CONTRAST = {
   'off':    { bg: '#FFFFFF', ink: '#2B2B23' },
@@ -409,9 +409,16 @@ const ROOM_PALETTES = {
 
 const ROOM_COLOR_LABELS = ['off', 'ปกส', 'ฟุ้ง', 'Screen', 'DM', 'รพ.สต.', '1/1'];
 const ROOM_COLOR_TOKENS = ['--room-off', '--df-dot-red', '--df-dot-purple', '--df-dot-cyan', '--df-dot-yellow', '--df-dot-green', '--df-dot-orange'];
+const ROOM_FILL_DEFAULT = 0.78;
 
-function applyRoomColors(colors) {
+function roomOpacityValue(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.min(1, Math.max(.25, number)) : ROOM_FILL_DEFAULT;
+}
+
+function applyRoomColors(colors, opacity = ROOM_FILL_DEFAULT) {
   ROOM_COLOR_TOKENS.forEach((name, index) => document.documentElement.style.setProperty(name, colors[index]));
+  document.documentElement.style.setProperty('--room-fill-opacity', `${Math.round(roomOpacityValue(opacity) * 100)}%`);
 }
 
 function applyRoomPalette(key) {
@@ -428,11 +435,12 @@ function applyRoomPalette(key) {
 }
 
 applyRoomPalette(localStorage.getItem('hos-room-palette') || 'iceberg');
+const initialRoomOpacity = roomOpacityValue(localStorage.getItem('hos-room-opacity'));
 try {
   const savedRoomColors = JSON.parse(localStorage.getItem('hos-room-colors') || 'null');
-  applyRoomColors(Array.isArray(savedRoomColors) && savedRoomColors.length === ROOM_COLOR_TOKENS.length ? savedRoomColors : ROOM_PALETTES.iceberg.colors);
+  applyRoomColors(Array.isArray(savedRoomColors) && savedRoomColors.length === ROOM_COLOR_TOKENS.length ? savedRoomColors : ROOM_PALETTES.iceberg.colors, initialRoomOpacity);
 } catch (e) {
-  applyRoomColors(ROOM_PALETTES.iceberg.colors);
+  applyRoomColors(ROOM_PALETTES.iceberg.colors, initialRoomOpacity);
 }
 
 const SKIP_WORDS = new Set(['ฟุ้ง', 'off', 'Screen', 'ปกส', 'รพ.สต.', '1/1', 'DM', 'เตียงเสริม']);
@@ -558,6 +566,7 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
       return Array.isArray(saved) && saved.length === ROOM_COLOR_TOKENS.length ? saved : [...ROOM_PALETTES.iceberg.colors];
     } catch (e) { return [...ROOM_PALETTES.iceberg.colors]; }
   });
+  const [roomOpacity, setRoomOpacity] = useState(() => roomOpacityValue(localStorage.getItem('hos-room-opacity')));
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -576,7 +585,13 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
         if (Array.isArray(parsed) && parsed.length === ROOM_COLOR_TOKENS.length) nextRoomColors = parsed;
       } catch (e) {}
       setRoomColors(nextRoomColors);
-      applyRoomColors(nextRoomColors);
+      let nextRoomOpacity = roomOpacityValue(localStorage.getItem('hos-room-opacity'));
+      try {
+        const savedOpacity = await window.storage.get('room-opacity', false);
+        if (savedOpacity?.value != null) nextRoomOpacity = roomOpacityValue(savedOpacity.value);
+      } catch (e) {}
+      setRoomOpacity(nextRoomOpacity);
+      applyRoomColors(nextRoomColors, nextRoomOpacity);
     })();
   }, []);
   useEffect(() => {
@@ -587,16 +602,23 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
   const chooseRoomPalette = async key => {
     setRoomPalette(key);
     applyRoomPalette(key);
-    applyRoomColors(roomColors);
+    applyRoomColors(roomColors, roomOpacity);
     localStorage.setItem('hos-room-palette', key);
     try { await window.storage.set('room-palette', key, false); } catch (e) {}
   };
   const updateRoomColor = async (index, color) => {
     const next = roomColors.map((value, i) => i === index ? color : value);
     setRoomColors(next);
-    applyRoomColors(next);
+    applyRoomColors(next, roomOpacity);
     localStorage.setItem('hos-room-colors', JSON.stringify(next));
     try { await window.storage.set('room-colors', JSON.stringify(next), false); } catch (e) {}
+  };
+  const updateRoomOpacity = async value => {
+    const next = roomOpacityValue(value);
+    setRoomOpacity(next);
+    applyRoomColors(roomColors, next);
+    localStorage.setItem('hos-room-opacity', String(next));
+    try { await window.storage.set('room-opacity', String(next), false); } catch (e) {}
   };
   return <div className="brand-bar">
     <style>{`
@@ -627,6 +649,10 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
       .room-color-list { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:0 4px 7px; }
       .room-color-option { min-width:0; min-height:32px; display:flex; align-items:center; gap:7px; padding:5px 7px; background:var(--theme-soft); color:var(--theme-text); font-size:9px; font-weight:800; }
       .room-color-option input { width:16px; height:16px; flex:0 0 16px; padding:0; border:0; background:transparent; }
+      .room-opacity-control { padding:4px 8px 8px; }
+      .room-opacity-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; color:var(--theme-muted); font-size:9px; font-weight:900; letter-spacing:.04em; text-transform:uppercase; }
+      .room-opacity-head b { color:var(--theme-text); font-size:10px; }
+      .room-opacity-control input { width:100%; height:18px; margin:0; accent-color:var(--theme-secondary); cursor:pointer; }
       .brand-menu-signout { color:var(--theme-danger); }
       @media(max-width:600px){ .brand-bar{height:54px;padding:0 14px}.brand-logo{width:34px;height:34px;flex-basis:34px;border-radius:10px;font-size:11px}.brand-title{font-size:14px}.brand-subtitle{display:none}.brand-user{gap:5px}.brand-avatar{width:27px;height:27px;font-size:9px}.brand-email{max-width:92px;font-size:9px}.brand-signout{display:none} }
     `}</style>
@@ -647,6 +673,10 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
           <div className="brand-menu-label">Room colors</div>
           <div className="room-color-list">
             {ROOM_COLOR_LABELS.map((label, index) => <label className="room-color-option" key={label}><input type="color" value={roomColors[index]} onChange={e => updateRoomColor(index, e.target.value)} /><span>{label}</span></label>)}
+          </div>
+          <div className="room-opacity-control">
+            <div className="room-opacity-head"><span>Room fill opacity</span><b>{Math.round(roomOpacity * 100)}%</b></div>
+            <input type="range" min="25" max="100" step="5" value={Math.round(roomOpacity * 100)} onChange={e => updateRoomOpacity(Number(e.target.value) / 100)} aria-label="Room fill opacity" />
           </div>
           {onSignOut && <button className="brand-menu-command brand-menu-signout" onClick={onSignOut}><Icon name="x" size={14}/><span>ออกจากระบบ</span></button>}
         </div>}
@@ -1398,7 +1428,7 @@ function ScheduleCalendar() {
                     style={{ minHeight: 62, borderRadius: 8, background: s ? s.soft : '#FFFFFF', border: isSel ? '2px solid #FFFFFF' : '2px solid transparent', padding: '6px 6px 4px', position: 'relative', overflow: 'hidden', '--room-bg': s ? s.soft : '#FFFFFF', '--room-date': s ? s.date : '#8F8A7D', '--room-text': s ? s.text : '#8F8A7D' }}>
                     <div className="calendar-date-line">
                       <span className="calendar-date-number">{c.day}</span>
-                      {s && <span className="calendar-room-dot" style={{ background: s.soft }} aria-hidden="true" />}
+                      {s && <span className="calendar-room-dot" style={{ background: s.solid }} aria-hidden="true" />}
                     </div>
                     {(holidays[c.dstr] || c.info?.holiday) && <div style={{ fontSize: 9, color: '#FFFFFF', fontWeight: 700, lineHeight: 1.2, marginTop: 1 }}>{holidays[c.dstr] || c.info.holiday}</div>}
                     {s && <div className="cell-shift-label" style={{ fontSize: 9.5, color: s.text, fontWeight: 600, marginTop: 2 }}>{s.label}</div>}
@@ -1410,7 +1440,7 @@ function ScheduleCalendar() {
             </div>
 
             <div className="calendar-room-legend">
-              {Object.entries(SHIFT_STYLE).map(([key, style]) => <span key={key} className="calendar-room-pill" data-shift={key} title={shiftNotes[key] || key}><span className="dot" style={{ background: style.soft }} /><span>{style.label || key}</span></span>)}
+              {Object.entries(SHIFT_STYLE).map(([key, style]) => <span key={key} className="calendar-room-pill" data-shift={key} title={shiftNotes[key] || key}><span className="dot" style={{ background: style.solid }} /><span>{style.label || key}</span></span>)}
             </div>
 
             {selected && (
@@ -1432,7 +1462,7 @@ function ScheduleCalendar() {
                   <CleanSelect value={selShift || ''} onChange={v => setShift(selected, v || null)}
                     options={[{ value: '', label: '— ไม่ระบุ —' }, ...Object.keys(SHIFT_STYLE).map(k => ({ value: k, label: k }))]}
                     className="day-room-select"
-                    style={{ minWidth: 126, fontSize: 12.5, fontWeight: 700, borderRadius: 0, padding: '7px 0', background: 'transparent', color: selShift === 'off' ? '#2B2B23' : (selShift ? SHIFT_STYLE[selShift]?.soft : '#5C6D68'), boxShadow: 'none' }} ariaLabel="เลือกห้อง" />
+                    style={{ minWidth: 126, fontSize: 12.5, fontWeight: 700, borderRadius: 0, padding: '7px 0', background: 'transparent', color: selShift === 'off' ? '#2B2B23' : (selShift ? SHIFT_STYLE[selShift]?.solid : '#5C6D68'), boxShadow: 'none' }} ariaLabel="เลือกห้อง" />
                 </div>
                 </div>
 
@@ -1452,7 +1482,7 @@ function ScheduleCalendar() {
                     <button onClick={() => { setAddMode('new'); setPickedCaseId(null); setAddPanelOpen(true); setAddChoiceOpen(false); }} style={{ border: 'none', borderRadius: 12, padding: '11px 13px', background: 'transparent', color: '#1F3A35', textAlign: 'left', cursor: 'pointer', fontWeight: 700 }}>เคสใหม่</button>
                     <button onClick={() => { setAddMode('existing'); setAddPanelOpen(true); setAddChoiceOpen(false); }} style={{ border: 'none', borderRadius: 12, padding: '11px 13px', background: 'transparent', color: '#1F3A35', textAlign: 'left', cursor: 'pointer', fontWeight: 700 }}>เคสเดิม · นัดต่อเนื่อง</button>
                   </div>}
-                  <button className="day-add-button" onClick={() => { if (addPanelOpen) { setAddPanelOpen(false); setAddChoiceOpen(false); } else setAddChoiceOpen(v => !v); }} aria-label="เพิ่มเคส" title="เพิ่มเคส" style={{ '--add-color': selShift ? SHIFT_STYLE[selShift]?.soft : '#6777B6', '--add-ink': selShift ? SHIFT_STYLE[selShift]?.date : '#6777B6', width: 34, height: 34, borderRadius: 11, border: '2px solid #E45C32', background: '#FFF7E8', color: '#E45C32', cursor: 'pointer', display: 'grid', placeItems: 'center', boxShadow: 'none', fontSize: 21, fontWeight: 800, lineHeight: 1, transform: addPanelOpen ? 'rotate(45deg)' : 'none', transition: 'transform .22s ease, filter .22s ease' }}><Icon name="plus" size={14}/></button>
+                  <button className="day-add-button" onClick={() => { if (addPanelOpen) { setAddPanelOpen(false); setAddChoiceOpen(false); } else setAddChoiceOpen(v => !v); }} aria-label="เพิ่มเคส" title="เพิ่มเคส" style={{ '--add-color': selShift ? SHIFT_STYLE[selShift]?.solid : '#6777B6', '--add-ink': selShift ? SHIFT_STYLE[selShift]?.date : '#6777B6', width: 34, height: 34, borderRadius: 11, border: '2px solid #E45C32', background: '#FFF7E8', color: '#E45C32', cursor: 'pointer', display: 'grid', placeItems: 'center', boxShadow: 'none', fontSize: 21, fontWeight: 800, lineHeight: 1, transform: addPanelOpen ? 'rotate(45deg)' : 'none', transition: 'transform .22s ease, filter .22s ease' }}><Icon name="plus" size={14}/></button>
                 </div>
 
                 {addPanelOpen && <div className="case-add-panel" style={{ background: '#EFCE7B', border: 'none', borderRadius: 10, padding: 14 }}>
@@ -1579,12 +1609,15 @@ function ScheduleCalendar() {
                       {wk.map((c, ci) => {
                         if (!c) return <div key={ci} style={{ minHeight: 38 }} />;
                         const s = c.shift ? SHIFT_STYLE[c.shift] : null;
+                        const joinsPrevious = Boolean(c.shift && ci > 0 && wk[ci - 1]?.shift === c.shift);
+                        const joinsNext = Boolean(c.shift && ci < wk.length - 1 && wk[ci + 1]?.shift === c.shift);
+                        const rangeClass = !c.shift ? '' : joinsPrevious && joinsNext ? 'ov-range-middle' : joinsPrevious ? 'ov-range-end' : joinsNext ? 'ov-range-start' : 'ov-range-single';
                         return (
                           <div key={c.dstr} style={{ minHeight: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <div className="ov-cell" data-shift={c.shift || ''} onClick={e => { e.stopPropagation(); cancelOverviewPress(); openOverviewPicker(e, c, m); }} onPointerDown={e => startOverviewPress(e, c, m)} onPointerUp={cancelOverviewPress} onPointerCancel={cancelOverviewPress} onPointerLeave={cancelOverviewPress} onContextMenu={e => e.preventDefault()} title={c.shift || 'เลือกห้อง'}
-                            style={{ cursor: 'pointer', touchAction: 'manipulation', userSelect: 'none' }}>
+                          <div className={`ov-cell ${rangeClass}`} data-shift={c.shift || ''} onClick={e => { e.stopPropagation(); cancelOverviewPress(); openOverviewPicker(e, c, m); }} onPointerDown={e => startOverviewPress(e, c, m)} onPointerUp={cancelOverviewPress} onPointerCancel={cancelOverviewPress} onPointerLeave={cancelOverviewPress} onContextMenu={e => e.preventDefault()} title={c.shift || 'เลือกห้อง'}
+                            style={{ cursor: 'pointer', touchAction: 'manipulation', userSelect: 'none', '--ov-range-color': s?.soft || 'transparent' }}>
                             <span className="ov-day-number">{c.day}</span>
-                            {s && <span className="ov-room-dot" style={{ background: s.soft }} aria-hidden="true" />}
+                            {s && <span className="ov-room-dot" style={{ background: s.solid }} aria-hidden="true" />}
                           </div>
                           </div>
                         );
