@@ -1,0 +1,19 @@
+{
+  "name": "HOS Schedule",
+  "short_name": "HOS",
+  "description": "งานโรงพยาบาลและนัดคนไข้",
+  "lang": "th",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2f2486",
+  "icons": [
+    {
+      "src": "./icons/hos-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

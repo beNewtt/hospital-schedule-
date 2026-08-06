@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2f2486">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="HOS Schedule">
 <title>HOS Schedule — DF × Monkeytype</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/hos-icon.svg" type="image/svg+xml">
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.25.0/babel.min.js"></script>
@@ -14,7 +20,7 @@
 <style>
   html, body { margin: 0; padding: 0; background: var(--theme-canvas, #FFFFFF); overflow-x: hidden; }
 </style>
-<link rel="stylesheet" href="./df-monkey-theme.css?v=20260801-49" />
+<link rel="stylesheet" href="./df-monkey-theme.css?v=20260805-1" />
 </head>
 <body>
 <div id="root"></div>
@@ -686,7 +692,11 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
 }
 
 function ScheduleCalendar() {
-  const [view, setView] = useState('calendar');
+  const [view, setView] = useState(() => {
+    const restoredView = sessionStorage.getItem('hos-start-view');
+    if (restoredView) sessionStorage.removeItem('hos-start-view');
+    return ['calendar', 'overview', 'patients', 'settings'].includes(restoredView) ? restoredView : 'calendar';
+  });
   useEffect(() => { const openSettings = () => setView('settings'); window.addEventListener('hos-open-settings', openSettings); return () => window.removeEventListener('hos-open-settings', openSettings); }, []);
   const today0 = new Date();
   const todayStr = dateKey(today0.getFullYear(), today0.getMonth() + 1, today0.getDate());
@@ -705,6 +715,14 @@ function ScheduleCalendar() {
   const [newHolidayDate, setNewHolidayDate] = useState(todayStr);
   const [newHolidayName, setNewHolidayName] = useState('');
   const [loaded, setLoaded] = useState(false);
+  const [backupNotice, setBackupNotice] = useState(() => {
+    const notice = sessionStorage.getItem('hos-backup-notice') || '';
+    if (notice) sessionStorage.removeItem('hos-backup-notice');
+    return notice;
+  });
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [restorePreview, setRestorePreview] = useState(null);
+  const restoreFileRef = useRef(null);
 
   const [addMode, setAddMode] = useState('new');
   const [addPanelOpen, setAddPanelOpen] = useState(false);
@@ -885,6 +903,116 @@ function ScheduleCalendar() {
     const migratedStyles = migrateCategoryStyles(next);
     setCategoryStyles(migratedStyles);
     try { await window.storage.set('category-styles', JSON.stringify(migratedStyles), false); } catch (e) {}
+  };
+
+  const createBackupPayload = () => {
+    let savedRoomColors = null;
+    try { savedRoomColors = JSON.parse(localStorage.getItem('hos-room-colors') || 'null'); } catch (e) {}
+    return {
+      app: 'hos-schedule',
+      schemaVersion: 1,
+      exportedAt: new Date().toISOString(),
+      data: {
+        cases: mergeCasesByHn(migrateCaseCategories(cases)),
+        legendNotes: { shift: shiftNotes },
+        shiftOverrides,
+        holidays,
+        categories: migrateCategoryList(categories),
+        categoryStyles: migrateCategoryStyles(categoryStyles),
+        roomPalette: localStorage.getItem('hos-room-palette') || 'iceberg',
+        roomColors: Array.isArray(savedRoomColors) ? savedRoomColors : null,
+        roomOpacity: roomOpacityValue(localStorage.getItem('hos-room-opacity')),
+      },
+    };
+  };
+
+  const downloadBackup = async () => {
+    setBackupBusy(true);
+    setBackupNotice('');
+    try {
+      const payload = createBackupPayload();
+      await window.storage.set('full-backup-latest', JSON.stringify(payload), false);
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `hos-schedule-backup-${payload.exportedAt.slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      localStorage.setItem('hos-last-backup-at', payload.exportedAt);
+      setBackupNotice('สำรองข้อมูลเรียบร้อยแล้ว');
+    } catch (error) {
+      console.error(error);
+      setBackupNotice('สำรองข้อมูลไม่สำเร็จ กรุณาลองใหม่');
+    } finally {
+      setBackupBusy(false);
+    }
+  };
+
+  const inspectRestoreFile = async event => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setBackupNotice('');
+    try {
+      const payload = JSON.parse(await file.text());
+      if (payload?.app !== 'hos-schedule' || payload?.schemaVersion !== 1 || !payload?.data || typeof payload.data !== 'object') {
+        throw new Error('invalid backup');
+      }
+      const data = payload.data;
+      const caseCount = data.cases && typeof data.cases === 'object' ? Object.keys(data.cases).length : 0;
+      const visitCount = data.cases && typeof data.cases === 'object'
+        ? Object.values(data.cases).reduce((sum, item) => sum + (Array.isArray(item?.visits) ? item.visits.length : 0), 0)
+        : 0;
+      setRestorePreview({ fileName: file.name, payload, caseCount, visitCount });
+    } catch (error) {
+      setBackupNotice('ไฟล์นี้ไม่ใช่ไฟล์สำรองของ HOS Schedule');
+    }
+  };
+
+  const restoreBackup = async () => {
+    if (!restorePreview) return;
+    setBackupBusy(true);
+    try {
+      const beforeRestore = createBackupPayload();
+      await window.storage.set('full-backup-before-restore', JSON.stringify(beforeRestore), false);
+      const data = restorePreview.payload.data;
+      const nextCases = mergeCasesByHn(migrateCaseCategories(data.cases || {}));
+      const nextShiftNotes = { ...SHIFT_DEFAULTS, ...(data.legendNotes?.shift || {}) };
+      const nextOverrides = data.shiftOverrides && typeof data.shiftOverrides === 'object' ? data.shiftOverrides : {};
+      const nextHolidays = data.holidays && typeof data.holidays === 'object' ? data.holidays : {};
+      const nextCategories = migrateCategoryList(Array.isArray(data.categories) ? data.categories : DEFAULT_CATEGORIES);
+      const nextCategoryStyles = { ...CATEGORY_STYLE, ...migrateCategoryStyles(data.categoryStyles || {}) };
+      await Promise.all([
+        window.storage.set('cases', JSON.stringify(nextCases), false),
+        window.storage.set('legend-notes', JSON.stringify({ shift: nextShiftNotes }), false),
+        window.storage.set('shift-overrides', JSON.stringify(nextOverrides), false),
+        window.storage.set('holidays', JSON.stringify(nextHolidays), false),
+        window.storage.set('categories', JSON.stringify(nextCategories), false),
+        window.storage.set('category-styles', JSON.stringify(nextCategoryStyles), false),
+      ]);
+      if (data.roomPalette && ROOM_PALETTES[data.roomPalette]) {
+        localStorage.setItem('hos-room-palette', data.roomPalette);
+        await window.storage.set('room-palette', data.roomPalette, false);
+      }
+      if (Array.isArray(data.roomColors) && data.roomColors.length === ROOM_COLOR_TOKENS.length) {
+        localStorage.setItem('hos-room-colors', JSON.stringify(data.roomColors));
+        await window.storage.set('room-colors', JSON.stringify(data.roomColors), false);
+      }
+      const restoredOpacity = roomOpacityValue(data.roomOpacity);
+      localStorage.setItem('hos-room-opacity', String(restoredOpacity));
+      await window.storage.set('room-opacity', String(restoredOpacity), false);
+      setRestorePreview(null);
+      sessionStorage.setItem('hos-start-view', 'settings');
+      sessionStorage.setItem('hos-backup-notice', 'กู้คืนข้อมูลเรียบร้อยแล้ว · ระบบเก็บข้อมูลชุดก่อนกู้คืนไว้ให้ด้วย');
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      setBackupNotice('กู้คืนไม่สำเร็จ ข้อมูลเดิมยังไม่ถูกแทนที่');
+      setBackupBusy(false);
+    }
   };
   const addCategory = () => {
     const name = newCategory.trim();
@@ -1802,6 +1930,59 @@ function ScheduleCalendar() {
             <button onClick={() => { saveLegend(shiftNotes); setEditingLegend(false); }} style={{ marginTop: 6, fontSize: 12.5, fontWeight: 600, background: '#2B2B23', color: '#FFFFFF', border: 'none', borderRadius: 6, padding: '7px 14px', cursor: 'pointer' }}>บันทึกหมายเหตุ</button>
           )}
         </div>
+
+        <section className="settings-section data-backup-settings" aria-labelledby="data-backup-title">
+          <div className="backup-heading">
+            <div id="data-backup-title" className="settings-title">Data &amp; Backup</div>
+            <p>สำรองเคส นัดหมาย ตารางเวร วันหยุด ประเภทงาน และสีที่ตั้งไว้</p>
+          </div>
+          <div className="backup-content">
+            <div className="backup-sync-state"><span aria-hidden="true"></span>บันทึกอัตโนมัติบนบัญชี Google นี้</div>
+            <div className="backup-stats" aria-label="สรุปข้อมูลที่จะสำรอง">
+              <div><strong>{Object.keys(cases || {}).length}</strong><span>คนไข้</span></div>
+              <div><strong>{Object.values(cases || {}).reduce((sum, item) => sum + (Array.isArray(item?.visits) ? item.visits.length : 0), 0)}</strong><span>Visits</span></div>
+              <div><strong>{Object.keys(holidays || {}).length}</strong><span>วันหยุด</span></div>
+            </div>
+            <div className="backup-actions">
+              <button type="button" className="backup-download-button" onClick={downloadBackup} disabled={backupBusy}>
+                <Icon name="saveSolid" size={13} />
+                {backupBusy ? 'กำลังเตรียมข้อมูล...' : 'ดาวน์โหลดไฟล์สำรอง'}
+              </button>
+              <button type="button" className="backup-restore-button" onClick={() => restoreFileRef.current?.click()} disabled={backupBusy}>
+                <Icon name="rotateSolid" size={13} />
+                กู้คืนจากไฟล์
+              </button>
+              <input ref={restoreFileRef} type="file" accept=".json,application/json" hidden onChange={inspectRestoreFile} />
+            </div>
+            {backupNotice && <div className="backup-notice" role="status">{backupNotice}</div>}
+            <p className="backup-footnote">
+              ไฟล์สำรองมีเฉพาะข้อมูลใน HOS Schedule ไม่มีรหัสผ่าน Google
+              {localStorage.getItem('hos-last-backup-at') && <> · สำรองล่าสุด {new Date(localStorage.getItem('hos-last-backup-at')).toLocaleString('th-TH')}</>}
+            </p>
+          </div>
+        </section>
+
+        {restorePreview && <div className="backup-restore-backdrop" role="presentation" onMouseDown={() => !backupBusy && setRestorePreview(null)}>
+          <section className="backup-restore-dialog" role="dialog" aria-modal="true" aria-labelledby="restore-backup-title" onMouseDown={event => event.stopPropagation()}>
+            <header>
+              <div>
+                <div id="restore-backup-title">กู้คืนข้อมูล</div>
+                <small>{restorePreview.fileName}</small>
+              </div>
+              <button type="button" onClick={() => setRestorePreview(null)} disabled={backupBusy} aria-label="ปิด"><Icon name="x" size={13} /></button>
+            </header>
+            <div className="restore-summary">
+              <div><strong>{restorePreview.caseCount}</strong><span>คนไข้</span></div>
+              <div><strong>{restorePreview.visitCount}</strong><span>Visits</span></div>
+              <div><strong>{restorePreview.payload?.exportedAt ? new Date(restorePreview.payload.exportedAt).toLocaleDateString('th-TH') : '—'}</strong><span>วันที่สำรอง</span></div>
+            </div>
+            <p>ข้อมูลปัจจุบันจะถูกสำรองไว้อัตโนมัติก่อนเริ่มกู้คืน</p>
+            <div className="restore-actions">
+              <button type="button" className="secondary" onClick={() => setRestorePreview(null)} disabled={backupBusy}>ยกเลิก</button>
+              <button type="button" className="primary" onClick={restoreBackup} disabled={backupBusy}><Icon name="rotateSolid" size={13} />{backupBusy ? 'กำลังกู้คืน...' : 'ยืนยันกู้คืน'}</button>
+            </div>
+          </section>
+        </div>}
         </div>}
 
       </div>
@@ -1831,6 +2012,45 @@ function App() {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
+</script>
+<script>
+(() => {
+  if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+
+  let refreshing = false;
+  const showUpdate = registration => {
+    if (!registration.waiting || document.querySelector('.hos-update-toast')) return;
+    const toast = document.createElement('div');
+    toast.className = 'hos-update-toast';
+    toast.innerHTML = '<span>มีเวอร์ชันใหม่พร้อมใช้งาน</span><button type="button">อัปเดต</button>';
+    toast.querySelector('button').addEventListener('click', () => {
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    });
+    document.body.appendChild(toast);
+  };
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    location.reload();
+  });
+
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('./sw.js');
+      showUpdate(registration);
+      registration.addEventListener('updatefound', () => {
+        const worker = registration.installing;
+        if (!worker) return;
+        worker.addEventListener('statechange', () => {
+          if (worker.state === 'installed' && navigator.serviceWorker.controller) showUpdate(registration);
+        });
+      });
+    } catch (error) {
+      console.warn('Service worker registration failed:', error);
+    }
+  });
+})();
 </script>
 </body>
 </html>

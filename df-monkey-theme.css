@@ -1329,6 +1329,11 @@ body #root .overview-grid .ov-room-dot{
   body #root .overview-grid .ov-cell{
     font-size:7.5px!important;
   }
+  body #root .overview-grid .ov-cell.ov-range-single::before{
+    width:15px!important;
+    height:15px!important;
+    inset:2px auto auto 50%!important;
+  }
   body #root .overview-grid .ov-room-dot{
     width:4px!important;
     height:4px!important;
@@ -1369,5 +1374,263 @@ body #root .overview-grid .ov-room-dot{
   body #root .schedule-root .calendar-room-dot{
     width:8px!important;
     height:8px!important;
+  }
+}
+
+/* Data & Backup ---------------------------------------------------------- */
+body #root .data-backup-settings{
+  display:grid!important;
+  grid-template-columns:minmax(180px,240px) minmax(0,1fr)!important;
+  gap:28px!important;
+  align-items:start!important;
+  margin:0!important;
+  padding:30px 8px!important;
+  border-top:1px solid var(--theme-line)!important;
+  border-bottom:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+body #root .data-backup-settings .backup-heading{
+  grid-column:1!important;
+}
+body #root .data-backup-settings .backup-heading .settings-title{
+  margin:0 0 4px!important;
+  color:var(--theme-primary)!important;
+  font-family:'Kanit',sans-serif!important;
+  font-size:16px!important;
+  font-weight:700!important;
+}
+body #root .data-backup-settings .backup-heading p,
+body #root .data-backup-settings .backup-footnote{
+  margin:0!important;
+  color:var(--theme-muted)!important;
+  font-size:11.5px!important;
+  line-height:1.55!important;
+}
+body #root .data-backup-settings .backup-content{
+  grid-column:2!important;
+  min-width:0!important;
+}
+body #root .backup-sync-state{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  color:var(--theme-text)!important;
+  font-size:13px!important;
+  font-weight:600!important;
+}
+body #root .backup-sync-state>span{
+  width:8px!important;
+  height:8px!important;
+  flex:0 0 8px!important;
+  border-radius:50%!important;
+  background:#45cd93!important;
+  box-shadow:0 0 0 4px color-mix(in srgb,#45cd93 14%,transparent)!important;
+}
+body #root .backup-stats{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:8px!important;
+  margin:14px 0!important;
+}
+body #root .backup-stats>div{
+  display:flex!important;
+  align-items:baseline!important;
+  gap:7px!important;
+  min-width:0!important;
+  padding:10px 12px!important;
+  border-radius:10px!important;
+  background:var(--theme-soft)!important;
+}
+body #root .backup-stats strong{
+  color:var(--theme-primary)!important;
+  font-family:'Nunito',sans-serif!important;
+  font-size:18px!important;
+  line-height:1!important;
+}
+body #root .backup-stats span{
+  overflow:hidden!important;
+  color:var(--theme-muted)!important;
+  font-size:11px!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+body #root .backup-actions{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:8px!important;
+  margin-bottom:10px!important;
+}
+body #root .backup-actions button,
+body #root .restore-actions button{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  min-height:38px!important;
+  border:0!important;
+  border-radius:9px!important;
+  padding:0 14px!important;
+  font:700 12.5px 'Noto Sans Thai Looped',sans-serif!important;
+  cursor:pointer!important;
+  transition:transform .18s ease,background-color .18s ease,color .18s ease!important;
+}
+body #root .backup-actions button:hover:not(:disabled),
+body #root .restore-actions button:hover:not(:disabled){transform:translateY(-1px)!important}
+body #root .backup-actions button:disabled,
+body #root .restore-actions button:disabled{cursor:wait!important;opacity:.6!important}
+body #root .backup-download-button,
+body #root .restore-actions .primary{
+  background:var(--theme-primary)!important;
+  color:#fff!important;
+}
+body #root .backup-restore-button,
+body #root .restore-actions .secondary{
+  background:var(--theme-soft)!important;
+  color:var(--theme-primary)!important;
+}
+body #root .backup-notice{
+  margin:0 0 9px!important;
+  border-radius:8px!important;
+  padding:8px 10px!important;
+  background:color-mix(in srgb,var(--theme-secondary) 18%,transparent)!important;
+  color:var(--theme-text)!important;
+  font-size:12px!important;
+}
+body #root .backup-restore-backdrop{
+  position:fixed!important;
+  inset:0!important;
+  z-index:1700!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:18px!important;
+  background:rgba(24,27,48,.42)!important;
+  -webkit-backdrop-filter:blur(7px)!important;
+  backdrop-filter:blur(7px)!important;
+}
+body #root .backup-restore-dialog{
+  width:min(460px,100%)!important;
+  max-height:min(620px,calc(100dvh - 36px))!important;
+  overflow:auto!important;
+  border:1px solid color-mix(in srgb,var(--theme-primary) 18%,transparent)!important;
+  border-radius:18px!important;
+  padding:20px!important;
+  background:var(--theme-surface)!important;
+  box-shadow:0 22px 60px rgba(25,28,54,.2)!important;
+  color:var(--theme-text)!important;
+}
+body #root .backup-restore-dialog>header{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:18px!important;
+}
+body #root .backup-restore-dialog>header>div>div{
+  color:var(--theme-primary)!important;
+  font:700 19px 'Kanit',sans-serif!important;
+}
+body #root .backup-restore-dialog>header small{
+  display:block!important;
+  max-width:330px!important;
+  overflow:hidden!important;
+  color:var(--theme-muted)!important;
+  font-size:11px!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+body #root .backup-restore-dialog>header button{
+  display:grid!important;
+  width:28px!important;
+  height:28px!important;
+  flex:0 0 28px!important;
+  place-items:center!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:transparent!important;
+  color:var(--theme-muted)!important;
+  cursor:pointer!important;
+}
+body #root .restore-summary{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:8px!important;
+  margin:18px 0!important;
+}
+body #root .restore-summary>div{
+  min-width:0!important;
+  border-radius:10px!important;
+  padding:11px 10px!important;
+  background:var(--theme-soft)!important;
+}
+body #root .restore-summary strong,
+body #root .restore-summary span{display:block!important}
+body #root .restore-summary strong{
+  overflow:hidden!important;
+  color:var(--theme-primary)!important;
+  font:800 15px 'Nunito',sans-serif!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+body #root .restore-summary span{
+  margin-top:3px!important;
+  color:var(--theme-muted)!important;
+  font-size:10.5px!important;
+}
+body #root .backup-restore-dialog>p{
+  margin:0 0 18px!important;
+  color:var(--theme-muted)!important;
+  font-size:12px!important;
+}
+body #root .restore-actions{
+  display:flex!important;
+  justify-content:flex-end!important;
+  gap:8px!important;
+}
+
+/* PWA update message */
+.hos-update-toast{
+  position:fixed;
+  z-index:2500;
+  right:18px;
+  bottom:18px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  max-width:min(390px,calc(100vw - 36px));
+  border-radius:14px;
+  padding:12px 13px 12px 15px;
+  background:#2f2486;
+  color:#fff;
+  box-shadow:0 14px 40px rgba(31,27,76,.22);
+  font:600 12px 'Noto Sans Thai Looped',sans-serif;
+}
+.hos-update-toast button{
+  flex:0 0 auto;
+  border:0;
+  border-radius:8px;
+  padding:7px 10px;
+  background:#fff;
+  color:#2f2486;
+  font:700 11.5px 'Noto Sans Thai Looped',sans-serif;
+  cursor:pointer;
+}
+
+@media(max-width:720px){
+  body #root .data-backup-settings{
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:14px!important;
+    padding:24px 4px!important;
+  }
+  body #root .data-backup-settings .backup-heading,
+  body #root .data-backup-settings .backup-content{grid-column:1!important}
+  body #root .backup-actions{display:grid!important;grid-template-columns:1fr 1fr!important}
+  body #root .backup-actions button{width:100%!important;padding:0 9px!important;font-size:11.5px!important}
+  body #root .backup-restore-backdrop{align-items:end!important;padding:0!important}
+  body #root .backup-restore-dialog{
+    width:100%!important;
+    max-height:86dvh!important;
+    border-width:1px 0 0!important;
+    border-radius:20px 20px 0 0!important;
+    padding:20px 16px calc(18px + env(safe-area-inset-bottom))!important;
   }
 }
