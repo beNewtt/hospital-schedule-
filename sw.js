@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hos-shell-v1';
+const CACHE_NAME = 'hos-shell-v2';
 const APP_SHELL = [
   './',
   './index.html',

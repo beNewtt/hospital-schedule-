@@ -611,6 +611,7 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
     applyRoomColors(roomColors, roomOpacity);
     localStorage.setItem('hos-room-palette', key);
     try { await window.storage.set('room-palette', key, false); } catch (e) {}
+    window.dispatchEvent(new CustomEvent('hos-backup-data-changed'));
   };
   const updateRoomColor = async (index, color) => {
     const next = roomColors.map((value, i) => i === index ? color : value);
@@ -618,6 +619,7 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
     applyRoomColors(next, roomOpacity);
     localStorage.setItem('hos-room-colors', JSON.stringify(next));
     try { await window.storage.set('room-colors', JSON.stringify(next), false); } catch (e) {}
+    window.dispatchEvent(new CustomEvent('hos-backup-data-changed'));
   };
   const updateRoomOpacity = async value => {
     const next = roomOpacityValue(value);
@@ -625,6 +627,7 @@ function BrandBar({ email = 'preview@hospital', photoURL = '', displayName = '',
     applyRoomColors(roomColors, next);
     localStorage.setItem('hos-room-opacity', String(next));
     try { await window.storage.set('room-opacity', String(next), false); } catch (e) {}
+    window.dispatchEvent(new CustomEvent('hos-backup-data-changed'));
   };
   return <div className="brand-bar">
     <style>{`
@@ -722,7 +725,12 @@ function ScheduleCalendar() {
   });
   const [backupBusy, setBackupBusy] = useState(false);
   const [restorePreview, setRestorePreview] = useState(null);
+  const [automaticBackups, setAutomaticBackups] = useState([]);
+  const [backupHistoryLoaded, setBackupHistoryLoaded] = useState(false);
+  const [backupChangeTick, setBackupChangeTick] = useState(0);
   const restoreFileRef = useRef(null);
+  const automaticBackupsRef = useRef([]);
+  const autoBackupWritingRef = useRef(false);
 
   const [addMode, setAddMode] = useState('new');
   const [addPanelOpen, setAddPanelOpen] = useState(false);
@@ -926,6 +934,160 @@ function ScheduleCalendar() {
     };
   };
 
+  const backupCounts = payload => {
+    const storedCases = payload?.data?.cases && typeof payload.data.cases === 'object' ? payload.data.cases : {};
+    return {
+      caseCount: Object.keys(storedCases).length,
+      visitCount: Object.values(storedCases).reduce((sum, item) => sum + (Array.isArray(item?.visits) ? item.visits.length : 0), 0),
+    };
+  };
+
+  const backupSignature = payload => {
+    const source = JSON.stringify(payload?.data || {});
+    let hash = 2166136261;
+    for (let index = 0; index < source.length; index += 1) {
+      hash ^= source.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(36);
+  };
+
+  const isValidBackup = payload => payload?.app === 'hos-schedule'
+    && payload?.schemaVersion === 1
+    && payload?.data
+    && typeof payload.data === 'object';
+
+  const backupMetaFromPayload = (key, payload, reason = 'automatic') => {
+    const counts = backupCounts(payload);
+    return {
+      key,
+      createdAt: payload.exportedAt || new Date().toISOString(),
+      reason,
+      signature: backupSignature(payload),
+      ...counts,
+    };
+  };
+
+  const saveAutomaticBackupIndex = async list => {
+    automaticBackupsRef.current = list;
+    setAutomaticBackups(list);
+    await window.storage.set('automatic-backup-index', JSON.stringify(list), false);
+  };
+
+  const createAutomaticBackup = async (reason = 'automatic', force = false) => {
+    if (!loaded || autoBackupWritingRef.current) return false;
+    const payload = createBackupPayload();
+    const signature = backupSignature(payload);
+    const current = automaticBackupsRef.current;
+    if (!force && current[0]?.signature === signature) return false;
+    autoBackupWritingRef.current = true;
+    try {
+      const key = `automatic-backup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      await window.storage.set(key, JSON.stringify(payload), false);
+      const next = [backupMetaFromPayload(key, payload, reason), ...current].slice(0, 5);
+      const removed = current.filter(item => !next.some(kept => kept.key === item.key));
+      await saveAutomaticBackupIndex(next);
+      await Promise.all(removed.map(item => window.storage.delete(item.key, false).catch(() => null)));
+      localStorage.setItem('hos-last-auto-backup-at', payload.exportedAt);
+      return true;
+    } finally {
+      autoBackupWritingRef.current = false;
+    }
+  };
+
+  const loadAutomaticBackups = async () => {
+    let history = [];
+    try {
+      const saved = await window.storage.get('automatic-backup-index', false);
+      const parsed = JSON.parse(saved.value || '[]');
+      if (Array.isArray(parsed)) history = parsed.filter(item => item?.key && item?.createdAt).slice(0, 5);
+    } catch (error) {
+      try {
+        const listed = await window.storage.list('automatic-backup-', false);
+        const recovered = await Promise.all((listed.keys || []).map(async key => {
+          try {
+            const saved = await window.storage.get(key, false);
+            const payload = JSON.parse(saved.value);
+            return isValidBackup(payload) ? backupMetaFromPayload(key, payload) : null;
+          } catch (e) { return null; }
+        }));
+        history = recovered.filter(Boolean).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+        if (history.length) await window.storage.set('automatic-backup-index', JSON.stringify(history), false);
+      } catch (e) {}
+    }
+    automaticBackupsRef.current = history;
+    setAutomaticBackups(history);
+    setBackupHistoryLoaded(true);
+  };
+
+  useEffect(() => {
+    if (!loaded) return;
+    loadAutomaticBackups();
+  }, [loaded]);
+
+  useEffect(() => {
+    const markChanged = () => setBackupChangeTick(value => value + 1);
+    window.addEventListener('hos-backup-data-changed', markChanged);
+    return () => window.removeEventListener('hos-backup-data-changed', markChanged);
+  }, []);
+
+  useEffect(() => {
+    if (!loaded || !backupHistoryLoaded) return;
+    const timer = setTimeout(() => {
+      createAutomaticBackup('automatic').catch(error => console.error('Automatic backup failed', error));
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, [loaded, backupHistoryLoaded, cases, shiftNotes, shiftOverrides, holidays, categories, categoryStyles, backupChangeTick]);
+
+  const createBackupNow = async () => {
+    setBackupBusy(true);
+    setBackupNotice('');
+    try {
+      await createAutomaticBackup('manual', true);
+      setBackupNotice('สร้างชุดสำรองล่าสุดแล้ว');
+    } catch (error) {
+      console.error(error);
+      setBackupNotice('สร้างชุดสำรองไม่สำเร็จ กรุณาลองใหม่');
+    } finally {
+      setBackupBusy(false);
+    }
+  };
+
+  const inspectAutomaticBackup = async item => {
+    setBackupBusy(true);
+    setBackupNotice('');
+    try {
+      const saved = await window.storage.get(item.key, false);
+      const payload = JSON.parse(saved.value);
+      if (!isValidBackup(payload)) throw new Error('invalid backup');
+      const counts = backupCounts(payload);
+      setRestorePreview({
+        fileName: `Automatic backup · ${new Date(item.createdAt).toLocaleString('th-TH')}`,
+        payload,
+        ...counts,
+      });
+    } catch (error) {
+      setBackupNotice('เปิดชุดสำรองนี้ไม่ได้ กรุณาลองชุดอื่น');
+    } finally {
+      setBackupBusy(false);
+    }
+  };
+
+  const deleteAutomaticBackup = async item => {
+    if (!window.confirm('ลบชุดสำรองนี้ใช่ไหม')) return;
+    setBackupBusy(true);
+    try {
+      await window.storage.delete(item.key, false);
+      const next = automaticBackupsRef.current.filter(entry => entry.key !== item.key);
+      await saveAutomaticBackupIndex(next);
+      setBackupNotice('ลบชุดสำรองแล้ว');
+    } catch (error) {
+      setBackupNotice('ลบชุดสำรองไม่สำเร็จ กรุณาลองใหม่');
+    } finally {
+      setBackupBusy(false);
+    }
+  };
+
   const downloadBackup = async () => {
     setBackupBusy(true);
     setBackupNotice('');
@@ -958,15 +1120,10 @@ function ScheduleCalendar() {
     setBackupNotice('');
     try {
       const payload = JSON.parse(await file.text());
-      if (payload?.app !== 'hos-schedule' || payload?.schemaVersion !== 1 || !payload?.data || typeof payload.data !== 'object') {
+      if (!isValidBackup(payload)) {
         throw new Error('invalid backup');
       }
-      const data = payload.data;
-      const caseCount = data.cases && typeof data.cases === 'object' ? Object.keys(data.cases).length : 0;
-      const visitCount = data.cases && typeof data.cases === 'object'
-        ? Object.values(data.cases).reduce((sum, item) => sum + (Array.isArray(item?.visits) ? item.visits.length : 0), 0)
-        : 0;
-      setRestorePreview({ fileName: file.name, payload, caseCount, visitCount });
+      setRestorePreview({ fileName: file.name, payload, ...backupCounts(payload) });
     } catch (error) {
       setBackupNotice('ไฟล์นี้ไม่ใช่ไฟล์สำรองของ HOS Schedule');
     }
@@ -978,6 +1135,7 @@ function ScheduleCalendar() {
     try {
       const beforeRestore = createBackupPayload();
       await window.storage.set('full-backup-before-restore', JSON.stringify(beforeRestore), false);
+      await createAutomaticBackup('before-restore', true);
       const data = restorePreview.payload.data;
       const nextCases = mergeCasesByHn(migrateCaseCategories(data.cases || {}));
       const nextShiftNotes = { ...SHIFT_DEFAULTS, ...(data.legendNotes?.shift || {}) };
@@ -1953,6 +2111,41 @@ function ScheduleCalendar() {
                 กู้คืนจากไฟล์
               </button>
               <input ref={restoreFileRef} type="file" accept=".json,application/json" hidden onChange={inspectRestoreFile} />
+            </div>
+            <div className="automatic-backup-history">
+              <div className="automatic-backup-header">
+                <div className="automatic-backup-title">
+                  <strong>Automatic backups</strong>
+                  <span>เก็บย้อนหลังสูงสุด 5 ชุดบนบัญชี Google</span>
+                </div>
+                <button type="button" className="automatic-backup-create" onClick={createBackupNow} disabled={backupBusy}>
+                  <Icon name="saveSolid" size={11} />
+                  สำรองตอนนี้
+                </button>
+              </div>
+              <div className="automatic-backup-list">
+                {!backupHistoryLoaded ? (
+                  <div className="automatic-backup-empty">กำลังโหลดประวัติ...</div>
+                ) : automaticBackups.length === 0 ? (
+                  <div className="automatic-backup-empty">ระบบจะสร้างชุดแรกหลังข้อมูลพร้อม</div>
+                ) : automaticBackups.map(item => (
+                  <div className="automatic-backup-row" key={item.key}>
+                    <div className="automatic-backup-info">
+                      <strong>{new Date(item.createdAt).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}</strong>
+                      <span>{item.caseCount} คนไข้ · {item.visitCount} Visits · {item.reason === 'before-restore' ? 'ก่อนกู้คืน' : item.reason === 'manual' ? 'บันทึกเอง' : 'อัตโนมัติ'}</span>
+                    </div>
+                    <div className="automatic-backup-actions">
+                      <button type="button" className="restore" onClick={() => inspectAutomaticBackup(item)} disabled={backupBusy}>
+                        <Icon name="rotateSolid" size={10} />
+                        กู้คืน
+                      </button>
+                      <button type="button" className="delete" onClick={() => deleteAutomaticBackup(item)} disabled={backupBusy} aria-label="ลบชุดสำรอง">
+                        <Icon name="trashSolid" size={10} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
             {backupNotice && <div className="backup-notice" role="status">{backupNotice}</div>}
             <p className="backup-footnote">
