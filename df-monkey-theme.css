@@ -156,9 +156,10 @@ button:focus-visible,[role="button"]:focus-visible,input:focus-visible,textarea:
 .brand-id,.brand-user{gap:10px!important}
 .brand-logo{
   width:42px!important;height:42px!important;flex-basis:42px!important;border-radius:10px!important;
-  background:var(--df-accent-strong)!important;color:#fff!important;
+  background:transparent!important;color:var(--df-ink)!important;
   font:900 12px var(--df-mono)!important;
 }
+.brand-logo img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important}
 .brand-title{font:800 16px/1.1 var(--df-heading)!important;color:var(--df-ink)!important;letter-spacing:-.02em!important}
 .brand-subtitle{font:450 10px/1.35 var(--df-body)!important;color:var(--df-muted)!important}
 .brand-online{width:8px!important;height:8px!important;background:var(--df-green)!important}

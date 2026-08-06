@@ -1,10 +1,13 @@
-const CACHE_NAME = 'hos-shell-v2';
+const CACHE_NAME = 'hos-shell-v3';
 const APP_SHELL = [
   './',
   './index.html',
   './df-monkey-theme.css',
   './manifest.webmanifest',
-  './icons/hos-icon.svg'
+  './icons/hos-icon.svg',
+  './icons/hos-icon-192.png',
+  './icons/hos-icon-512.png',
+  './icons/hos-icon-maskable-512.png'
 ];
 
 self.addEventListener('install', event => {
