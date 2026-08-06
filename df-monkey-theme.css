@@ -240,7 +240,7 @@ button:focus-visible,[role="button"]:focus-visible,input:focus-visible,textarea:
   display:inline!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;
   color:var(--df-ink)!important;font:800 13px/1 var(--df-mono)!important;
 }
-.calendar-room-dot{width:7px!important;height:7px!important;display:inline-block!important;border-radius:50%!important;box-shadow:0 0 0 1px var(--theme-line)}
+.calendar-room-dot{width:7px!important;height:7px!important;display:inline-block!important;border:0!important;border-radius:50%!important;outline:0!important;box-shadow:none!important}
 .calendar-days>.cell[data-shift="off"] .calendar-room-dot,
 .ov-cell[data-shift="off"] .ov-room-dot,
 .calendar-room-pill[data-shift="off"] .dot{background:var(--room-off)!important}
@@ -281,7 +281,7 @@ button:focus-visible,[role="button"]:focus-visible,input:focus-visible,textarea:
   background:var(--df-panel-2)!important;color:var(--df-muted)!important;font:750 10px var(--df-body)!important;
   cursor:default!important;user-select:none!important;
 }
-.calendar-room-pill .dot{width:7px!important;height:7px!important;border-radius:50%!important}
+.calendar-room-pill .dot{width:7px!important;height:7px!important;border:0!important;border-radius:50%!important;outline:0!important;box-shadow:none!important}
 
 .new-case-suggestions{
   display:grid!important;gap:3px!important;margin:-2px 0 9px!important;padding:6px!important;
@@ -598,7 +598,7 @@ body #root .patient-scroll .plist-row:nth-child(odd):hover{
 }
 .ov-cell:hover{background:var(--df-panel-2)!important}
 .ov-day-number{line-height:1!important}
-.ov-room-dot{width:7px!important;height:7px!important;border-radius:50%!important}
+.ov-room-dot{width:7px!important;height:7px!important;border:0!important;border-radius:50%!important;outline:0!important;box-shadow:none!important}
 .overview-deck-controls button{background:var(--df-panel)!important;color:var(--theme-secondary)!important;border-radius:50%!important}
 .overview-deck-dots button{width:7px!important;height:7px!important;border-radius:50%!important;background:var(--theme-tint)!important}
 .overview-deck-dots button.active{background:var(--theme-primary)!important}
