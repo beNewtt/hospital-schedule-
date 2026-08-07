@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="HOS Schedule">
+  <rect width="512" height="512" fill="#35227F"/>
+  <rect x="76" y="76" width="360" height="360" rx="86" fill="#FFF9ED"/>
+  <g transform="translate(78 78) scale(.6953125)">
+    <g fill="none" stroke="#35227F" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M112 116h288a48 48 0 0 1 48 48v236a48 48 0 0 1-48 48H112a48 48 0 0 1-48-48V164a48 48 0 0 1 48-48Z"/>
+      <path d="M64 204h384"/><path d="M152 74v84M360 74v84"/>
+    </g>
+    <path d="M362 448v-66a30 30 0 0 1 30-30h56Z" fill="#7AA5A6"/>
+    <path d="M118 254h40M354 254h40" stroke="#EC7B5A" stroke-width="18" stroke-linecap="round"/>
+    <text x="256" y="365" text-anchor="middle" fill="#35227F" font-family="Arial, Helvetica, sans-serif" font-size="150" font-weight="800" letter-spacing="-8">18</text>
+    <circle cx="166" cy="405" r="18" fill="#7AA5A6"/><circle cx="226" cy="405" r="18" fill="#EC7B5A"/>
+  </g>
+</svg>
